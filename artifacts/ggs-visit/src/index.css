@@ -34,63 +34,63 @@
 }
 
 :root {
-  color-scheme: dark;
-  --background: 0 0% 5%;
-  --foreground: 44 20% 91%;
-  --border: 38 21% 21%;
-  --card: 0 0% 8%;
-  --card-foreground: 44 20% 91%;
-  --popover: 0 0% 9%;
-  --popover-foreground: 44 20% 91%;
-  --primary: 43 70% 59%;
-  --primary-foreground: 0 0% 5%;
-  --secondary: 0 0% 14%;
-  --secondary-foreground: 44 20% 91%;
-  --muted: 0 0% 13%;
-  --muted-foreground: 42 9% 63%;
-  --accent: 319 79% 58%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 65% 52%;
+  color-scheme: light;
+  --background: 40 31% 93%;
+  --foreground: 43 8% 15%;
+  --border: 37 14% 75%;
+  --card: 40 35% 96%;
+  --card-foreground: 43 8% 15%;
+  --popover: 40 35% 96%;
+  --popover-foreground: 43 8% 15%;
+  --primary: 5 45% 40%;
+  --primary-foreground: 36 39% 96%;
+  --secondary: 38 21% 87%;
+  --secondary-foreground: 43 8% 15%;
+  --muted: 38 21% 87%;
+  --muted-foreground: 40 7% 39%;
+  --accent: 5 45% 40%;
+  --accent-foreground: 36 39% 96%;
+  --destructive: 0 65% 45%;
   --destructive-foreground: 0 0% 100%;
-  --input: 0 0% 17%;
-  --ring: 43 70% 59%;
+  --input: 37 14% 75%;
+  --ring: 5 45% 40%;
   --app-font-sans: 'DM Sans', sans-serif;
   --app-font-serif: 'Cormorant Garamond', serif;
   --app-font-mono: 'Space Mono', monospace;
   --radius: 0.25rem;
-  --ink: #0c0b0a;
-  --panel: #141210;
-  --gold: #d4b56f;
-  --paper: #eee9de;
-  --quiet: #a49d90;
-  --fusion: linear-gradient(112deg, #ec7f52 0%, #da4f9b 48%, #8a73db 100%);
+  --ink: #292723;
+  --panel: #f8f5ee;
+  --gold: #923d36;
+  --paper: #f2eee5;
+  --quiet: #68645b;
+  --fusion: linear-gradient(112deg, #923d36 0%, #b47462 100%);
 }
 
 .dark {
-  --background: 0 0% 5%;
-  --foreground: 44 20% 91%;
-  --border: 38 21% 21%;
-  --card: 0 0% 8%;
-  --card-foreground: 44 20% 91%;
-  --popover: 0 0% 9%;
-  --popover-foreground: 44 20% 91%;
-  --primary: 43 70% 59%;
-  --primary-foreground: 0 0% 5%;
-  --secondary: 0 0% 14%;
-  --secondary-foreground: 44 20% 91%;
-  --muted: 0 0% 13%;
-  --muted-foreground: 42 9% 63%;
-  --accent: 319 79% 58%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 65% 52%;
+  --background: 40 31% 93%;
+  --foreground: 43 8% 15%;
+  --border: 37 14% 75%;
+  --card: 40 35% 96%;
+  --card-foreground: 43 8% 15%;
+  --popover: 40 35% 96%;
+  --popover-foreground: 43 8% 15%;
+  --primary: 5 45% 40%;
+  --primary-foreground: 36 39% 96%;
+  --secondary: 38 21% 87%;
+  --secondary-foreground: 43 8% 15%;
+  --muted: 38 21% 87%;
+  --muted-foreground: 40 7% 39%;
+  --accent: 5 45% 40%;
+  --accent-foreground: 36 39% 96%;
+  --destructive: 0 65% 45%;
   --destructive-foreground: 0 0% 100%;
-  --input: 0 0% 17%;
-  --ring: 43 70% 59%;
+  --input: 37 14% 75%;
+  --ring: 5 45% 40%;
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 90px; }
-body { margin: 0; min-width: 320px; background: #0c0b0a; color: #eee9de; font-family: var(--app-font-sans); }
+body { margin: 0; min-width: 320px; background: #f2eee5; color: #292723; font-family: var(--app-font-sans); }
 button, input, select, textarea { font: inherit; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; text-decoration: none; }

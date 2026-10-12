@@ -1,18 +1,22 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { Link, Route, Switch, useLocation } from 'wouter';
 import {
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   CalendarDays,
   Check,
   Clock3,
+  Compass,
+  Gift,
   House,
   Instagram,
   MapPin,
   Menu,
-  MessageCircle,
   Phone,
   Scissors,
   Sparkles,
+  UserRound,
   X,
 } from 'lucide-react';
 import {
@@ -22,6 +26,7 @@ import {
   useGetGgsPublicServices,
   useGetGgsSite,
 } from '@workspace/api-client-react';
+import type { GgsService, GgsSiteContent } from '@workspace/api-client-react';
 import './homepage.css';
 
 type BookingFields = {
@@ -44,55 +49,17 @@ const initialFields: BookingFields = {
   notes: '',
 };
 
-const today = new Intl.DateTimeFormat('sv-SE', {
-  timeZone: 'Asia/Jakarta',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-}).format(new Date());
-
-const oldDefaultTagline = 'Rambutmu. Ceritamu. Versi terbaikmu.';
-const oldDefaultIntroduction =
-  'Studio rambut untuk potongan, warna, dan perawatan yang merayakan karakter unikmu.';
-
-const naturalTagline =
-  'Ceritakan apa yang kamu inginkan dan bagaimana kamu merawat rambut. Dari situ, kita pilih layanan yang pas.';
-const naturalIntroduction =
-  'GGS adalah studio rambut independen. Kami mulai dari obrolan tentang rambutmu, kebiasaanmu, dan waktu yang kamu punya.';
-
-const mobileNavItems = [
-  { label: 'Beranda', href: '#beranda', icon: House },
-  { label: 'Layanan', href: '#layanan', icon: Scissors },
-  { label: 'Buat janji', href: '#booking', icon: CalendarDays },
-  { label: 'Kunjungi', href: '#kunjungi', icon: MapPin },
+const routes = [
+  { href: '/', label: 'Home', icon: House },
+  { href: '/services', label: 'Services', icon: Scissors },
+  { href: '/style-gallery', label: 'Style Gallery', icon: Sparkles },
+  { href: '/offers-membership', label: 'Offers & Membership', icon: Gift },
+  { href: '/branches', label: 'Our Branches', icon: Compass },
+  { href: '/my-ggs', label: 'My GGS', icon: UserRound },
 ] as const;
 
-const homeMenuItems = [
-  {
-    label: 'Cara kerja',
-    description: 'Kenali tahapan sebelum janji.',
-    href: '#cara-kerja',
-    icon: MessageCircle,
-  },
-  {
-    label: 'Layanan',
-    description: 'Lihat pilihan dan harga.',
-    href: '#layanan',
-    icon: Scissors,
-  },
-  {
-    label: 'Tentang GGS',
-    description: 'Kenali pendekatan studio.',
-    href: '#studio',
-    icon: Sparkles,
-  },
-  {
-    label: 'Kunjungi',
-    description: 'Lihat informasi kunjungan.',
-    href: '#kunjungi',
-    icon: MapPin,
-  },
-] as const;
+const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
+const money = (amount: number) => `Rp${new Intl.NumberFormat('id-ID').format(amount)}`;
 
 function App() {
   const siteQuery = useGetGgsSite({ query: { queryKey: getGetGgsSiteQueryKey() } });
@@ -100,35 +67,23 @@ function App() {
     query: { queryKey: getGetGgsPublicServicesQueryKey() },
   });
   const appointment = useCreateGgsAppointment();
-  const [fields, setFields] = useState<BookingFields>(initialFields);
+  const [location] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [fields, setFields] = useState<BookingFields>(initialFields);
   const [submitted, setSubmitted] = useState(false);
-  const [activeMobileSection, setActiveMobileSection] = useState('#beranda');
-
-  const site = siteQuery.data;
   const services = useMemo(
     () => servicesQuery.data?.filter((service) => service.active) ?? [],
     [servicesQuery.data],
   );
+  const site = siteQuery.data;
 
-  const tagline =
-    site?.tagline && site.tagline.trim() !== oldDefaultTagline
-      ? site.tagline
-      : naturalTagline;
-  const introduction =
-    site?.introduction && site.introduction.trim() !== oldDefaultIntroduction
-      ? site.introduction
-      : naturalIntroduction;
-
-  const setField = (name: keyof BookingFields, value: string) => {
-    setFields((current) => ({ ...current, [name]: value }));
-  };
-
-  const goToBooking = (serviceId?: number) => {
-    if (serviceId) setField('serviceId', String(serviceId));
+  useEffect(() => {
     setMenuOpen(false);
-    document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
-  };
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location]);
+
+  const updateField = (key: keyof BookingFields, value: string) =>
+    setFields((current) => ({ ...current, [key]: value }));
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -154,65 +109,43 @@ function App() {
     );
   };
 
-  const navItems = [
-    { label: 'Cara kerja', href: '#cara-kerja' },
-    { label: 'Layanan', href: '#layanan' },
-    { label: 'Studio', href: '#studio' },
-    { label: 'Kunjungi', href: '#kunjungi' },
-  ];
+  const openBooking = (serviceId?: number) => {
+    if (serviceId) updateField('serviceId', String(serviceId));
+  };
 
-  const instagramHandle = site?.instagramHandle?.trim();
-  const phone = site?.phone?.trim();
-
-  useEffect(() => {
-    if (!('IntersectionObserver' in window)) return;
-
-    const sections = mobileNavItems
-      .map(({ href }) => document.querySelector<HTMLElement>(href))
-      .filter((section): section is HTMLElement => section !== null);
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const activeEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
-
-        if (activeEntry) {
-          setActiveMobileSection(`#${activeEntry.target.id}`);
-        }
-      },
-      { rootMargin: '-18% 0px -62% 0px', threshold: [0, 0.15, 0.35, 0.6] },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
+  const common = {
+    services,
+    servicesQuery,
+    siteQuery,
+    site,
+    openBooking,
+  };
 
   return (
     <main className="clearer-page">
       <header className="clearer-header">
-        <a href="#beranda" className="clearer-brand" aria-label="GGS, kembali ke beranda" data-testid="link-home">
+        <Link href="/" className="clearer-brand" aria-label="GGS, ke beranda" data-testid="link-home">
           <span className="clearer-mark">G</span>
-          <span>{site?.brandName || 'GGS'}</span>
-        </a>
-
+          <span className="brand-wordmark">
+            {site?.brandName?.trim() || 'GGS'}
+            <small>HAIR STUDIO</small>
+          </span>
+        </Link>
         <nav className="clearer-nav" aria-label="Navigasi utama">
-          {navItems.map((item) => (
-            <a href={item.href} key={item.href} data-testid={`link-nav-${item.href.slice(1)}`}>
+          {routes.map((item) => (
+            <Link
+              href={item.href}
+              key={item.href}
+              aria-current={location === item.href ? 'page' : undefined}
+              data-testid={`link-nav-${item.href === '/' ? 'home' : item.href.slice(1)}`}
+            >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
-
-        <button
-          className="clearer-book-link"
-          type="button"
-          onClick={() => goToBooking()}
-          data-testid="button-book-nav"
-        >
-          Buat janji <ArrowRight size={17} />
-        </button>
-
+        <Link href="/book" className="clearer-book-link" data-testid="link-book-header">
+          Book Appointment <ArrowRight size={17} />
+        </Link>
         <button
           className="clearer-menu-button"
           type="button"
@@ -221,491 +154,485 @@ function App() {
           onClick={() => setMenuOpen((open) => !open)}
           data-testid="button-menu"
         >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          {menuOpen ? <X size={21} /> : <Menu size={21} />}
         </button>
-
         {menuOpen && (
           <nav className="clearer-mobile-nav" aria-label="Navigasi ponsel">
-            {navItems.map((item) => (
-              <a
-                href={item.href}
-                key={item.href}
-                onClick={() => setMenuOpen(false)}
-                data-testid={`link-mobile-${item.href.slice(1)}`}
-              >
-                {item.label}
-              </a>
+            {routes.map((item) => (
+              <Link href={item.href} key={item.href} data-testid={`link-mobile-${item.href.slice(1) || 'home'}`}>
+                {item.label} <ArrowUpRight size={15} />
+              </Link>
             ))}
-            <button type="button" onClick={() => goToBooking()} data-testid="button-book-mobile">
-              Buat janji <ArrowRight size={17} />
-            </button>
+            <Link href="/book" className="mobile-book" data-testid="link-mobile-book">
+              Book Appointment <ArrowRight size={16} />
+            </Link>
           </nav>
         )}
       </header>
 
-      <section className="clearer-hero" id="beranda">
-        <div className="clearer-hero-copy">
-          <p className="clearer-kicker">Studio rambut independen · Jakarta</p>
-          <h1 data-testid="text-hero-title">
-            Sebelum gunting,
-            <br />
-            kita <em>ngobrol.</em>
-          </h1>
-          <p className="clearer-lede" data-testid="text-hero-intro">
-            {tagline}
-          </p>
+      <Switch>
+        <Route path="/">
+          <HomePage {...common} />
+        </Route>
+        <Route path="/services">
+          <ServicesPage {...common} />
+        </Route>
+        <Route path="/book">
+          <BookingPage
+            {...common}
+            fields={fields}
+            updateField={updateField}
+            handleSubmit={handleSubmit}
+            appointment={appointment}
+            submitted={submitted}
+            setSubmitted={setSubmitted}
+            setFields={setFields}
+          />
+        </Route>
+        <Route path="/style-gallery">
+          <GalleryPage />
+        </Route>
+        <Route path="/offers-membership">
+          <OffersPage />
+        </Route>
+        <Route path="/branches">
+          <BranchesPage {...common} />
+        </Route>
+        <Route path="/my-ggs">
+          <MyGgsPage />
+        </Route>
+        <Route>
+          <NotFound />
+        </Route>
+      </Switch>
+
+      <footer className="clearer-footer">
+        <p>© {new Date().getFullYear()} {site?.brandName?.trim() || 'GGS Hair Studio'}. Studio rambut, dimulai dari percakapan.</p>
+        <Link href="/book" className="clearer-back-top" data-testid="link-footer-book">Ajukan janji <ArrowRight size={15} /></Link>
+      </footer>
+      <nav className="clearer-mobile-tabbar" aria-label="Navigasi bawah">
+        {[
+            { href: '/', label: 'Home', icon: House },
+            { href: '/services', label: 'Services', icon: Scissors },
+            { href: '/book', label: 'Booking', icon: CalendarDays },
+          { href: '/my-ggs', label: 'My GGS', icon: UserRound },
+        ].map((item) => (
+          <Link
+            href={item.href}
+            key={item.href}
+            aria-current={location === item.href ? 'page' : undefined}
+            data-testid={`link-tab-${item.href.slice(1) || 'home'}`}
+          >
+            <item.icon size={19} strokeWidth={1.8} aria-hidden="true" />
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+    </main>
+  );
+}
+
+type SharedProps = {
+  services: GgsService[];
+  servicesQuery: ReturnType<typeof useGetGgsPublicServices>;
+  siteQuery: ReturnType<typeof useGetGgsSite>;
+  site: GgsSiteContent | undefined;
+  openBooking: (serviceId?: number) => void;
+};
+
+const homeShortcuts = [
+  { label: 'Services', description: 'Pilihan, durasi, dan harga layanan.', href: '/services', icon: Scissors, number: '01' },
+  { label: 'Style Gallery', description: 'Galeri hasil belum tersedia.', href: '/style-gallery', icon: Sparkles, number: '02' },
+  { label: 'Offers & Membership', description: 'Promo dan benefit belum tersedia.', href: '/offers-membership', icon: Gift, number: '03' },
+  { label: 'Our Branches', description: 'Informasi cabang yang dipublikasikan.', href: '/branches', icon: MapPin, number: '04' },
+  { label: 'My GGS', description: 'Riwayat dan preferensi belum terhubung.', href: '/my-ggs', icon: UserRound, number: '05' },
+];
+
+function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
+  const slides = [
+    {
+      eyebrow: 'GGS HAIR STUDIO · MULAI DARI SINI',
+      headline: <>Sebelum gunting,<br /><em>kita ngobrol.</em></>,
+      detail: site?.tagline?.trim() || 'Ceritakan kebutuhan rambutmu sebelum memilih layanan.',
+      cta: 'Ajukan janji',
+      path: '/book',
+    },
+    {
+      eyebrow: 'LAYANAN GGS',
+      headline: <>Pilih layanan<br /><em>yang sesuai.</em></>,
+      detail: 'Lihat layanan, durasi, dan harga yang saat ini tersedia. Tim GGS akan membahas detail sebelum mengonfirmasi.',
+      cta: 'Lihat layanan',
+      path: '/services',
+    },
+    {
+      eyebrow: 'AJUKAN JANJI TEMU',
+      headline: <>Mulai dari<br /><em>obrolan.</em></>,
+      detail: 'Sampaikan layanan dan waktu yang kamu inginkan. Tim GGS akan menghubungi untuk membahas dan mengonfirmasi permintaan.',
+      cta: 'Buat janji',
+      path: '/book',
+    },
+  ];
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => setReducedMotion(motionPreference.matches);
+    const updatePageVisibility = () => setPageVisible(document.visibilityState === 'visible');
+    updateMotionPreference();
+    updatePageVisibility();
+    motionPreference.addEventListener('change', updateMotionPreference);
+    document.addEventListener('visibilitychange', updatePageVisibility);
+    return () => {
+      motionPreference.removeEventListener('change', updateMotionPreference);
+      document.removeEventListener('visibilitychange', updatePageVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (paused || reducedMotion || !pageVisible) return;
+    const timer = window.setInterval(() => setActive((index) => (index + 1) % slides.length), 6000);
+    return () => window.clearInterval(timer);
+  }, [paused, reducedMotion, pageVisible, slides.length]);
+
+  const slide = slides[active];
+  return (
+    <>
+      <section
+        className="clearer-hero"
+        aria-label="Sorotan GGS"
+        aria-roledescription="carousel"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setPaused(false);
+        }}
+        data-testid="carousel-home"
+      >
+        <div className="clearer-hero-copy" key={active}>
+          <p className="clearer-kicker">{slide.eyebrow}</p>
+          <h1 data-testid="text-hero-title">{slide.headline}</h1>
+          <p className="clearer-lede" data-testid="text-hero-intro">{slide.detail}</p>
           <div className="clearer-hero-actions">
-            <button
-              className="clearer-primary-button"
-              type="button"
-              onClick={() => goToBooking()}
-              data-testid="button-book-hero"
-            >
-              Pilih waktu kunjungan <ArrowRight size={18} />
-            </button>
-            <a className="clearer-text-link" href="#layanan" data-testid="link-explore-services">
-              Lihat layanan <ArrowRight size={16} />
-            </a>
+            <Link className="clearer-primary-button" href={slide.path} data-testid="link-hero-action">
+              {slide.cta} <ArrowRight size={17} />
+            </Link>
+            <Link className="clearer-text-link" href="/services" data-testid="link-hero-services">
+              Lihat semua layanan <ArrowUpRight size={16} />
+            </Link>
+          </div>
+          <div className="clearer-carousel-controls" aria-label="Kontrol banner">
+            <div className="clearer-carousel-dots" aria-label="Pilih sorotan">
+              {slides.map((item, index) => (
+                <button
+                  type="button"
+                  key={item.eyebrow}
+                  aria-label={`Tampilkan sorotan ${index + 1}`}
+                  aria-current={active === index ? 'true' : undefined}
+                  onClick={() => setActive(index)}
+                  data-testid={`button-banner-${index + 1}`}
+                ><span /></button>
+              ))}
+            </div>
+            <div className="clearer-carousel-arrows">
+              <span>{String(active + 1).padStart(2, '0')} / 03</span>
+              <button type="button" aria-label="Sorotan sebelumnya" onClick={() => setActive((active + 2) % 3)} data-testid="button-banner-previous"><ArrowLeft size={17} /></button>
+              <button type="button" aria-label="Sorotan berikutnya" onClick={() => setActive((active + 1) % 3)} data-testid="button-banner-next"><ArrowRight size={17} /></button>
+            </div>
           </div>
         </div>
-
         <div className="clearer-hero-image">
           <img
             src={site?.heroImageUrl || '/ggs-editorial.jpg'}
-            alt="Potret gaya rambut editorial GGS"
+            alt="Foto editorial gaya rambut GGS"
             data-testid={site?.heroImageUrl ? 'img-hero-api' : 'img-hero-editorial'}
           />
+          <span className="clearer-hero-image-label">Gaya editorial GGS</span>
         </div>
       </section>
 
-      <nav className="clearer-home-menu" aria-label="Jelajahi GGS">
+        <section className="clearer-home-menu" aria-label="Jelajahi GGS">
         <div className="clearer-home-menu-heading">
-          <p className="clearer-kicker">Jelajahi GGS</p>
-          <h2>Mau cari apa?</h2>
+          <p className="clearer-kicker">JELAJAHI GGS</p>
+          <h2>Mau mulai<br />dari mana?</h2>
         </div>
         <div className="clearer-home-menu-grid">
-          {homeMenuItems.map((item) => (
-            <a
-              className="clearer-home-menu-card"
-              href={item.href}
-              key={item.href}
-              onClick={() => setActiveMobileSection(item.href)}
-              data-testid={`link-home-menu-${item.href.slice(1)}`}
-            >
-              <span className="clearer-home-menu-card-top">
-                <item.icon size={21} strokeWidth={1.8} aria-hidden="true" />
-                <ArrowUpRight size={17} aria-hidden="true" />
-              </span>
+          {homeShortcuts.map((item) => (
+            <Link className="clearer-home-menu-card" href={item.href} key={item.href} data-testid={`link-home-menu-${item.href.slice(1)}`}>
+              <span className="clearer-home-menu-card-top"><item.icon size={20} /><span>{item.number}</span></span>
               <strong>{item.label}</strong>
               <span className="clearer-home-menu-description">{item.description}</span>
-            </a>
+            </Link>
           ))}
+          <Link className="clearer-home-menu-card clearer-home-book-card" href="/book" data-testid="link-home-menu-book">
+            <span className="clearer-home-menu-card-top"><CalendarDays size={20} /><ArrowUpRight size={16} /></span>
+            <strong>Book Appointment</strong>
+            <span className="clearer-home-menu-description">Ajukan layanan, tanggal, dan waktu kunjungan.</span>
+          </Link>
         </div>
-      </nav>
+      </section>
 
-      <section className="clearer-promise" id="cara-kerja">
+      <section className="clearer-promise" data-testid="section-approach">
         <div className="clearer-promise-intro">
-          <p className="clearer-kicker">Cara kerja</p>
-          <h2>Mulai dari kebutuhanmu.</h2>
-          <p>
-            Bawa foto kalau ada, atau ceritakan bagian rambut yang ingin diubah. Kalau belum
-            yakin, kami bantu membahas pilihannya.
-          </p>
+          <p className="clearer-kicker">CARA KERJA</p>
+          <h2>Mulai dengan<br />lebih jelas.</h2>
+          <p>{site?.introduction?.trim() || 'Informasi tentang GGS belum tersedia.'}</p>
         </div>
         <div className="clearer-steps">
-          <article>
-            <span>01</span>
-            <h3>Ceritakan</h3>
-            <p>Apa yang kamu suka, dan apa yang ingin terasa berbeda?</p>
-          </article>
-          <article>
-            <span>02</span>
-            <h3>Pilih bersama</h3>
-            <p>Kami jelaskan pilihan, waktu, dan harga sebelum mulai.</p>
-          </article>
-          <article>
-            <span>03</span>
-            <h3>Mulai</h3>
-            <p>Kamu bisa bertanya atau mengubah arah selama proses.</p>
-          </article>
+          <article><span>01</span><h3>Ceritakan</h3><p>Gaya yang kamu suka dan perubahan yang ingin dicoba.</p></article>
+          <article><span>02</span><h3>Pilih bersama</h3><p>Tim GGS akan membahas pilihan, waktu, dan harga sebelum janji dikonfirmasi.</p></article>
+          <article><span>03</span><h3>Konfirmasi</h3><p>Permintaanmu menjadi awal percakapan dengan tim studio.</p></article>
         </div>
       </section>
 
-      <section className="clearer-services" id="layanan">
+      <section className="clearer-services home-featured-services">
         <div className="clearer-section-heading">
-          <div>
-            <p className="clearer-kicker">Layanan & harga</p>
-            <h2>
-              Pilih yang
-              <br />
-              kamu butuhkan.
-            </h2>
-          </div>
-          <p>
-            Lihat harga dan durasi di sini. Detailnya bisa dibahas lagi sebelum janji temu
-            dikonfirmasi.
-          </p>
+          <div><p className="clearer-kicker">LAYANAN YANG TERSEDIA</p><h2>Pilihan layanan.</h2></div>
+          <Link href="/services" className="clearer-text-link" data-testid="link-all-services">Semua layanan <ArrowRight size={16} /></Link>
         </div>
-
-        {servicesQuery.isLoading ? (
-          <div className="clearer-service-state" aria-label="Memuat layanan" data-testid="status-services-loading">
-            <p>Memuat daftar layanan…</p>
-          </div>
-        ) : servicesQuery.isError ? (
-          <div className="clearer-service-state" role="alert" data-testid="status-services-error">
-            <p>Daftar layanan belum bisa dimuat.</p>
-            <button
-              className="clearer-retry"
-              type="button"
-              onClick={() => servicesQuery.refetch()}
-              data-testid="button-retry-services"
-            >
-              Coba lagi
-            </button>
-          </div>
-        ) : services.length === 0 ? (
-          <div className="clearer-service-state" data-testid="status-services-empty">
-            <p>Belum ada layanan yang bisa dipesan.</p>
-          </div>
-        ) : (
-          <div className="clearer-service-list">
-            {services.map((service, index) => (
-              <article className="clearer-service-row" key={service.id} data-testid={`card-service-${service.id}`}>
-                <span className="clearer-service-index">{String(index + 1).padStart(2, '0')}</span>
-                <div className="clearer-service-main">
-                  <h3>{service.name}</h3>
-                  <p>{service.description}</p>
-                </div>
-                <div className="clearer-service-meta">
-                  <span className="clearer-duration">
-                    <Clock3 size={16} aria-hidden="true" /> {service.durationMinutes} menit
-                  </span>
-                  <strong>Rp{new Intl.NumberFormat('id-ID').format(service.price)}</strong>
-                </div>
-                <button
-                  type="button"
-                  className="clearer-service-action"
-                  onClick={() => goToBooking(service.id)}
-                  aria-label={`Pilih layanan ${service.name}`}
-                  data-testid={`button-book-service-${service.id}`}
-                >
-                  Pilih <ArrowRight size={17} />
-                </button>
-              </article>
-            ))}
-          </div>
-        )}
+        <ServiceList {...{ services, servicesQuery, openBooking }} compact />
       </section>
 
-      <section className="clearer-studio" id="studio">
-        <div className="clearer-studio-copy">
-          <p className="clearer-kicker">Tentang GGS</p>
-          <h2>
-            Jujur soal hasil.
-            <br />
-            <em>Fleksibel soal gaya.</em>
-          </h2>
-        </div>
-        <div className="clearer-studio-copy clearer-studio-detail">
-          <p data-testid="text-studio-description">{introduction}</p>
-          <p>
-            Kalau sebuah ide kurang cocok untuk kondisi rambutmu, kami akan menjelaskan alasannya
-            dan mencari pilihan lain.
-          </p>
-          <button
-            type="button"
-            className="clearer-text-link clearer-inline-link"
-            onClick={() => goToBooking()}
-            data-testid="link-find-studio"
-          >
-            Mulai dengan konsultasi <ArrowRight size={17} />
-          </button>
-        </div>
+      <section className="home-editorial-band">
+        <div className="home-editorial-index">GGS / CATATAN 01</div>
+        <p>Inspirasi gaya akan hadir di sini.<br /><em>Style Gallery belum tersedia.</em></p>
+        <Link href="/style-gallery" data-testid="link-home-inspiration">Buka Style Gallery <ArrowUpRight size={17} /></Link>
       </section>
+      <section className="home-last-cta">
+        <div><p className="clearer-kicker">BOOK APPOINTMENT</p><h2>Ceritakan<br /><em>yang kamu inginkan.</em></h2></div>
+        <Link href="/book" className="clearer-primary-button" data-testid="link-home-booking">Buat janji <ArrowRight size={17} /></Link>
+      </section>
+    </>
+  );
+}
 
-      <section className="clearer-booking" id="booking">
-        <div className="clearer-booking-intro">
-          <p className="clearer-kicker">Buat janji</p>
-          <h2>
-            Yuk, mulai
-            <br />
-            <em>dari ngobrol.</em>
-          </h2>
-          <p>
-            Ajukan waktu yang kamu inginkan. Tim GGS akan menghubungi untuk membahas detail dan
-            mengonfirmasi janji temu.
-          </p>
-          <div className="clearer-booking-note">
-            Belum yakin soal layanan? Pilih yang paling mendekati. Kita bisa membahasnya lagi
-            sebelum janji dikonfirmasi.
+function ServicesPage(props: SharedProps) {
+  const { services, servicesQuery, openBooking } = props;
+  return (
+    <PageFrame kicker="GGS / SERVICES" title={<>Pilihan<br /><em>layanan.</em></>} intro="Lihat layanan yang saat ini tersedia, beserta durasi dan harganya. Tim GGS akan menghubungi untuk membahas detail dan mengonfirmasi permintaan." testId="page-services">
+      <div className="service-category-grid" aria-label="Kategori layanan yang diminta" data-testid="list-service-categories">
+        {["Men's Grooming", "Women's Hair", 'Hair Treatment', 'Beauty & Spa'].map((category, index) => (
+          <article key={category} data-testid={`card-service-category-${index}`}>
+            <strong>{category}</strong>
+            <span>Belum dipetakan</span>
+          </article>
+        ))}
+      </div>
+      <div className="service-page-note" data-testid="text-service-category-note">
+        <Sparkles size={18} /> Kategori di atas belum dipetakan ke layanan aktif. Daftar di bawah mengikuti kategori yang saat ini tersimpan di data GGS.
+      </div>
+      <ServiceList {...{ services, servicesQuery, openBooking }} />
+      <div className="service-followup"><p>Belum yakin layanan mana yang sesuai?</p><Link href="/book" className="clearer-text-link" data-testid="link-services-consult">Ceritakan kebutuhanmu <ArrowRight size={16} /></Link></div>
+    </PageFrame>
+  );
+}
+
+function ServiceList({ services, servicesQuery, openBooking, compact = false }: {
+  services: GgsService[];
+  servicesQuery: SharedProps['servicesQuery'];
+  openBooking: (serviceId?: number) => void;
+  compact?: boolean;
+}) {
+  if (servicesQuery.isLoading) return <div className="clearer-service-state service-skeleton" data-testid="status-services-loading"><span /><span /><span /></div>;
+  if (servicesQuery.isError) return (
+    <div className="clearer-service-state" role="alert" data-testid="status-services-error">
+        <p>Daftar layanan belum bisa dimuat.</p>
+        <button className="clearer-retry" type="button" onClick={() => servicesQuery.refetch()} data-testid="button-retry-services">Coba lagi</button>
+    </div>
+  );
+  if (!services.length) return <div className="clearer-service-state" data-testid="status-services-empty"><p>Belum ada layanan aktif yang ditampilkan.</p></div>;
+  return (
+    <div className={`clearer-service-list ${compact ? 'service-list-compact' : ''}`}>
+      {services.slice(0, compact ? 3 : undefined).map((service, index) => (
+        <article className="clearer-service-row" key={service.id} data-testid={`card-service-${service.id}`}>
+          <span className="clearer-service-index">{String(index + 1).padStart(2, '0')}</span>
+          <div className="clearer-service-main">
+            <span className="service-category">{service.category}</span>
+            <h3>{service.name}</h3><p>{service.description}</p>
           </div>
-        </div>
+          <div className="clearer-service-meta">
+              <span className="clearer-duration"><Clock3 size={15} /> {service.durationMinutes} menit</span>
+            <strong>{money(service.price)}</strong>
+          </div>
+          <Link href="/book" className="clearer-service-action" onClick={() => openBooking(service.id)} aria-label={`Ajukan ${service.name}`} data-testid={`link-book-service-${service.id}`}>Pilih <ArrowRight size={16} /></Link>
+        </article>
+      ))}
+    </div>
+  );
+}
 
+type BookingProps = SharedProps & {
+  fields: BookingFields;
+  updateField: (key: keyof BookingFields, value: string) => void;
+  handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  appointment: ReturnType<typeof useCreateGgsAppointment>;
+  submitted: boolean;
+  setSubmitted: (value: boolean) => void;
+  setFields: (value: BookingFields) => void;
+};
+
+function BookingPage({ services, servicesQuery, fields, updateField, handleSubmit, appointment, submitted, setSubmitted, setFields }: BookingProps) {
+  return (
+    <PageFrame kicker="GGS / BOOK APPOINTMENT" title={<>Buat ruang<br /><em>untuk dirimu.</em></>} intro="Sampaikan layanan dan waktu yang kamu inginkan. Formulir ini mengirim permintaan; tim GGS akan menghubungi untuk membahas detail dan mengonfirmasi." testId="page-booking">
+      <section className="booking-page-layout">
+        <aside className="booking-aside">
+          <div className="booking-aside-mark"><CalendarDays size={22} /></div>
+          <p className="clearer-kicker">SEBELUM MENGAJUKAN</p>
+          <h2>Mulai dengan<br /><em>percakapan.</em></h2>
+          <p>Tanggal dan waktu yang kamu pilih adalah permintaan, bukan jadwal yang sudah dikonfirmasi. Tim GGS akan menghubungi sebelum kunjungan ditetapkan.</p>
+          <div className="booking-aside-detail"><span>Cabang</span><strong>Belum tersedia</strong><small>Informasi lokasi akan diberikan saat tim mengonfirmasi permintaan.</small></div>
+          <div className="booking-aside-detail"><span>Hairstylist</span><strong>Belum tersedia</strong><small>Pilihan hairstylist belum tersedia di formulir ini.</small></div>
+        </aside>
         <div className="clearer-form-wrap">
           {submitted && appointment.data ? (
             <div role="status" className="clearer-success" data-testid="status-booking-success">
-              <span className="clearer-success-icon">
-                <Check size={23} />
-              </span>
+              <span className="clearer-success-icon"><Check size={23} /></span>
+              <p className="clearer-kicker">PERMINTAAN DITERIMA</p>
               <h3>Terima kasih, {appointment.data.customerName}.</h3>
-              <p>
-                Permintaan untuk <strong>{appointment.data.serviceName}</strong> pada{' '}
-                <strong>
-                  {new Date(
-                    `${appointment.data.appointmentDate}T${appointment.data.appointmentTime}`,
-                  ).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}
-                </strong>{' '}
-                sudah kami terima. Tim kami akan menghubungimu untuk konfirmasi.
-              </p>
-              <p data-testid="text-appointment-reference">
-                Nomor permintaan: <strong>#{appointment.data.id}</strong>
-              </p>
-              <button
-                type="button"
-                className="clearer-secondary-button"
-                onClick={() => {
-                  setSubmitted(false);
-                  appointment.reset();
-                }}
-                data-testid="button-new-booking"
-              >
-                Buat permintaan lain
-              </button>
+              <p>Permintaan untuk <strong>{appointment.data.serviceName}</strong> pada <strong>{new Date(`${appointment.data.appointmentDate}T${appointment.data.appointmentTime}`).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}</strong> sudah diterima. Tim GGS akan menghubungimu untuk konfirmasi.</p>
+              <p data-testid="text-appointment-reference">Nomor permintaan: <strong>#{appointment.data.id}</strong></p>
+              <button type="button" className="clearer-secondary-button" onClick={() => { setSubmitted(false); setFields(initialFields); appointment.reset(); }} data-testid="button-new-booking">Buat permintaan lain</button>
             </div>
           ) : (
-            <form
-              className="clearer-form"
-              onSubmit={handleSubmit}
-              data-testid="form-appointment"
-            >
+            <form className="clearer-form" onSubmit={handleSubmit} data-testid="form-appointment">
               <div className="clearer-form-grid">
-                <label>
-                  Nama
-                  <input
-                    required
-                    minLength={2}
-                    maxLength={120}
-                    autoComplete="name"
-                    value={fields.customerName}
-                    onChange={(event) => setField('customerName', event.target.value)}
-                    placeholder="Nama yang ingin kami panggil"
-                    data-testid="input-customer-name"
-                  />
-                </label>
-                <label>
-                  Nomor telepon
-                  <input
-                    required
-                    type="tel"
-                    minLength={7}
-                    maxLength={40}
-                    autoComplete="tel"
-                    value={fields.phone}
-                    onChange={(event) => setField('phone', event.target.value)}
-                    placeholder="Nomor yang bisa dihubungi"
-                    data-testid="input-customer-phone"
-                  />
-                </label>
-                <label className="clearer-form-wide">
-                  Email
-                  <input
-                    required
-                    type="email"
-                    maxLength={254}
-                    autoComplete="email"
-                    value={fields.email}
-                    onChange={(event) => setField('email', event.target.value)}
-                    placeholder="nama@email.com"
-                    data-testid="input-customer-email"
-                  />
-                </label>
-                <label className="clearer-form-wide">
-                  Layanan
-                  <select
-                    required
-                    value={fields.serviceId}
-                    onChange={(event) => setField('serviceId', event.target.value)}
-                    disabled={services.length === 0}
-                    data-testid="select-service"
-                  >
-                    <option value="" disabled>
-                      {servicesQuery.isLoading
-                        ? 'Memuat layanan…'
-                        : services.length
-                          ? 'Pilih layanan'
-                          : 'Layanan belum tersedia'}
-                    </option>
-                    {services.map((service) => (
-                      <option value={service.id} key={service.id}>
-                        {service.name} · Rp{new Intl.NumberFormat('id-ID').format(service.price)} ·{' '}
-                        {service.durationMinutes} menit
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Tanggal yang diinginkan
-                  <input
-                    type="date"
-                    min={today}
-                    required
-                    value={fields.appointmentDate}
-                    onChange={(event) => setField('appointmentDate', event.target.value)}
-                    data-testid="input-appointment-date"
-                  />
-                </label>
-                <label>
-                  Jam yang diinginkan
-                  <input
-                    type="time"
-                    required
-                    value={fields.appointmentTime}
-                    onChange={(event) => setField('appointmentTime', event.target.value)}
-                    data-testid="input-appointment-time"
-                  />
-                </label>
-                <label className="clearer-form-wide">
-                  Catatan <span>(opsional)</span>
-                  <textarea
-                    maxLength={600}
-                    value={fields.notes}
-                    onChange={(event) => setField('notes', event.target.value)}
-                    placeholder="Ada yang ingin kami tahu tentang rambutmu?"
-                    data-testid="input-appointment-notes"
-                  />
-                </label>
-                {appointment.isError && (
-                  <p role="alert" className="clearer-error" data-testid="status-booking-error">
-                    Permintaan belum terkirim. Coba lagi; isianmu tetap tersimpan.
-                  </p>
-                )}
+                <label>Nama<input required minLength={2} maxLength={120} autoComplete="name" value={fields.customerName} onChange={(event) => updateField('customerName', event.target.value)} placeholder="Nama yang biasa digunakan" data-testid="input-customer-name" /></label>
+                <label>Nomor telepon<input required type="tel" minLength={7} maxLength={40} autoComplete="tel" value={fields.phone} onChange={(event) => updateField('phone', event.target.value)} placeholder="Nomor yang bisa dihubungi" data-testid="input-customer-phone" /></label>
+                <label className="clearer-form-wide">Email<input required type="email" maxLength={254} autoComplete="email" value={fields.email} onChange={(event) => updateField('email', event.target.value)} placeholder="nama@email.com" data-testid="input-customer-email" /></label>
+                <label className="clearer-form-wide">Layanan<select required value={fields.serviceId} onChange={(event) => updateField('serviceId', event.target.value)} disabled={!services.length} data-testid="select-service">
+                  <option value="" disabled>{servicesQuery.isLoading ? 'Memuat layanan…' : services.length ? 'Pilih layanan' : 'Belum ada layanan tersedia'}</option>
+                  {services.map((service) => <option value={service.id} key={service.id}>{service.name} · {money(service.price)} · {service.durationMinutes} menit</option>)}
+                </select></label>
+                <label>Tanggal yang diinginkan<input type="date" min={today} required value={fields.appointmentDate} onChange={(event) => updateField('appointmentDate', event.target.value)} data-testid="input-appointment-date" /></label>
+                <label>Waktu yang diinginkan<input type="time" required value={fields.appointmentTime} onChange={(event) => updateField('appointmentTime', event.target.value)} data-testid="input-appointment-time" /></label>
+                <label className="clearer-form-wide">Catatan untuk tim <span>(opsional)</span><textarea maxLength={600} value={fields.notes} onChange={(event) => updateField('notes', event.target.value)} placeholder="Ceritakan hal yang perlu diketahui tentang rambut atau permintaanmu." data-testid="input-appointment-notes" /></label>
+                {appointment.isError && <p role="alert" className="clearer-error" data-testid="status-booking-error">Permintaan belum terkirim. Coba lagi; detail yang kamu isi tetap tersimpan.</p>}
               </div>
-              <div className="clearer-submit-row">
-                <p>Waktu janji akan dikonfirmasi oleh tim GGS.</p>
-                <button
-                  type="submit"
-                  className="clearer-primary-button"
-                  disabled={appointment.isPending || services.length === 0}
-                  data-testid="button-submit-appointment"
-                >
-                  {appointment.isPending ? 'Mengirim…' : 'Kirim permintaan'}
-                  {!appointment.isPending && <ArrowRight size={17} />}
-                </button>
-              </div>
+              <div className="clearer-submit-row"><p>Tim GGS akan menghubungimu untuk mengonfirmasi detail kunjungan.</p><button type="submit" className="clearer-primary-button" disabled={appointment.isPending || !services.length} data-testid="button-submit-appointment">{appointment.isPending ? 'Mengirim permintaan…' : 'Kirim permintaan'} {!appointment.isPending && <ArrowRight size={17} />}</button></div>
             </form>
           )}
         </div>
       </section>
+    </PageFrame>
+  );
+}
 
-      <section className="clearer-visit" id="kunjungi">
-        <div className="clearer-visit-heading">
-          <div>
-            <p className="clearer-kicker">Kunjungi GGS</p>
-            <h2>Temukan studio.</h2>
-          </div>
-          <p>
-            {site?.address
-              ? 'Cek alamat dan jam studio sebelum datang.'
-              : 'Ajukan janji lewat formulir. Tim GGS akan mengirimkan detail kunjungan saat mengonfirmasi.'}
-          </p>
-        </div>
-
-        {siteQuery.isError ? (
-          <div className="clearer-visit-empty" role="alert" data-testid="status-site-error">
-            <p>Informasi studio belum bisa dimuat.</p>
-            <button type="button" onClick={() => siteQuery.refetch()} data-testid="button-retry-site">
-              Coba lagi
-            </button>
-          </div>
-        ) : siteQuery.isLoading ? (
-          <div className="clearer-visit-empty" data-testid="status-site-loading">
-            <p>Memuat informasi studio…</p>
-          </div>
-        ) : site?.address || site?.openingHours || instagramHandle || phone ? (
-          <div className="clearer-visit-grid">
-            {site?.address && (
-              <article className="clearer-visit-card" data-testid="card-location-address">
-                <h3>
-                  <MapPin size={17} aria-hidden="true" /> Alamat
-                </h3>
-                <p>{site.address}</p>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(site.address)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  data-testid="link-map"
-                >
-                  Buka peta <ArrowUpRight size={15} />
-                </a>
-              </article>
-            )}
-            {site?.openingHours && (
-              <article className="clearer-visit-card" data-testid="card-location-hours">
-                <h3>
-                  <Clock3 size={17} aria-hidden="true" /> Jam buka
-                </h3>
-                <p className="whitespace-pre-line">{site.openingHours}</p>
-              </article>
-            )}
-            {(instagramHandle || phone) && (
-              <article className="clearer-visit-card" data-testid="card-location-connect">
-                <h3>Hubungi</h3>
-                {instagramHandle && (
-                  <a
-                    href={`https://instagram.com/${instagramHandle.replace(/^@/, '')}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    data-testid="link-instagram"
-                  >
-                    <Instagram size={17} aria-hidden="true" /> {instagramHandle}
-                  </a>
-                )}
-                {phone && (
-                  <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} data-testid="link-phone">
-                    <Phone size={16} aria-hidden="true" /> {phone}
-                  </a>
-                )}
-              </article>
-            )}
-          </div>
-        ) : (
-          <div className="clearer-visit-empty" data-testid="text-contact-unavailable">
-            <p>
-              Alamat dan kontak belum tersedia di halaman ini. Ajukan janji; tim GGS akan
-              menghubungimu untuk mengirimkan detailnya.
-            </p>
-          </div>
-        )}
+function GalleryPage() {
+  return (
+    <PageFrame kicker="GGS / STYLE GALLERY" title={<>Galeri gaya,<br /><em>sedang disiapkan.</em></>} intro="Tempat untuk inspirasi potongan, warna rambut, transformasi, dan hasil pelanggan setelah foto serta keterangannya tersedia dan diverifikasi." testId="page-gallery">
+      <section className="unavailable-panel gallery-empty" data-testid="status-gallery-empty">
+        <div className="empty-ornament"><Sparkles size={25} /></div>
+        <span className="panel-index">GALERI / 00</span>
+        <h2>Belum ada hasil GGS<br />yang ditampilkan.</h2>
+        <p>Foto pada halaman Home adalah gambar editorial, bukan hasil pelanggan. Inspirasi gaya akan ditambahkan setelah foto dan keterangannya tersedia serta diverifikasi.</p>
+        <Link href="/services" className="clearer-text-link" data-testid="link-gallery-services">Lihat Services <ArrowRight size={16} /></Link>
       </section>
+      <div className="gallery-placeholder-grid" aria-label="Bagian galeri yang belum tersedia">
+        {['Warna rambut', 'Transformasi', 'Hasil pelanggan'].map((title, index) => <div className="gallery-placeholder" key={title} data-testid={`status-gallery-category-${index}`}><span>0{index + 1}</span><strong>{title}</strong><small>Belum tersedia</small></div>)}
+      </div>
+    </PageFrame>
+  );
+}
 
-      <footer className="clearer-footer" data-testid="footer-site">
-        <a href="#beranda" className="clearer-brand" data-testid="link-footer-home">
-          <span className="clearer-mark">G</span>
-          <span>{site?.brandName || 'GGS'}</span>
-        </a>
-        <p>GGS Hair Studio</p>
-        <a href="#beranda" className="clearer-back-top" data-testid="link-back-top">
-          Kembali ke atas
-        </a>
-      </footer>
+function OffersPage() {
+  return (
+    <PageFrame kicker="GGS / OFFERS & MEMBERSHIP" title={<>Promo &amp;<br /><em>keanggotaan.</em></>} intro="Halaman ini akan memuat promo, paket bundling, poin, voucher, dan benefit member jika programnya sudah tersedia." testId="page-offers">
+      <section className="unavailable-panel member-empty" data-testid="status-membership-unavailable">
+        <div className="empty-ornament"><Gift size={25} /></div>
+        <span className="panel-index">PROGRAM MEMBER / BELUM TERSEDIA</span>
+        <h2>Belum ada promo atau<br />program member.</h2>
+        <p>Belum ada informasi promo, paket bundling, poin, atau voucher dari GGS. Belum ada saldo member yang bisa ditampilkan dan halaman ini belum menyediakan pendaftaran.</p>
+        <Link href="/book" className="clearer-primary-button" data-testid="link-membership-book">Tanyakan saat mengajukan janji <ArrowRight size={16} /></Link>
+      </section>
+      <div className="member-feature-list">
+        <article><span>01</span><div><strong>Promo</strong><p>Belum ada promo aktif yang dicantumkan.</p></div></article>
+        <article><span>02</span><div><strong>Poin & voucher</strong><p>Belum ada data poin atau voucher.</p></div></article>
+        <article><span>03</span><div><strong>Benefit member</strong><p>Informasi keanggotaan belum tersedia.</p></div></article>
+      </div>
+    </PageFrame>
+  );
+}
 
-      <nav className="clearer-mobile-tabbar" aria-label="Navigasi utama ponsel">
-        {mobileNavItems.map((item) => (
-          <a
-            href={item.href}
-            key={item.href}
-            aria-current={activeMobileSection === item.href ? 'location' : undefined}
-            onClick={() => {
-              setActiveMobileSection(item.href);
-              setMenuOpen(false);
-            }}
-          >
-            <item.icon size={19} strokeWidth={2} aria-hidden="true" />
-            <span>{item.label}</span>
-          </a>
-        ))}
-      </nav>
-    </main>
+function BranchesPage({ site, siteQuery }: SharedProps) {
+  const address = site?.address?.trim();
+  const phone = site?.phone?.trim();
+  const hours = site?.openingHours?.trim();
+  const instagram = site?.instagramHandle?.trim();
+  return (
+    <PageFrame kicker="GGS / OUR BRANCHES" title={<>Kunjungi<br /><em>studio GGS.</em></>} intro="Temukan informasi sebelum berkunjung. Halaman ini hanya menampilkan detail yang sudah dicantumkan oleh GGS." testId="page-branches">
+      {siteQuery.isLoading ? <div className="clearer-visit-empty" data-testid="status-branches-loading">Memuat informasi studio…</div> :
+        siteQuery.isError ? <div className="clearer-visit-empty" role="alert" data-testid="status-branches-error"><p>Informasi studio belum bisa dimuat.</p><button type="button" onClick={() => siteQuery.refetch()} data-testid="button-retry-site">Coba lagi</button></div> :
+          address || phone || hours || instagram ? (
+            <div className="branch-details" data-testid="section-branch-details">
+              {address && <article><MapPin size={19} /><span>Alamat</span><p>{address}</p><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer" data-testid="link-map">Buka peta <ArrowUpRight size={15} /></a></article>}
+              {hours && <article><Clock3 size={19} /><span>Jam operasional</span><p>{hours}</p></article>}
+              {phone && <article><Phone size={19} /><span>Kontak</span><p>{phone}</p><a href={`tel:${phone}`} data-testid="link-branch-phone">Hubungi studio <ArrowUpRight size={15} /></a></article>}
+              {instagram && <article><Instagram size={19} /><span>Instagram</span><p>{instagram}</p><a href={`https://instagram.com/${instagram.replace(/^@/, '')}`} target="_blank" rel="noreferrer" data-testid="link-branch-instagram">Lihat Instagram <ArrowUpRight size={15} /></a></article>}
+              <article className="branch-no-facilities"><Compass size={19} /><span>Fasilitas & cabang</span><p>Informasi fasilitas dan cabang lain belum dicantumkan.</p></article>
+            </div>
+          ) : (
+            <section className="unavailable-panel branch-empty" data-testid="status-branches-empty">
+              <div className="empty-ornament"><MapPin size={25} /></div>
+              <span className="panel-index">DETAIL STUDIO / BELUM DIPUBLIKASIKAN</span>
+              <h2>Alamat studio<br />belum tersedia.</h2>
+              <p>Alamat, jam operasional, telepon, Instagram, dan fasilitas cabang belum dicantumkan pada profil publik GGS. Ajukan janji dan tim GGS akan menyampaikan detail kunjungan saat konfirmasi.</p>
+              <Link href="/book" className="clearer-primary-button" data-testid="link-branch-book">Ajukan janji <ArrowRight size={16} /></Link>
+            </section>
+          )}
+      <div className="branch-contact-note"><span>CATATAN KUNJUNGAN</span><p>Pilihan cabang dan hairstylist belum tersedia di formulir janji temu.</p></div>
+    </PageFrame>
+  );
+}
+
+function MyGgsPage() {
+  return (
+    <PageFrame kicker="GGS / MY GGS" title={<>My GGS,<br /><em>belum aktif.</em></>} intro="Tempat untuk melihat booking mendatang, riwayat kunjungan, poin, voucher, dan preferensi gaya. Data tersebut belum terhubung." testId="page-my-ggs">
+      <section className="unavailable-panel myggs-empty" data-testid="status-my-ggs-unavailable">
+        <div className="empty-ornament"><UserRound size={25} /></div>
+        <span className="panel-index">MY GGS / DATA PRIBADI BELUM TERHUBUNG</span>
+        <h2>Riwayat kunjunganmu<br />belum bisa ditampilkan.</h2>
+        <p>Website ini belum memiliki akun pelanggan, riwayat booking, atau data member. Permintaan janji dikelola oleh tim studio dan belum tampil sebagai riwayat pribadi.</p>
+        <Link href="/book" className="clearer-primary-button" data-testid="link-my-ggs-book">Ajukan janji <ArrowRight size={16} /></Link>
+      </section>
+      <div className="myggs-record-grid">
+        {[
+          { label: 'Booking mendatang', value: 'Belum terhubung', note: 'Data booking akun belum tersedia' },
+          { label: 'Riwayat kunjungan', value: 'Belum terhubung', note: 'Data kunjungan pelanggan belum tersedia' },
+          { label: 'Poin & voucher', value: 'Belum tersedia', note: 'Belum ada saldo atau voucher yang dicantumkan' },
+          { label: 'Preferensi gaya', value: 'Belum disimpan', note: 'Website ini belum menyimpan data profil' },
+        ].map((item, index) => <article key={item.label} data-testid={`card-my-ggs-${index}`}><span>0{index + 1} / {item.label}</span><strong>{item.value}</strong><p>{item.note}</p></article>)}
+      </div>
+    </PageFrame>
+  );
+}
+
+function PageFrame({ kicker, title, intro, children, testId }: {
+  kicker: string;
+  title: ReactNode;
+  intro: string;
+  children: ReactNode;
+  testId: string;
+}) {
+  return (
+    <div className="inner-page" data-testid={testId}>
+      <section className="inner-page-hero">
+        <div><p className="clearer-kicker">{kicker}</p><h1>{title}</h1></div>
+        <p className="inner-page-intro">{intro}</p>
+        <span className="inner-page-stamp">GGS<br />STUDIO</span>
+      </section>
+      <div className="inner-page-content">{children}</div>
+    </div>
+  );
+}
+
+function NotFound() {
+  return (
+    <PageFrame kicker="GGS / HALAMAN TIDAK DITEMUKAN" title={<>Halaman ini<br /><em>tidak tersedia.</em></>} intro="Alamat ini bukan bagian dari website GGS. Kembali ke Home atau lihat daftar layanan." testId="page-not-found">
+      <div className="unavailable-panel"><h2>Kembali ke halaman utama.</h2><Link href="/" className="clearer-primary-button" data-testid="link-not-found-home">Kembali ke GGS <ArrowRight size={16} /></Link></div>
+    </PageFrame>
   );
 }
 
