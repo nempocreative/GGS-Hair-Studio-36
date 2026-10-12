@@ -433,9 +433,22 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [paused, setPaused] = useState(false);
   const [whyActive, setWhyActive] = useState(0);
   const [whyPaused, setWhyPaused] = useState(false);
+  const [mensServiceActive, setMensServiceActive] = useState(0);
+  const [mensServicePaused, setMensServicePaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [menuPage, setMenuPage] = useState(0);
+  const mensServiceImages: Record<string, string> = {
+    'cut & styling': '/men-cut-service.jpg',
+    color: '/men-color-service.jpg',
+    styling: '/men-styling-service.jpg',
+  };
+  const mensServices = useMemo(
+    () => services.filter((service) => service.active && audienceCategoryMap.men.has(service.category.trim().toLowerCase())),
+    [services],
+  );
+  const activeMensServiceIndex = mensServices.length ? mensServiceActive % mensServices.length : 0;
+  const activeMensService = mensServices[activeMensServiceIndex];
   const menuPageCount = Math.ceil(homeShortcuts.length / homeMenuPageSize);
   const visibleHomeShortcuts = homeShortcuts.slice(
     menuPage * homeMenuPageSize,
@@ -513,6 +526,15 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
     );
     return () => window.clearInterval(timer);
   }, [whyPaused, reducedMotion, pageVisible, whyReasons.length]);
+
+  useEffect(() => {
+    if (mensServicePaused || reducedMotion || !pageVisible || mensServices.length < 2) return;
+    const timer = window.setInterval(
+      () => setMensServiceActive((index) => (index + 1) % mensServices.length),
+      6000,
+    );
+    return () => window.clearInterval(timer);
+  }, [mensServicePaused, reducedMotion, pageVisible, mensServices.length]);
 
   return (
     <>
@@ -671,12 +693,85 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
         </div>
       </section>
 
-      <section className="clearer-services home-featured-services">
-        <div className="clearer-section-heading">
-          <div><p className="clearer-kicker">LAYANAN YANG TERSEDIA</p><h2>Pilihan layanan.</h2></div>
-          <Link href="/services" className="clearer-text-link" data-testid="link-all-services">Pilih kategori <ArrowRight size={16} /></Link>
+      <section
+        className="home-mens-grooming"
+        aria-labelledby="home-mens-grooming-title"
+        aria-roledescription="carousel"
+        onMouseEnter={() => setMensServicePaused(true)}
+        onMouseLeave={() => setMensServicePaused(false)}
+        onFocusCapture={() => setMensServicePaused(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setMensServicePaused(false);
+        }}
+        data-testid="section-home-mens-grooming"
+      >
+        <div className="home-mens-grooming-heading">
+          <div>
+            <p className="clearer-kicker">MEN'S GROOMING</p>
+            <h2 id="home-mens-grooming-title">
+              Layanan pria
+              <br />
+              <em>aktif di GGS.</em>
+            </h2>
+          </div>
+          <p className="home-mens-grooming-intro">Pilihan layanan pria yang tersedia saat ini, dengan detail durasi dan harga dari GGS.</p>
         </div>
-        <ServiceList {...{ services, servicesQuery, openBooking }} compact />
+        {servicesQuery.isLoading ? (
+          <div className="home-mens-service-skeleton" role="status" aria-label="Layanan pria sedang dimuat">
+            <span />
+            <span />
+          </div>
+        ) : servicesQuery.isError ? (
+          <div className="home-mens-service-state" role="alert">
+            <p>Layanan pria belum dapat dimuat.</p>
+            <button type="button" onClick={() => servicesQuery.refetch()}>Coba lagi</button>
+          </div>
+        ) : !mensServices.length ? (
+          <div className="home-mens-service-state" role="status">
+            <p>Belum ada layanan pria aktif yang tersedia saat ini.</p>
+          </div>
+        ) : (
+          <>
+            <article
+              className="home-mens-service-slide"
+              key={activeMensService.id}
+              aria-roledescription="slide"
+              aria-label={`Layanan ${activeMensServiceIndex + 1} dari ${mensServices.length}: ${activeMensService.name}`}
+              data-testid={`card-home-mens-service-${activeMensService.id}`}
+            >
+              <div className="home-mens-service-image">
+                <img
+                  src={activeMensService.imageUrl || mensServiceImages[activeMensService.category.trim().toLowerCase()]}
+                  alt={activeMensService.imageUrl ? `Foto layanan ${activeMensService.name} di GGS Hair Studio` : `Ilustrasi AI layanan ${activeMensService.name}, bukan hasil aktual GGS`}
+                  loading="lazy"
+                />
+              </div>
+              <div className="home-mens-service-copy">
+                <p className="home-mens-service-index">LAYANAN {String(activeMensServiceIndex + 1).padStart(2, '0')} / {String(mensServices.length).padStart(2, '0')}</p>
+                <p className="home-mens-service-category">{activeMensService.category}</p>
+                <h3>{activeMensService.name}</h3>
+                <p className="home-mens-service-description">{activeMensService.description}</p>
+                <div className="home-mens-service-meta">
+                  <span>{activeMensService.durationMinutes} menit</span>
+                  <strong>{money(activeMensService.price)}</strong>
+                </div>
+                <Link
+                  href="/book"
+                  className="home-mens-service-book"
+                  onClick={() => openBooking(activeMensService.id)}
+                  data-testid={`link-home-book-service-${activeMensService.id}`}
+                >
+                  Ajukan layanan
+                </Link>
+              </div>
+            </article>
+            {!activeMensService.imageUrl && (
+              <div className="home-mens-grooming-footer">
+                <p>Foto AI merupakan ilustrasi layanan, bukan hasil aktual GGS.</p>
+              </div>
+            )}
+          </>
+        )}
       </section>
 
       <section className="home-editorial-band">

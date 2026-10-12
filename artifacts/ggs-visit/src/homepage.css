@@ -398,9 +398,34 @@
 .service-category { color: var(--clearer-accent); font: 10px 'Space Mono', monospace; letter-spacing: .1em; text-transform: uppercase; }
 .service-list-compact .clearer-service-row { grid-template-columns: 38px minmax(180px, 1fr) 170px 82px; padding: 21px 0; }
 .service-list-compact .clearer-service-main h3 { font-size: 28px; }
-.home-featured-services { padding-top: 70px; padding-bottom: 90px; }
-.home-featured-services .clearer-section-heading { max-width: 1260px; }
-.home-featured-services .clearer-section-heading h2 { font-size: clamp(44px, 5vw, 66px); }
+.home-mens-grooming { padding: clamp(62px, 8vw, 112px) clamp(24px, 8vw, 122px) clamp(48px, 6vw, 82px); background: #e9e3d7; }
+.home-mens-grooming-heading { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); align-items: end; gap: 48px; max-width: 1260px; margin: 0 auto 42px; }
+.home-mens-grooming-heading .clearer-kicker { margin: 0 0 18px; color: var(--clearer-accent); }
+.home-mens-grooming-heading h2 { margin: 0; font: 500 clamp(46px, 5.7vw, 76px)/.89 'Cormorant Garamond', serif; letter-spacing: -.045em; }
+.home-mens-grooming-heading h2 em { color: var(--clearer-accent); font-weight: 400; }
+.home-mens-grooming-intro { max-width: 390px; margin: 0 0 7px; color: var(--clearer-muted); font-size: 15px; line-height: 1.75; }
+.home-mens-service-slide { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(300px, .92fr); min-height: 430px; max-width: 1260px; margin: 0 auto; border-top: 1px solid #c9bfb0; border-bottom: 1px solid #c9bfb0; animation: home-mens-service-enter .55s cubic-bezier(.2,.75,.25,1) both; }
+.home-mens-service-image { min-height: 430px; overflow: hidden; background: #d6cec0; }
+.home-mens-service-image img { display: block; width: 100%; height: 100%; min-height: 430px; object-fit: cover; filter: saturate(.82); }
+.home-mens-service-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(30px, 5vw, 68px); }
+.home-mens-service-index { margin: 0 0 31px; color: var(--clearer-accent); font: 10px 'Space Mono', monospace; letter-spacing: .12em; }
+.home-mens-service-category { margin: 0 0 9px; color: var(--clearer-muted); font: 10px 'Space Mono', monospace; letter-spacing: .11em; text-transform: uppercase; }
+.home-mens-service-copy h3 { margin: 0; font: 500 clamp(38px, 4.5vw, 58px)/.98 'Cormorant Garamond', serif; letter-spacing: -.035em; }
+.home-mens-service-description { max-width: 470px; margin: 18px 0 22px; color: var(--clearer-muted); font-size: 15px; line-height: 1.75; }
+.home-mens-service-meta { display: flex; align-items: baseline; gap: 25px; margin: 0 0 26px; }
+.home-mens-service-meta span { color: var(--clearer-muted); font-size: 13px; }
+.home-mens-service-meta strong { color: var(--clearer-ink); font-size: 17px; }
+.home-mens-service-book { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; border: 1px solid var(--clearer-accent); background: var(--clearer-accent); padding: 0 19px; color: #fff8ed; font-size: 13px; font-weight: 700; transition: transform .2s; }
+.home-mens-service-book:hover { transform: translateY(-2px); }
+.home-mens-grooming-footer { max-width: 1260px; margin: 17px auto 0; }
+.home-mens-grooming-footer p { margin: 0; color: var(--clearer-muted); font-size: 12px; line-height: 1.6; }
+.home-mens-service-state { max-width: 1260px; margin: 0 auto; border: 1px solid var(--clearer-line); background: rgb(255 255 255 / 24%); padding: 28px; color: var(--clearer-muted); }
+.home-mens-service-state p { margin: 0; }
+.home-mens-service-state button { margin-top: 12px; border: 0; border-bottom: 1px solid var(--clearer-accent); background: transparent; padding: 0 0 4px; color: var(--clearer-accent); font-weight: 700; cursor: pointer; }
+.home-mens-service-skeleton { display: grid; grid-template-columns: 1.08fr .92fr; min-height: 430px; max-width: 1260px; margin: 0 auto; border-block: 1px solid #c9bfb0; }
+.home-mens-service-skeleton span:first-child { min-height: 430px; background: #ded7ca; }
+.home-mens-service-skeleton span:last-child { align-self: center; height: 220px; margin: 40px; background: #ded7ca; }
+@keyframes home-mens-service-enter { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .home-editorial-band { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 30px; padding: clamp(58px, 8vw, 104px) clamp(24px, 8vw, 122px); background: #302d27; color: #f2eee5; }
 .home-editorial-index { position: absolute; top: 28px; left: clamp(24px, 8vw, 122px); color: #e4a69b; font: 10px 'Space Mono', monospace; letter-spacing: .16em; }
 .home-editorial-band > p { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: clamp(34px, 5.2vw, 70px); line-height: .98; }
@@ -573,14 +598,22 @@
   .clearer-hero h1 { font-size: clamp(52px, 14vw, 76px); }
   .clearer-home-menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .clearer-home-menu-card { min-height: 122px; }
-  .home-featured-services { padding: 52px 22px 60px; }
-  .home-featured-services .clearer-section-heading { flex-direction: row; align-items: end; gap: 10px; }
-  .home-featured-services .clearer-section-heading h2 { font-size: 42px; }
-  .home-featured-services .clearer-section-heading .clearer-text-link { font-size: 12px; white-space: nowrap; }
-  .service-list-compact .clearer-service-row { grid-template-columns: 30px minmax(0,1fr) auto; gap: 10px; }
-  .service-list-compact .clearer-service-main { grid-column: 2 / -1; }
-  .service-list-compact .clearer-service-meta { grid-column: 2; grid-row: 2; margin-top: 8px; }
-  .service-list-compact .clearer-service-action { grid-column: 3; grid-row: 2; }
+  .home-mens-grooming { padding: 56px 22px 54px; }
+  .home-mens-grooming-heading { grid-template-columns: 1fr; gap: 19px; margin-bottom: 27px; }
+  .home-mens-grooming-heading h2 { font-size: 48px; }
+  .home-mens-grooming-intro { max-width: 440px; font-size: 14px; }
+  .home-mens-service-slide { grid-template-columns: 1fr; }
+  .home-mens-service-image { min-height: 0; aspect-ratio: 1.14; }
+  .home-mens-service-image img { min-height: 0; }
+  .home-mens-service-copy { padding: 27px 2px 30px; }
+  .home-mens-service-index { margin-bottom: 21px; }
+  .home-mens-service-copy h3 { font-size: 43px; }
+  .home-mens-service-description { margin: 14px 0 19px; font-size: 14px; }
+  .home-mens-service-meta { margin-bottom: 22px; }
+  .home-mens-service-skeleton { grid-template-columns: 1fr; min-height: 0; }
+  .home-mens-service-skeleton span:first-child { min-height: 0; aspect-ratio: 1.14; }
+  .home-mens-service-skeleton span:last-child { height: 120px; margin: 24px 2px; }
+  .home-mens-grooming-footer { margin-top: 14px; }
   .home-editorial-band { grid-template-columns: 1fr; gap: 24px; padding: 72px 22px 50px; }
   .home-editorial-index { left: 22px; }
   .home-editorial-band > p { font-size: 42px; }
