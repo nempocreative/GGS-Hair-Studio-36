@@ -1,13 +1,16 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   ArrowRight,
   ArrowUpRight,
+  CalendarDays,
   Check,
   Clock3,
+  House,
   Instagram,
   MapPin,
   Menu,
   Phone,
+  Scissors,
   X,
 } from 'lucide-react';
 import {
@@ -55,6 +58,13 @@ const naturalTagline =
 const naturalIntroduction =
   'GGS adalah studio rambut independen. Kami mulai dari obrolan tentang rambutmu, kebiasaanmu, dan waktu yang kamu punya.';
 
+const mobileNavItems = [
+  { label: 'Beranda', href: '#beranda', icon: House },
+  { label: 'Layanan', href: '#layanan', icon: Scissors },
+  { label: 'Buat janji', href: '#booking', icon: CalendarDays },
+  { label: 'Kunjungi', href: '#kunjungi', icon: MapPin },
+] as const;
+
 function App() {
   const siteQuery = useGetGgsSite({ query: { queryKey: getGetGgsSiteQueryKey() } });
   const servicesQuery = useGetGgsPublicServices({
@@ -64,6 +74,7 @@ function App() {
   const [fields, setFields] = useState<BookingFields>(initialFields);
   const [menuOpen, setMenuOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [activeMobileSection, setActiveMobileSection] = useState('#beranda');
 
   const site = siteQuery.data;
   const services = useMemo(
@@ -123,6 +134,30 @@ function App() {
 
   const instagramHandle = site?.instagramHandle?.trim();
   const phone = site?.phone?.trim();
+
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return;
+
+    const sections = mobileNavItems
+      .map(({ href }) => document.querySelector<HTMLElement>(href))
+      .filter((section): section is HTMLElement => section !== null);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const activeEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
+
+        if (activeEntry) {
+          setActiveMobileSection(`#${activeEntry.target.id}`);
+        }
+      },
+      { rootMargin: '-18% 0px -62% 0px', threshold: [0, 0.15, 0.35, 0.6] },
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <main className="clearer-page">
@@ -599,6 +634,23 @@ function App() {
           Kembali ke atas
         </a>
       </footer>
+
+      <nav className="clearer-mobile-tabbar" aria-label="Navigasi utama ponsel">
+        {mobileNavItems.map((item) => (
+          <a
+            href={item.href}
+            key={item.href}
+            aria-current={activeMobileSection === item.href ? 'location' : undefined}
+            onClick={() => {
+              setActiveMobileSection(item.href);
+              setMenuOpen(false);
+            }}
+          >
+            <item.icon size={19} strokeWidth={2} aria-hidden="true" />
+            <span>{item.label}</span>
+          </a>
+        ))}
+      </nav>
     </main>
   );
 }
