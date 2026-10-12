@@ -9,8 +9,10 @@ import {
   Instagram,
   MapPin,
   Menu,
+  MessageCircle,
   Phone,
   Scissors,
+  Sparkles,
   X,
 } from 'lucide-react';
 import {
@@ -63,6 +65,33 @@ const mobileNavItems = [
   { label: 'Layanan', href: '#layanan', icon: Scissors },
   { label: 'Buat janji', href: '#booking', icon: CalendarDays },
   { label: 'Kunjungi', href: '#kunjungi', icon: MapPin },
+] as const;
+
+const homeMenuItems = [
+  {
+    label: 'Cara kerja',
+    description: 'Kenali tahapan sebelum janji.',
+    href: '#cara-kerja',
+    icon: MessageCircle,
+  },
+  {
+    label: 'Layanan',
+    description: 'Lihat pilihan dan harga.',
+    href: '#layanan',
+    icon: Scissors,
+  },
+  {
+    label: 'Tentang GGS',
+    description: 'Kenali pendekatan studio.',
+    href: '#studio',
+    icon: Sparkles,
+  },
+  {
+    label: 'Kunjungi',
+    description: 'Lihat informasi kunjungan.',
+    href: '#kunjungi',
+    icon: MapPin,
+  },
 ] as const;
 
 function App() {
@@ -248,6 +277,31 @@ function App() {
           />
         </div>
       </section>
+
+      <nav className="clearer-home-menu" aria-label="Jelajahi GGS">
+        <div className="clearer-home-menu-heading">
+          <p className="clearer-kicker">Jelajahi GGS</p>
+          <h2>Mau cari apa?</h2>
+        </div>
+        <div className="clearer-home-menu-grid">
+          {homeMenuItems.map((item) => (
+            <a
+              className="clearer-home-menu-card"
+              href={item.href}
+              key={item.href}
+              onClick={() => setActiveMobileSection(item.href)}
+              data-testid={`link-home-menu-${item.href.slice(1)}`}
+            >
+              <span className="clearer-home-menu-card-top">
+                <item.icon size={21} strokeWidth={1.8} aria-hidden="true" />
+                <ArrowUpRight size={17} aria-hidden="true" />
+              </span>
+              <strong>{item.label}</strong>
+              <span className="clearer-home-menu-description">{item.description}</span>
+            </a>
+          ))}
+        </div>
+      </nav>
 
       <section className="clearer-promise" id="cara-kerja">
         <div className="clearer-promise-intro">
