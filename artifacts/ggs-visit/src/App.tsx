@@ -9,6 +9,7 @@ import {
   Check,
   Clock3,
   Compass,
+  Droplets,
   Gift,
   House,
   Instagram,
@@ -92,6 +93,8 @@ function App() {
   const [cartItems, setCartItems] = useState<CartLine[]>(readStoredCart);
   const [fields, setFields] = useState<BookingFields>(initialFields);
   const [submitted, setSubmitted] = useState(false);
+  const [selectedHairStyle, setSelectedHairStyle] = useState<string | null>(null);
+  const [notesError, setNotesError] = useState('');
   const services = useMemo(
     () => servicesQuery.data?.filter((service) => service.active) ?? [],
     [servicesQuery.data],
@@ -122,12 +125,23 @@ function App() {
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, [headerPanel]);
 
-  const updateField = (key: keyof BookingFields, value: string) =>
+  const updateField = (key: keyof BookingFields, value: string) => {
     setFields((current) => ({ ...current, [key]: value }));
+    if (key === 'notes') setNotesError('');
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitted(false);
+    const selectedStyleNote = selectedHairStyle
+      ? `Model rambut pilihan: ${selectedHairStyle}`
+      : '';
+    const notes = [fields.notes.trim(), selectedStyleNote].filter(Boolean).join('\n');
+    if (notes.length > 600) {
+      setNotesError('Persingkat catatan agar pilihan model rambut dapat disertakan.');
+      return;
+    }
+    setNotesError('');
     appointment.mutate(
       {
         data: {
@@ -137,13 +151,14 @@ function App() {
           serviceId: Number(fields.serviceId),
           appointmentDate: fields.appointmentDate,
           appointmentTime: fields.appointmentTime,
-          notes: fields.notes.trim(),
+          notes,
         },
       },
       {
         onSuccess: () => {
           setSubmitted(true);
           setFields(initialFields);
+          setSelectedHairStyle(null);
         },
       },
     );
@@ -151,6 +166,11 @@ function App() {
 
   const openBooking = (serviceId?: number) => {
     if (serviceId) updateField('serviceId', String(serviceId));
+  };
+
+  const chooseHairStyle = (style: string) => {
+    setSelectedHairStyle(style);
+    setNotesError('');
   };
 
   const addProductToCart = (product: GgsProduct) => {
@@ -276,7 +296,16 @@ function App() {
           <ProductsPage {...common} />
         </Route>
         <Route path="/services">
-          <ServicesPage {...common} />
+          <ServicesPage />
+        </Route>
+        <Route path="/mens-grooming">
+          <AudienceServicesPage {...common} audience="men" />
+        </Route>
+        <Route path="/womens-hair-beauty">
+          <AudienceServicesPage {...common} audience="women" />
+        </Route>
+        <Route path="/hair-self-care">
+          <AudienceServicesPage {...common} audience="self-care" />
         </Route>
         <Route path="/book">
           <BookingPage
@@ -288,10 +317,12 @@ function App() {
             submitted={submitted}
             setSubmitted={setSubmitted}
             setFields={setFields}
+            selectedHairStyle={selectedHairStyle}
+            notesError={notesError}
           />
         </Route>
         <Route path="/style-gallery">
-          <GalleryPage />
+          <GalleryPage onChooseStyle={chooseHairStyle} />
         </Route>
         <Route path="/offers-membership">
           <OffersPage />
@@ -350,7 +381,9 @@ type SharedProps = {
 
 const homeShortcuts = [
   { label: 'Beranda', href: '/', icon: House, tone: 'quick-tone-blue' },
-  { label: 'Layanan', href: '/services', icon: Scissors, tone: 'quick-tone-rose' },
+  { label: "Men's Grooming", href: '/mens-grooming', icon: Scissors, tone: 'quick-tone-rose' },
+  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', icon: Sparkles, tone: 'quick-tone-violet' },
+  { label: 'Hair & Self Care', href: '/hair-self-care', icon: Droplets, tone: 'quick-tone-sage' },
   { label: 'Galeri Gaya', href: '/style-gallery', icon: Sparkles, tone: 'quick-tone-violet' },
   { label: 'Produk', href: '/products', icon: ShoppingBag, tone: 'quick-tone-plum' },
   { label: 'Booking', href: '/book', icon: CalendarDays, tone: 'quick-tone-gold' },
@@ -359,7 +392,7 @@ const homeShortcuts = [
   { label: 'My GGS', href: '/my-ggs', icon: UserRound, tone: 'quick-tone-plum' },
 ];
 
-const homeMenuPageSize = 8;
+const homeMenuPageSize = 10;
 
 function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [active, setActive] = useState(0);
@@ -386,7 +419,7 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
       eyebrow: 'LAYANAN GGS',
       headline: <>Pilih layanan<br /><em>yang sesuai.</em></>,
       detail: 'Lihat layanan, durasi, dan harga yang saat ini tersedia. Tim GGS akan membahas detail sebelum mengonfirmasi.',
-      cta: 'Lihat layanan',
+      cta: 'Pilih kategori',
       path: '/services',
       image: '/ggs-carousel-style.jpg',
       imageAlt: 'Potret editorial rambut berlayer untuk inspirasi layanan GGS',
@@ -504,7 +537,7 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
           >
             {visibleHomeShortcuts.map((item) => (
               <Link
-                className="ggs-quick-menu-item"
+                className={`ggs-quick-menu-item${item.href === '/mens-grooming' ? ' ggs-menu-mens' : ''}${item.href === '/womens-hair-beauty' ? ' ggs-menu-womens' : ''}${item.href === '/hair-self-care' ? ' ggs-menu-self-care' : ''}`}
                 href={item.href}
                 key={item.href}
                 data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
@@ -557,14 +590,14 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
       <section className="clearer-services home-featured-services">
         <div className="clearer-section-heading">
           <div><p className="clearer-kicker">LAYANAN YANG TERSEDIA</p><h2>Pilihan layanan.</h2></div>
-          <Link href="/services" className="clearer-text-link" data-testid="link-all-services">Semua layanan <ArrowRight size={16} /></Link>
+          <Link href="/services" className="clearer-text-link" data-testid="link-all-services">Pilih kategori <ArrowRight size={16} /></Link>
         </div>
         <ServiceList {...{ services, servicesQuery, openBooking }} compact />
       </section>
 
       <section className="home-editorial-band">
         <div className="home-editorial-index">GGS / CATATAN 01</div>
-        <p>Inspirasi gaya akan hadir di sini.<br /><em>Style Gallery belum tersedia.</em></p>
+        <p>Pilih model rambut pria sebagai referensi booking.<br /><em>Katalog hasil styling dan warna rambut akan hadir setelah foto GGS tersedia.</em></p>
         <Link href="/style-gallery" data-testid="link-home-inspiration">Buka Style Gallery <ArrowUpRight size={17} /></Link>
       </section>
       <section className="home-last-cta">
@@ -575,23 +608,122 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   );
 }
 
-function ServicesPage(props: SharedProps) {
-  const { services, servicesQuery, openBooking } = props;
+function ServicesPage() {
   return (
-    <PageFrame kicker="GGS / SERVICES" title={<>Pilihan<br /><em>layanan.</em></>} intro="Lihat layanan yang saat ini tersedia, beserta durasi dan harganya. Tim GGS akan menghubungi untuk membahas detail dan mengonfirmasi permintaan." testId="page-services">
-      <div className="service-category-grid" aria-label="Kategori layanan yang diminta" data-testid="list-service-categories">
-        {["Men's Grooming", "Women's Hair", 'Hair Treatment', 'Beauty & Spa'].map((category, index) => (
-          <article key={category} data-testid={`card-service-category-${index}`}>
-            <strong>{category}</strong>
-            <span>Belum dipetakan</span>
-          </article>
-        ))}
+    <PageFrame kicker="GGS / LAYANAN" title={<>Pilih kategori,<br /><em>yang sesuai.</em></>} intro="Pilih kategori yang sesuai untuk melihat deskripsi dan layanan aktif GGS." testId="page-services">
+      <div className="service-category-grid" aria-label="Kategori layanan GGS" data-testid="list-service-categories">
+        <article className="service-category-card" data-testid="card-service-category-mens">
+          <p className="clearer-kicker">KATEGORI PRIA</p>
+          <h3>Men's Grooming</h3>
+          <p className="service-category-description">Khusus kebutuhan pria: haircut, skin fade, taper, hair styling, hair coloring, beard grooming jika tersedia, serta inspirasi gaya rambut pria.</p>
+          <div className="service-category-feature">
+            <span>FITUR UNGGULAN</span>
+            <strong>Pilih model rambut sebelum booking.</strong>
+          </div>
+          <Link className="service-category-link" href="/mens-grooming" data-testid="link-category-mens-style">
+            Lihat layanan pria <ArrowRight size={16} />
+          </Link>
+        </article>
+        <article className="service-category-card" data-testid="card-service-category-womens">
+          <p className="clearer-kicker">KATEGORI WANITA</p>
+          <h3>Women's Hair &amp; Beauty</h3>
+          <p className="service-category-description">Potong rambut, blow, hair styling, coloring, smoothing, creambath, hair spa, dan perawatan kecantikan lain sesuai layanan GGS.</p>
+          <div className="service-category-feature">
+            <span>FITUR UNGGULAN</span>
+            <strong>Katalog hasil styling dan warna rambut.</strong>
+          </div>
+          <Link className="service-category-link" href="/womens-hair-beauty" data-testid="link-category-womens-gallery">
+            Lihat layanan wanita <ArrowRight size={16} />
+          </Link>
+        </article>
+        <article className="service-category-card" data-testid="card-service-category-self-care">
+          <p className="clearer-kicker">HAIR &amp; SELF CARE</p>
+          <h3>Hair &amp; Self Care</h3>
+          <p className="service-category-description">Paket perawatan rambut dan kulit kepala, hair spa, scalp treatment, serta paket grooming sebelum acara penting.</p>
+          <div className="service-category-feature">
+            <span>FITUR UNGGULAN</span>
+            <strong>Cocok untuk meningkatkan nilai transaksi per kunjungan.</strong>
+          </div>
+          <Link className="service-category-link" href="/hair-self-care" data-testid="link-category-self-care">
+            Lihat perawatan <ArrowRight size={16} />
+          </Link>
+        </article>
       </div>
       <div className="service-page-note" data-testid="text-service-category-note">
-        <Sparkles size={18} /> Kategori di atas belum dipetakan ke layanan aktif. Daftar di bawah mengikuti kategori yang saat ini tersimpan di data GGS.
+        <Sparkles size={18} /> Harga, durasi, dan ketersediaan mengikuti layanan aktif yang ditampilkan di masing-masing kategori. Beard grooming hanya tersedia jika dikonfirmasi tim GGS.
       </div>
-      <ServiceList {...{ services, servicesQuery, openBooking }} />
-      <div className="service-followup"><p>Belum yakin layanan mana yang sesuai?</p><Link href="/book" className="clearer-text-link" data-testid="link-services-consult">Ceritakan kebutuhanmu <ArrowRight size={16} /></Link></div>
+    </PageFrame>
+  );
+}
+
+type ServiceAudience = 'men' | 'women' | 'self-care';
+
+const audienceCategoryMap: Record<ServiceAudience, Set<string>> = {
+  men: new Set(['cut & styling', 'color', 'styling']),
+  women: new Set(['cut & styling', 'color', 'hair care', 'styling']),
+  'self-care': new Set(['hair care', 'styling']),
+};
+
+function AudienceServicesPage({ services, servicesQuery, openBooking, audience }: SharedProps & { audience: ServiceAudience }) {
+  const page = audience === 'men'
+    ? {
+        label: "MEN'S GROOMING",
+        title: <>Men's<br /><em>Grooming.</em></>,
+        intro: 'Khusus kebutuhan pria: haircut, skin fade, taper, hair styling, hair coloring, beard grooming jika tersedia, serta inspirasi gaya rambut pria.',
+        feature: 'Pilih model rambut sebelum booking.',
+        action: 'Pilih model rambut',
+        note: 'Beard grooming hanya tersedia jika dikonfirmasi oleh tim GGS.',
+      }
+    : audience === 'self-care'
+      ? {
+          label: 'HAIR & SELF CARE',
+          title: <>Hair &amp;<br /><em>Self Care.</em></>,
+          intro: 'Paket perawatan rambut dan kulit kepala, hair spa, scalp treatment, serta paket grooming sebelum acara penting.',
+          feature: 'Cocok untuk meningkatkan nilai transaksi per kunjungan.',
+          action: 'Lihat layanan aktif',
+          note: 'Paket dan scalp treatment hanya ditampilkan jika tersedia sebagai layanan aktif GGS.',
+        }
+      : {
+          label: "WOMEN'S HAIR & BEAUTY",
+          title: <>Women's Hair<br /><em>&amp; Beauty.</em></>,
+          intro: 'Potong rambut, blow, hair styling, coloring, smoothing, creambath, hair spa, dan perawatan kecantikan lain sesuai layanan GGS.',
+          feature: 'Katalog hasil styling dan warna rambut.',
+          action: 'Lihat katalog',
+          note: 'Katalog hasil styling dan warna akan diisi setelah foto hasil GGS tersedia dan terverifikasi.',
+        };
+  const categories = audienceCategoryMap[audience];
+  const audienceServices = services.filter((service) => categories.has(service.category.trim().toLowerCase()));
+
+  return (
+    <PageFrame kicker={`GGS / ${page.label}`} title={page.title} intro={page.intro} testId={`page-services-${audience}`}>
+      <section className="service-audience-feature" data-testid={`feature-services-${audience}`}>
+        <div>
+          <p className="clearer-kicker">FITUR UNGGULAN</p>
+          <h2>{page.feature}</h2>
+          <p>{page.note}</p>
+        </div>
+        {audience === 'self-care' ? (
+          <a href="#active-services-self-care" className="clearer-primary-button" data-testid={`link-services-feature-${audience}`}>
+            {page.action} <ArrowRight size={17} />
+          </a>
+        ) : (
+          <Link href="/style-gallery" className="clearer-primary-button" data-testid={`link-services-feature-${audience}`}>
+            {page.action} <ArrowRight size={17} />
+          </Link>
+        )}
+      </section>
+      <section
+        className="service-audience-list"
+        id={audience === 'self-care' ? 'active-services-self-care' : undefined}
+        aria-labelledby={`heading-services-${audience}`}
+        data-testid={`list-services-${audience}`}
+      >
+        <div className="clearer-section-heading">
+          <div><p className="clearer-kicker">LAYANAN AKTIF</p><h2 id={`heading-services-${audience}`}>Pilihan layanan.</h2></div>
+        </div>
+        <p className="service-provisional-note">Pengelompokan awal ini masih sementara dan dapat disesuaikan. Hanya layanan aktif GGS yang ditampilkan.</p>
+        <ServiceList services={audienceServices} servicesQuery={servicesQuery} openBooking={openBooking} />
+      </section>
     </PageFrame>
   );
 }
@@ -693,9 +825,11 @@ type BookingProps = SharedProps & {
   submitted: boolean;
   setSubmitted: (value: boolean) => void;
   setFields: (value: BookingFields) => void;
+  selectedHairStyle: string | null;
+  notesError: string;
 };
 
-function BookingPage({ services, servicesQuery, fields, updateField, handleSubmit, appointment, submitted, setSubmitted, setFields }: BookingProps) {
+function BookingPage({ services, servicesQuery, fields, updateField, handleSubmit, appointment, submitted, setSubmitted, setFields, selectedHairStyle, notesError }: BookingProps) {
   return (
     <PageFrame kicker="GGS / BOOK APPOINTMENT" title={<>Buat ruang<br /><em>untuk dirimu.</em></>} intro="Sampaikan layanan dan waktu yang kamu inginkan. Formulir ini mengirim permintaan; tim GGS akan menghubungi untuk membahas detail dan mengonfirmasi." testId="page-booking">
       <section className="booking-page-layout">
@@ -729,7 +863,9 @@ function BookingPage({ services, servicesQuery, fields, updateField, handleSubmi
                 </select></label>
                 <label>Tanggal yang diinginkan<input type="date" min={today} required value={fields.appointmentDate} onChange={(event) => updateField('appointmentDate', event.target.value)} data-testid="input-appointment-date" /></label>
                 <label>Waktu yang diinginkan<input type="time" required value={fields.appointmentTime} onChange={(event) => updateField('appointmentTime', event.target.value)} data-testid="input-appointment-time" /></label>
-                <label className="clearer-form-wide">Catatan untuk tim <span>(opsional)</span><textarea maxLength={600} value={fields.notes} onChange={(event) => updateField('notes', event.target.value)} placeholder="Ceritakan hal yang perlu diketahui tentang rambut atau permintaanmu." data-testid="input-appointment-notes" /></label>
+                {selectedHairStyle && <p className="booking-style-note" data-testid="text-selected-hair-style"><Sparkles size={16} /> Model rambut pilihan: <strong>{selectedHairStyle}</strong>. Pilihan ini akan disertakan pada permintaanmu.</p>}
+                <label className="clearer-form-wide">Catatan untuk tim <span>(opsional)</span><textarea maxLength={selectedHairStyle ? 560 : 600} value={fields.notes} onChange={(event) => updateField('notes', event.target.value)} placeholder="Ceritakan hal yang perlu diketahui tentang rambut atau permintaanmu." data-testid="input-appointment-notes" /></label>
+                {notesError && <p role="alert" className="clearer-error clearer-form-wide" data-testid="status-booking-notes-error">{notesError}</p>}
                 {appointment.isError && <p role="alert" className="clearer-error" data-testid="status-booking-error">Permintaan belum terkirim. Coba lagi; detail yang kamu isi tetap tersimpan.</p>}
               </div>
               <div className="clearer-submit-row"><p>Tim GGS akan menghubungimu untuk mengonfirmasi detail kunjungan.</p><button type="submit" className="clearer-primary-button" disabled={appointment.isPending || !services.length} data-testid="button-submit-appointment">{appointment.isPending ? 'Mengirim permintaan…' : 'Kirim permintaan'} {!appointment.isPending && <ArrowRight size={17} />}</button></div>
@@ -741,19 +877,55 @@ function BookingPage({ services, servicesQuery, fields, updateField, handleSubmi
   );
 }
 
-function GalleryPage() {
+const hairStyleChoices = [
+  { id: 'skin-fade', label: 'Skin fade' },
+  { id: 'taper', label: 'Taper' },
+  { id: 'gaya-lain', label: 'Gaya lain' },
+];
+
+function GalleryPage({ onChooseStyle }: { onChooseStyle: (style: string) => void }) {
   return (
-    <PageFrame kicker="GGS / STYLE GALLERY" title={<>Galeri gaya,<br /><em>sedang disiapkan.</em></>} intro="Tempat untuk inspirasi potongan, warna rambut, transformasi, dan hasil pelanggan setelah foto serta keterangannya tersedia dan diverifikasi." testId="page-gallery">
-      <section className="unavailable-panel gallery-empty" data-testid="status-gallery-empty">
-        <div className="empty-ornament"><Sparkles size={25} /></div>
-        <span className="panel-index">GALERI / 00</span>
-        <h2>Belum ada hasil GGS<br />yang ditampilkan.</h2>
-        <p>Foto pada halaman Home adalah gambar editorial, bukan hasil pelanggan. Inspirasi gaya akan ditambahkan setelah foto dan keterangannya tersedia serta diverifikasi.</p>
-        <Link href="/services" className="clearer-text-link" data-testid="link-gallery-services">Lihat Services <ArrowRight size={16} /></Link>
+    <PageFrame kicker="GGS / STYLE GALLERY" title={<>Pilih inspirasi,<br /><em>sebelum booking.</em></>} intro="Pilih model rambut pria sebagai referensi permintaan booking. Katalog hasil styling dan warna rambut akan ditampilkan setelah foto GGS tersedia dan terverifikasi." testId="page-gallery">
+      <section className="gallery-style-picker" aria-labelledby="gallery-men-heading" data-testid="section-mens-style-picker">
+        <div className="gallery-section-heading">
+          <p className="clearer-kicker">MEN'S GROOMING</p>
+          <h2 id="gallery-men-heading">Pilih referensi gaya rambut pria.</h2>
+          <p>Pilih Skin fade, Taper, atau gaya lain. Tim GGS akan membahas detail dan ketersediaan sebelum mengonfirmasi.</p>
+        </div>
+        <div className="gallery-style-choice-grid">
+          {hairStyleChoices.map((style, index) => (
+            <Link
+              className="gallery-style-choice"
+              href="/book"
+              key={style.id}
+              onClick={() => onChooseStyle(style.label)}
+              data-testid={`link-style-choice-${style.id}`}
+            >
+              <span>0{index + 1} / REFERENSI</span>
+              <strong>{style.label}</strong>
+              <small>Pilih sebagai catatan untuk booking</small>
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+          ))}
+        </div>
+        <p className="gallery-editorial-note">Pilihan ini menjadi referensi konsultasi, bukan jaminan hasil. Foto hasil rambut pria GGS belum tersedia.</p>
       </section>
-      <div className="gallery-placeholder-grid" aria-label="Bagian galeri yang belum tersedia">
-        {['Warna rambut', 'Transformasi', 'Hasil pelanggan'].map((title, index) => <div className="gallery-placeholder" key={title} data-testid={`status-gallery-category-${index}`}><span>0{index + 1}</span><strong>{title}</strong><small>Belum tersedia</small></div>)}
-      </div>
+      <section className="gallery-women-catalog" aria-labelledby="gallery-women-heading" data-testid="section-womens-style-catalog">
+        <div className="gallery-section-heading">
+          <p className="clearer-kicker">WOMEN'S HAIR &amp; BEAUTY</p>
+          <h2 id="gallery-women-heading">Katalog styling dan warna rambut.</h2>
+          <p>Foto hasil GGS yang terverifikasi akan ditampilkan di sini.</p>
+        </div>
+        <div className="gallery-placeholder-grid" aria-label="Bagian katalog yang belum tersedia">
+          {['Hasil styling', 'Warna rambut'].map((title, index) => (
+            <div className="gallery-placeholder" key={title} data-testid={`status-gallery-category-${index}`}>
+              <span>0{index + 1}</span>
+              <strong>{title}</strong>
+              <small>Foto hasil GGS belum tersedia</small>
+            </div>
+          ))}
+        </div>
+      </section>
     </PageFrame>
   );
 }
