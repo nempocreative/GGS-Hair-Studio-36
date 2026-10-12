@@ -428,6 +428,13 @@ const homeShortcuts = [
 ];
 
 const homeMenuPageSize = 8;
+const homeWomenServiceNames = new Set(['signature cut', 'color expression', 'care ritual', 'event finish']);
+const homeWomenServicePhotos: Record<string, string> = {
+  'signature cut': 'ggs-carousel-consultation.jpg',
+  'color expression': 'ggs-carousel-style.jpg',
+  'care ritual': 'ggs-carousel-care.jpg',
+  'event finish': 'ggs-editorial.jpg',
+};
 
 function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [active, setActive] = useState(0);
@@ -439,6 +446,7 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [menuPage, setMenuPage] = useState(0);
   const [mensServiceIndex, setMensServiceIndex] = useState(0);
   const [mensServiceSnapCount, setMensServiceSnapCount] = useState(0);
+  const [mensSlidesPerView, setMensSlidesPerView] = useState(4);
   const [mensServicesViewportRef, mensServicesApi] = useEmblaCarousel({
     align: 'start',
     containScroll: false,
@@ -448,6 +456,12 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const mensServices = useMemo(
     () => services.filter(
       (service) => service.active && audienceCategoryMap.men.has(service.category.trim().toLowerCase()),
+    ),
+    [services],
+  );
+  const womenServices = useMemo(
+    () => services.filter(
+      (service) => service.active && homeWomenServiceNames.has(service.name.trim().toLowerCase()),
     ),
     [services],
   );
@@ -511,6 +525,21 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
     return () => {
       motionPreference.removeEventListener('change', updateMotionPreference);
       document.removeEventListener('visibilitychange', updatePageVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia('(max-width: 680px)');
+    const tabletQuery = window.matchMedia('(max-width: 900px)');
+    const updateVisibleSlides = () => {
+      setMensSlidesPerView(mobileQuery.matches ? 1 : tabletQuery.matches ? 2 : 4);
+    };
+    updateVisibleSlides();
+    mobileQuery.addEventListener('change', updateVisibleSlides);
+    tabletQuery.addEventListener('change', updateVisibleSlides);
+    return () => {
+      mobileQuery.removeEventListener('change', updateVisibleSlides);
+      tabletQuery.removeEventListener('change', updateVisibleSlides);
     };
   }, []);
 
@@ -765,7 +794,7 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
 
                 return (
                   <div
-                    className={`home-mens-service-slide${!reducedMotion && mensServiceIndex === index && index > 0 ? ' home-mens-service-slide-pop' : ''}`}
+                    className={`home-mens-service-slide${!reducedMotion && mensSlidesPerView > 1 && mensServiceSnapCount > 0 && mensServices.length > 1 && index === (mensServiceIndex + 1) % mensServices.length ? ' home-mens-service-slide-pop' : ''}`}
                     key={service.id}
                     role="group"
                     aria-roledescription="slide"
@@ -831,9 +860,89 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
         )}
       </section>
 
+      <section
+        className="home-mens-grooming home-womens-grooming"
+        aria-labelledby="home-womens-services-title"
+        data-testid="section-home-womens-services"
+      >
+        <div className="home-mens-grooming-heading">
+          <div>
+            <p className="clearer-kicker">WOMEN'S HAIR &amp; BEAUTY</p>
+            <h2 id="home-womens-services-title">
+              Layanan wanita
+              <br />
+              <em>di GGS.</em>
+            </h2>
+          </div>
+          <p className="home-mens-grooming-intro">Pilihan potong, warna, perawatan, dan styling rambut wanita, lengkap dengan durasi dan harga.</p>
+        </div>
+        {servicesQuery.isLoading ? (
+          <div className="home-mens-service-skeleton" role="status" aria-label="Layanan wanita sedang dimuat">
+            {Array.from({ length: 4 }, (_, index) => <span key={index} />)}
+          </div>
+        ) : servicesQuery.isError ? (
+          <div className="home-mens-service-state" role="alert">
+            <p>Layanan wanita belum dapat dimuat.</p>
+            <button type="button" onClick={() => servicesQuery.refetch()}>Coba lagi</button>
+          </div>
+        ) : !womenServices.length ? (
+          <div className="home-mens-service-state" role="status">
+            <p>Belum ada layanan wanita aktif yang tersedia saat ini.</p>
+          </div>
+        ) : (
+          <div className="home-womens-service-grid">
+            {womenServices.map((service) => {
+              const serviceName = service.name.trim().toLowerCase();
+              const imageUrl = service.imageUrl || `${import.meta.env.BASE_URL}${homeWomenServicePhotos[serviceName]}`;
+
+              return (
+                <article
+                  className="home-mens-service-card"
+                  key={service.id}
+                  aria-label={`Layanan ${service.name}`}
+                  data-testid={`card-home-womens-service-${service.id}`}
+                >
+                  <div className="home-mens-service-image">
+                    <img
+                      src={imageUrl}
+                      alt={`Foto layanan wanita ${service.name} di GGS Hair Studio`}
+                      loading="eager"
+                    />
+                    <span className="home-mens-service-image-category">{service.category}</span>
+                  </div>
+                  <div className="home-mens-service-copy">
+                    <h3>{service.name}</h3>
+                    {service.description && <p className="home-mens-service-description">{service.description}</p>}
+                    <div className="home-mens-service-meta">
+                      <span className="home-mens-service-duration">
+                        <Clock3 size={14} aria-hidden="true" />
+                        {service.durationMinutes} menit
+                      </span>
+                      <div className="home-mens-service-price">
+                        <span>Harga</span>
+                        <strong>{money(service.price)}</strong>
+                      </div>
+                    </div>
+                    <Link
+                      href="/book"
+                      className="home-mens-service-book"
+                      onClick={() => openBooking(service.id)}
+                      data-testid={`link-home-book-womens-service-${service.id}`}
+                    >
+                      Booking layanan
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <section className="home-editorial-band">
         <div className="home-editorial-index">GGS / CATATAN 01</div>
-        <p>Pilih model rambut pria sebagai referensi booking.<br /><em>Temukan inspirasi potongan dan penataan yang sesuai dengan gayamu.</em></p>
+        <p>Pilih model rambut sebagai referensi booking.<br /><em>Temukan inspirasi potongan dan penataan yang sesuai dengan gayamu.</em></p>
         <Link href="/style-gallery" data-testid="link-home-inspiration">Buka Style Gallery <ArrowUpRight size={17} /></Link>
       </section>
       <section className="home-last-cta">
