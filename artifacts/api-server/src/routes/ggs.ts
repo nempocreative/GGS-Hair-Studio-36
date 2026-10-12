@@ -33,9 +33,9 @@ const router: IRouter = Router();
 const defaultSite = {
   id: "main",
   brandName: "GGS",
-  tagline: "Rambutmu. Ceritamu. Versi terbaikmu.",
+  tagline: "Ceritakan yang kamu inginkan. Kita pilih layanan yang pas untuk rambutmu.",
   introduction:
-    "Studio rambut untuk potongan, warna, dan perawatan yang merayakan karakter unikmu.",
+    "Kami mulai dengan mendengar apa yang kamu suka, kebiasaanmu merawat rambut, dan perubahan yang kamu inginkan.",
   phone: "",
   address: "",
   openingHours: "",
