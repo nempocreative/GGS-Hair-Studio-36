@@ -392,7 +392,7 @@ const homeShortcuts = [
   { label: 'My GGS', href: '/my-ggs', icon: UserRound, tone: 'quick-tone-plum' },
 ];
 
-const homeMenuPageSize = 10;
+const homeMenuPageSize = 6;
 
 function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [active, setActive] = useState(0);
