@@ -428,12 +428,31 @@ const homeShortcuts = [
 ];
 
 const homeMenuPageSize = 8;
-const homeWomenServiceNames = new Set(['signature cut', 'color expression', 'care ritual', 'event finish']);
+const homeWomenServiceNames = new Set([
+  'signature cut',
+  'color expression',
+  'care ritual',
+  'event finish',
+  'layered cut',
+  'blow & volume',
+  'creambath relax',
+  'smoothing sleek',
+]);
+const homeWomenEstimateServiceNames = new Set([
+  'layered cut',
+  'blow & volume',
+  'creambath relax',
+  'smoothing sleek',
+]);
 const homeWomenServicePhotos: Record<string, string> = {
   'signature cut': 'ggs-carousel-consultation.jpg',
   'color expression': 'ggs-carousel-style.jpg',
   'care ritual': 'ggs-carousel-care.jpg',
   'event finish': 'ggs-editorial.jpg',
+  'layered cut': 'ggs-carousel-consultation.jpg',
+  'blow & volume': 'ggs-carousel-style.jpg',
+  'creambath relax': 'ggs-carousel-care.jpg',
+  'smoothing sleek': 'ggs-editorial.jpg',
 };
 
 function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
@@ -876,9 +895,12 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
           </div>
           <p className="home-mens-grooming-intro">Pilihan potong, warna, perawatan, dan styling rambut wanita, lengkap dengan durasi dan harga.</p>
         </div>
+        <p className="home-womens-estimate-notice">
+          Empat pilihan tambahan masih contoh sementara; harga dan durasinya perkiraan dan perlu dikonfirmasi dengan tim GGS.
+        </p>
         {servicesQuery.isLoading ? (
           <div className="home-mens-service-skeleton" role="status" aria-label="Layanan wanita sedang dimuat">
-            {Array.from({ length: 4 }, (_, index) => <span key={index} />)}
+            {Array.from({ length: 8 }, (_, index) => <span key={index} />)}
           </div>
         ) : servicesQuery.isError ? (
           <div className="home-mens-service-state" role="alert">
@@ -913,6 +935,11 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
                   <div className="home-mens-service-copy">
                     <h3>{service.name}</h3>
                     {service.description && <p className="home-mens-service-description">{service.description}</p>}
+                    {homeWomenEstimateServiceNames.has(serviceName) && (
+                      <p className="home-womens-estimate">
+                        Contoh sementara · harga dan durasi perkiraan
+                      </p>
+                    )}
                     <div className="home-mens-service-meta">
                       <span className="home-mens-service-duration">
                         <Clock3 size={14} aria-hidden="true" />

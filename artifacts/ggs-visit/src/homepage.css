@@ -442,6 +442,8 @@
 .home-mens-service-skeleton span { aspect-ratio: .69; background: linear-gradient(100deg, #ded7ca 20%, #e9e3d7 38%, #ded7ca 56%); background-size: 220% 100%; animation: home-mens-skeleton 1.4s ease-in-out infinite; }
 .home-womens-grooming { border-top: 1px solid #ddd5c9; background: #f3efe7; }
 .home-womens-service-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; max-width: 1260px; margin: 0 auto; }
+.home-womens-estimate-notice { max-width: 1260px; margin: -22px auto 24px; color: var(--clearer-muted); font-size: 12px; line-height: 1.6; }
+.home-womens-estimate { margin: 0 0 10px; border-left: 2px solid var(--clearer-accent); padding-left: 8px; color: #77554b; font-size: 10px; line-height: 1.45; }
 @keyframes home-mens-service-pop {
   0%, 15%, 100% { transform: translateY(0); box-shadow: 0 8px 24px rgb(54 43 33 / 5%); }
   40%, 62% { transform: translateY(-8px); box-shadow: 0 18px 38px rgb(54 43 33 / 16%); }
