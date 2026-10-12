@@ -392,7 +392,7 @@ const homeShortcuts = [
   { label: 'My GGS', href: '/my-ggs', icon: UserRound, tone: 'quick-tone-plum' },
 ];
 
-const homeMenuPageSize = 6;
+const homeMenuPageSize = 8;
 
 function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [active, setActive] = useState(0);
@@ -549,11 +549,6 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
           </nav>
           {menuPageCount > 1 && (
             <div className="ggs-quick-menu-pagination" aria-label="Kontrol halaman menu">
-              <button
-                type="button"
-                aria-label="Halaman menu sebelumnya"
-                onClick={() => setMenuPage((page) => (page + menuPageCount - 1) % menuPageCount)}
-              ><ArrowLeft size={16} /></button>
               <div className="ggs-quick-menu-dots" aria-label="Pilih halaman menu">
                 {Array.from({ length: menuPageCount }, (_, index) => (
                   <button
@@ -565,11 +560,6 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
                   />
                 ))}
               </div>
-              <button
-                type="button"
-                aria-label="Halaman menu berikutnya"
-                onClick={() => setMenuPage((page) => (page + 1) % menuPageCount)}
-              ><ArrowRight size={16} /></button>
             </div>
           )}
       </section>
