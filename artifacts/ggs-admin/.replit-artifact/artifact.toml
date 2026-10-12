@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/cms/"
+title = "GGS Hair Studio — CMS Admin"
+description = "An owner-only CMS for editing GGS Hair Studio website content and services, reviewing customer booking requests, and updating appointment status with PostgreSQL persistence."
+version = "1.0.0"
+id = "artifacts/ggs-admin"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/cms/" ]
+localPort = 18707
+
+[services.development]
+run = "pnpm --filter @workspace/ggs-admin run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ggs-admin", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ggs-admin/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18707"
+BASE_PATH = "/cms/"
