@@ -14,3 +14,9 @@ GGS service menus may describe men's haircut, skin fade, taper, styling, colorin
 **Why:** The user supplied service-specific copy with availability caveats, and the current editorial imagery is not verified GGS work.
 
 **How to apply:** Keep public menus accurate to GGS's active services and require verified GGS photos before showing a result gallery.
+
+Position GGS Hair Studio around Garut's reputation for haircutting expertise while emphasizing strong service and customer comfort. Do not invent a specific history, awards, or service guarantees.
+
+**Why:** The user explicitly identified these as GGS's public-facing differentiators.
+
+**How to apply:** Use this positioning in GGS visitor-facing copy without adding unsupported claims.

@@ -133,7 +133,8 @@
 .clearer-promise { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(38px, 7vw, 100px); padding: clamp(60px, 8vw, 115px) clamp(24px, 8vw, 122px); background: var(--clearer-paper-deep); }
 .clearer-promise-intro { max-width: 425px; }
 .clearer-promise h2 { margin-bottom: 17px; font-family: 'Cormorant Garamond', serif; font-size: clamp(40px, 4.7vw, 63px); font-weight: 500; letter-spacing: -.03em; line-height: .98; }
-.clearer-promise-intro > p:last-child { color: var(--clearer-muted); font-size: 17px; line-height: 1.75; }
+.clearer-promise-intro > p:not(.clearer-kicker) { color: var(--clearer-muted); font-size: 17px; line-height: 1.75; }
+.clearer-promise-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
 .clearer-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(20px, 3vw, 42px); align-self: center; }
 .clearer-steps article { border-top: 1px solid #b7ac9b; padding-top: 18px; }
 .clearer-steps article > span { color: var(--clearer-accent); font-size: 15px; font-weight: 700; }

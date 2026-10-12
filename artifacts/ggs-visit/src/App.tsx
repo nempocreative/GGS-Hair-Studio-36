@@ -598,6 +598,27 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
           )}
       </section>
 
+      <section className="clearer-promise" data-testid="section-why-ggs">
+        <div className="clearer-promise-intro">
+          <p className="clearer-kicker">KENAPA GGS HAIR STUDIO</p>
+          <h2>Kenapa GGS<br /><em>Hair Studio?</em></h2>
+          <p>Garut dikenal dengan keahlian mencukurnya. Di GGS, kami ingin setiap pelanggan mendapat pelayanan maksimal dan merasa nyaman—sejak memilih layanan hingga kunjungan selesai.</p>
+          <div className="clearer-promise-actions">
+            <Link href="/services" className="clearer-text-link" data-testid="link-why-ggs-services">
+              Jelajahi layanan <ArrowRight size={16} />
+            </Link>
+            <Link href="/book" className="clearer-primary-button" data-testid="link-why-ggs-book">
+              Buat janji <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+        <div className="clearer-steps">
+          <article><span>01</span><h3>Keahlian mencukur</h3><p>Keahlian mencukur yang dikenal dari Garut menjadi inspirasi GGS Hair Studio.</p></article>
+          <article><span>02</span><h3>Dilayani dengan perhatian</h3><p>Ceritakan gaya yang kamu inginkan. Tim GGS membahas pilihan dan detail sebelum janji dikonfirmasi.</p></article>
+          <article><span>03</span><h3>Nyaman dari awal</h3><p>Kami ingin kamu merasa nyaman sepanjang kunjungan di GGS.</p></article>
+        </div>
+      </section>
+
       <section className="clearer-promise" data-testid="section-approach">
         <div className="clearer-promise-intro">
           <p className="clearer-kicker">CARA KERJA</p>
