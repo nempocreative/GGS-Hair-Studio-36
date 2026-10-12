@@ -14,9 +14,11 @@ import {
   Droplets,
   Gift,
   GraduationCap,
+  Heart,
   House,
   Instagram,
   MapPin,
+  MessageCircle,
   Minus,
   Phone,
   Plus,
@@ -431,6 +433,8 @@ const homeMenuPageSize = 8;
 function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [whyActive, setWhyActive] = useState(0);
+  const [whyPaused, setWhyPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [menuPage, setMenuPage] = useState(0);
@@ -468,6 +472,23 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
       imageAlt: 'Potret editorial rambut ikal untuk sorotan perawatan GGS',
     },
   ];
+  const whyReasons = [
+    {
+      title: 'Keahlian mencukur dari Garut',
+      description: 'GGS berangkat dari reputasi Garut dalam keahlian mencukur.',
+      icon: Scissors,
+    },
+    {
+      title: 'Konsultasi sebelum janji',
+      description: 'Sampaikan gaya yang diinginkan. Tim GGS akan membahas pilihan dan detail sebelum janji dikonfirmasi.',
+      icon: MessageCircle,
+    },
+    {
+      title: 'Pelayanan dan kenyamanan',
+      description: 'GGS mengutamakan pelayanan yang baik dan kenyamanan pelanggan selama kunjungan.',
+      icon: Heart,
+    },
+  ];
 
   useEffect(() => {
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -488,6 +509,15 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
     const timer = window.setInterval(() => setActive((index) => (index + 1) % slides.length), 6000);
     return () => window.clearInterval(timer);
   }, [paused, reducedMotion, pageVisible, slides.length]);
+
+  useEffect(() => {
+    if (whyPaused || reducedMotion || !pageVisible) return;
+    const timer = window.setInterval(
+      () => setWhyActive((index) => (index + 1) % whyReasons.length),
+      5000,
+    );
+    return () => window.clearInterval(timer);
+  }, [whyPaused, reducedMotion, pageVisible, whyReasons.length]);
 
   return (
     <>
@@ -600,9 +630,9 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
 
       <section className="clearer-promise" data-testid="section-why-ggs">
         <div className="clearer-promise-intro">
-          <p className="clearer-kicker">KENAPA GGS HAIR STUDIO</p>
-          <h2>Kenapa GGS<br /><em>Hair Studio?</em></h2>
-          <p>Garut dikenal dengan keahlian mencukurnya. Di GGS, kami ingin setiap pelanggan mendapat pelayanan maksimal dan merasa nyaman—sejak memilih layanan hingga kunjungan selesai.</p>
+          <p className="clearer-kicker">TENTANG GGS HAIR STUDIO</p>
+          <h2>Mengapa memilih<br /><em>GGS?</em></h2>
+          <p>GGS mengutamakan keahlian mencukur, pelayanan yang baik, dan kenyamanan pelanggan.</p>
           <div className="clearer-promise-actions">
             <Link href="/services" className="clearer-text-link" data-testid="link-why-ggs-services">
               Jelajahi layanan <ArrowRight size={16} />
@@ -612,10 +642,42 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
             </Link>
           </div>
         </div>
-        <div className="clearer-steps">
-          <article><span>01</span><h3>Keahlian mencukur</h3><p>Keahlian mencukur yang dikenal dari Garut menjadi inspirasi GGS Hair Studio.</p></article>
-          <article><span>02</span><h3>Dilayani dengan perhatian</h3><p>Ceritakan gaya yang kamu inginkan. Tim GGS membahas pilihan dan detail sebelum janji dikonfirmasi.</p></article>
-          <article><span>03</span><h3>Nyaman dari awal</h3><p>Kami ingin kamu merasa nyaman sepanjang kunjungan di GGS.</p></article>
+        <div
+          className="clearer-why-carousel"
+          aria-label="Alasan memilih GGS"
+          aria-roledescription="carousel"
+          onMouseEnter={() => setWhyPaused(true)}
+          onMouseLeave={() => setWhyPaused(false)}
+          onFocusCapture={() => setWhyPaused(true)}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setWhyPaused(false);
+          }}
+          data-testid="carousel-why-ggs"
+        >
+          <article
+            className="clearer-why-slide"
+            key={whyReasons[whyActive].title}
+            aria-roledescription="slide"
+            aria-label={whyReasons[whyActive].title}
+          >
+            {(() => {
+              const Icon = whyReasons[whyActive].icon;
+              return <span className="clearer-why-icon"><Icon size={31} strokeWidth={1.6} /></span>;
+            })()}
+            <h3>{whyReasons[whyActive].title}</h3>
+            <p className="clearer-why-description">{whyReasons[whyActive].description}</p>
+          </article>
+          <div className="clearer-why-pagination" aria-label="Pilih alasan GGS">
+            {whyReasons.map((reason, index) => (
+              <button
+                type="button"
+                key={reason.title}
+                aria-label={`Tampilkan: ${reason.title}`}
+                aria-current={whyActive === index ? 'true' : undefined}
+                onClick={() => setWhyActive(index)}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
