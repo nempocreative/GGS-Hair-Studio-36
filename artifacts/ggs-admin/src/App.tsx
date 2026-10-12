@@ -4,22 +4,30 @@ import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import {
   getGetGgsAdminAppointmentsQueryKey,
+  getGetGgsAdminProductsQueryKey,
+  getGetGgsPublicProductsQueryKey,
   getGetGgsAdminServicesQueryKey,
   getGetGgsAdminSummaryQueryKey,
   getGetGgsSiteQueryKey,
   useCreateGgsService,
+  useCreateGgsProduct,
   useDeleteGgsService,
+  useDeleteGgsProduct,
   useGetGgsAdminAppointments,
+  useGetGgsAdminProducts,
   useGetGgsAdminServices,
   useGetGgsAdminSummary,
   useGetGgsSite,
   useUpdateGgsAppointment,
   useUpdateGgsService,
+  useUpdateGgsProduct,
   useUpdateGgsSite,
   type GgsAppointment,
   type GgsAppointmentStatus,
   type GgsService,
   type GgsServiceInput,
+  type GgsProduct,
+  type GgsProductInput,
   type GgsSiteContent,
 } from '@workspace/api-client-react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -27,7 +35,7 @@ import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation } fr
 import {
   ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown,
   Clock3, ExternalLink, Instagram, LayoutDashboard, LogOut, Menu, Pencil,
-  Plus, Scissors, Settings2, ShieldAlert, Sparkles, Trash2, X,
+  Plus, Scissors, Settings2, ShieldAlert, Sparkles, Trash2, X, ShoppingBag,
 } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
@@ -101,6 +109,7 @@ const navItems: NavItem[] = [
   { label: 'Janji temu', href: '/appointments', icon: CalendarDays, kicker: '02' },
   { label: 'Layanan', href: '/services', icon: Scissors, kicker: '03' },
   { label: 'Konten situs', href: '/site', icon: Settings2, kicker: '04' },
+  { label: 'Produk', href: '/products', icon: ShoppingBag, kicker: '05' },
 ];
 
 function AuthPage({ mode }: { mode: 'in' | 'up' }) {
@@ -169,6 +178,7 @@ function ClerkProviderWithRoutes() {
         <Route path="/" component={RootDashboard} />
         <Route path="/site" component={ProtectedSite} />
         <Route path="/services" component={ProtectedServices} />
+        <Route path="/products" component={ProtectedProducts} />
         <Route path="/appointments" component={ProtectedAppointments} />
         <Route path="/dashboard" component={() => <Redirect to="/" />} />
         <Route component={NotFound} />
@@ -189,6 +199,7 @@ function Protected({ children }: { children: ReactNode }) {
 }
 function ProtectedSite() { return <Protected><SitePage /></Protected>; }
 function ProtectedServices() { return <Protected><ServicesPage /></Protected>; }
+function ProtectedProducts() { return <Protected><ProductsPage /></Protected>; }
 function ProtectedAppointments() { return <Protected><AppointmentsPage /></Protected>; }
 
 function AdminShell({ children }: { children: ReactNode }) {
@@ -392,6 +403,108 @@ function ServiceDialog({ service, saving, onClose, onSave }: { service: GgsServi
     <label className="toggle-row"><span><b>Tampilkan di daftar layanan</b><small>Tamu dapat melihat dan memesan layanan ini.</small></span><input type="checkbox" data-testid="input-service-active" checked={form.active} onChange={(e) => set('active', e.target.checked)} /><span className="toggle-ui" /></label>
     <div className="dialog-actions"><button type="button" className="button button-outline" onClick={onClose}>Batal</button><button type="submit" className="button button-gold" disabled={saving}>{saving ? 'Menyimpan…' : service ? 'Simpan perubahan' : 'Tambah layanan'} <ArrowRight size={15} /></button></div>
   </form></section></div>;
+}
+
+const emptyProduct: GgsProductInput = {
+  name: '',
+  category: '',
+  description: '',
+  price: 0,
+  stock: 0,
+  active: true,
+  imageUrl: null,
+};
+
+function ProductsPage() {
+  const query = useGetGgsAdminProducts({
+    query: { queryKey: getGetGgsAdminProductsQueryKey(), refetchOnMount: 'always', staleTime: 20_000 },
+  });
+  const [editing, setEditing] = useState<GgsProduct | null | 'new'>(null);
+  const [search, setSearch] = useState('');
+  const create = useCreateGgsProduct();
+  const update = useUpdateGgsProduct();
+  const remove = useDeleteGgsProduct();
+  const client = useQueryClient();
+  const { toast } = useToast();
+  const saving = create.isPending || update.isPending;
+  function saved() {
+    void client.invalidateQueries({ queryKey: getGetGgsAdminProductsQueryKey() });
+    void client.invalidateQueries({ queryKey: getGetGgsPublicProductsQueryKey() });
+  }
+  const records = query.data?.filter((product) =>
+    `${product.name} ${product.category}`.toLowerCase().includes(search.toLowerCase()),
+  ) || [];
+
+  return <div className="services-page">
+    <PageHeading
+      eyebrow="KATALOG PRODUK"
+      title={<>Rawat rambut<br /><em>di rumah.</em></>}
+      detail="Kelola produk yang tersedia untuk dilihat dan dimasukkan ke keranjang di situs GGS."
+      action={<button className="button button-gold" onClick={() => setEditing('new')} data-testid="button-add-product"><Plus size={16} /> Tambah produk</button>}
+    />
+    <div className="table-tools">
+      <div className="table-count"><span className="eyebrow">DAFTAR PRODUK</span><b>{query.data?.length ?? '—'} <small>produk</small></b></div>
+      <label className="search-box"><span className="sr-only">Cari produk</span><input data-testid="input-product-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari produk…" /><span>/</span></label>
+    </div>
+    {query.isLoading ? <div className="panel table-panel"><Skeleton rows={5} /></div> :
+      query.isError ? <QueryFailure error={query.error} retry={() => void query.refetch()} /> :
+        records.length ? <div className="panel table-panel"><table className="data-table service-table product-table">
+          <thead><tr><th>PRODUK</th><th>KATEGORI</th><th>STOK</th><th>HARGA</th><th>STATUS</th><th><span className="sr-only">Aksi</span></th></tr></thead>
+          <tbody>{records.map((product) => <tr key={product.id} data-testid={`row-product-${product.id}`}>
+            <td><div className="service-name-cell">{product.imageUrl ? <img src={product.imageUrl} alt="" /> : <span className="service-thumb"><ShoppingBag size={15} /></span>}<span><b>{product.name}</b><small>{product.description || 'Deskripsi belum ditambahkan'}</small></span></div></td>
+            <td><span className="category-label">{product.category || '—'}</span></td>
+            <td>{product.stock} <small>unit</small></td>
+            <td className="price-cell">{money(product.price)}</td>
+            <td><span className={`availability ${product.active ? 'available' : 'unavailable'}`}><i />{product.active ? 'Aktif' : 'Disembunyikan'}</span></td>
+            <td><div className="table-actions">
+              <button className="icon-button" onClick={() => setEditing(product)} aria-label={`Ubah ${product.name}`} data-testid={`button-edit-product-${product.id}`}><Pencil size={15} /></button>
+              <button className="icon-button danger-icon" onClick={() => { if (window.confirm(`Hapus “${product.name}” dari katalog?`)) remove.mutate({ id: product.id }, { onSuccess: () => { saved(); toast({ title: 'Produk dihapus', description: `${product.name} telah dihapus dari katalog.` }); }, onError: (error) => toast({ title: isForbidden(error) ? 'Akses pemilik diperlukan' : 'Produk belum terhapus', description: 'Silakan coba lagi.', variant: 'destructive' }) }); }} disabled={remove.isPending} aria-label={`Hapus ${product.name}`} data-testid={`button-delete-product-${product.id}`}><Trash2 size={15} /></button>
+            </div></td>
+          </tr>)}</tbody>
+        </table></div> :
+          <EmptyState icon={<ShoppingBag size={20} />} title={search ? 'Produk tidak ditemukan.' : 'Katalog produk masih kosong.'} body={search ? 'Coba nama atau kategori lain.' : 'Tambahkan produk dan harga sebenarnya agar pelanggan dapat melihatnya di situs.'} action={!search && <button className="button button-gold" onClick={() => setEditing('new')}><Plus size={15} /> Tambahkan produk pertama</button>} />}
+    <div className="services-footnote"><span className="eyebrow">KATALOG PUBLIK</span><span>Produk aktif akan tampil di situs; stok 0 tetap terlihat sebagai habis.</span><Link href="/site">Atur detail studio <ArrowUpRight size={13} /></Link></div>
+    {editing && <ProductDialog product={editing === 'new' ? null : editing} saving={saving} onClose={() => setEditing(null)} onSave={(input) => {
+      const onSuccess = () => { saved(); setEditing(null); toast({ title: editing === 'new' ? 'Produk ditambahkan' : 'Produk diperbarui', description: 'Katalog produk GGS telah diperbarui.' }); };
+      const onError = (error: unknown) => toast({ title: isForbidden(error) ? 'Akses pemilik diperlukan' : 'Produk belum tersimpan', description: 'Periksa detailnya lalu coba lagi.', variant: 'destructive' });
+      if (editing === 'new') create.mutate({ data: input }, { onSuccess, onError });
+      else update.mutate({ id: editing.id, data: input }, { onSuccess, onError });
+    }} />}
+  </div>;
+}
+
+function ProductDialog({ product, saving, onClose, onSave }: { product: GgsProduct | null; saving: boolean; onClose: () => void; onSave: (input: GgsProductInput) => void }) {
+  const [form, setForm] = useState<GgsProductInput>(() => product ? {
+    name: product.name,
+    category: product.category,
+    description: product.description,
+    price: product.price,
+    stock: product.stock,
+    active: product.active,
+    imageUrl: product.imageUrl,
+  } : emptyProduct);
+  const set = <K extends keyof GgsProductInput>(key: K, value: GgsProductInput[K]) => setForm((old) => ({ ...old, [key]: value }));
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    onSave({ ...form, name: form.name.trim(), category: form.category.trim(), imageUrl: form.imageUrl || null });
+  }
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="service-dialog" role="dialog" aria-modal="true" aria-labelledby="product-dialog-title">
+      <div className="dialog-head"><div><span className="eyebrow">{product ? 'UBAH KATALOG PRODUK' : 'PRODUK BARU'}</span><h2 className="font-display" id="product-dialog-title">{product ? 'Perbarui produk.' : 'Tambahkan produk.'}</h2></div><button className="icon-button" onClick={onClose} aria-label="Tutup dialog"><X size={18} /></button></div>
+      <form onSubmit={submit} className="dialog-form">
+        <Field label="Nama produk" id="product-name"><input id="product-name" data-testid="input-product-name" required maxLength={100} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Nama sesuai kemasan" /></Field>
+        <Field label="Kategori" id="product-category"><input id="product-category" data-testid="input-product-category" maxLength={60} value={form.category} onChange={(e) => set('category', e.target.value)} placeholder="Perawatan / Styling" /></Field>
+        <Field label="Deskripsi" id="product-description" hint={`${form.description.length} / 600`}><textarea id="product-description" data-testid="input-product-description" rows={3} maxLength={600} value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Informasi produk yang sudah diverifikasi…" /></Field>
+        <div className="form-two">
+          <Field label="Harga" id="product-price" hint="Rupiah Indonesia"><div className="unit-input"><span>RP</span><input id="product-price" data-testid="input-product-price" type="number" min={0} step={1000} required value={form.price} onChange={(e) => set('price', Number(e.target.value))} /></div></Field>
+          <Field label="Stok" id="product-stock"><div className="unit-input"><input id="product-stock" data-testid="input-product-stock" type="number" min={0} step={1} required value={form.stock} onChange={(e) => set('stock', Number(e.target.value))} /><span>UNIT</span></div></Field>
+        </div>
+        <Field label="URL foto produk" id="product-image" hint="Opsional"><input id="product-image" data-testid="input-product-image" type="url" value={form.imageUrl || ''} onChange={(e) => set('imageUrl', e.target.value || null)} placeholder="https://…" /></Field>
+        <label className="toggle-row"><span><b>Tampilkan di katalog publik</b><small>Pelanggan dapat melihat produk aktif di situs.</small></span><input type="checkbox" data-testid="input-product-active" checked={form.active} onChange={(e) => set('active', e.target.checked)} /><span className="toggle-ui" /></label>
+        <div className="dialog-actions"><button type="button" className="button button-outline" onClick={onClose}>Batal</button><button type="submit" className="button button-gold" disabled={saving}>{saving ? 'Menyimpan…' : product ? 'Simpan perubahan' : 'Tambah produk'} <ArrowRight size={15} /></button></div>
+      </form>
+    </section>
+  </div>;
 }
 
 function AppointmentsPage() {

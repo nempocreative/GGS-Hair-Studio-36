@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  Bell,
   CalendarDays,
   Check,
   Clock3,
@@ -12,21 +13,24 @@ import {
   House,
   Instagram,
   MapPin,
-  Menu,
+  Minus,
   Phone,
+  Plus,
+  ShoppingBag,
   Scissors,
   Sparkles,
   UserRound,
-  X,
 } from 'lucide-react';
 import {
   getGetGgsPublicServicesQueryKey,
   getGetGgsSiteQueryKey,
+  getGetGgsPublicProductsQueryKey,
   useCreateGgsAppointment,
+  useGetGgsPublicProducts,
   useGetGgsPublicServices,
   useGetGgsSite,
 } from '@workspace/api-client-react';
-import type { GgsService, GgsSiteContent } from '@workspace/api-client-react';
+import type { GgsProduct, GgsService, GgsSiteContent } from '@workspace/api-client-react';
 import './homepage.css';
 
 type BookingFields = {
@@ -39,6 +43,28 @@ type BookingFields = {
   notes: string;
 };
 
+type HeaderPanel = 'notifications' | 'cart' | null;
+type CartLine = { productId: number; quantity: number };
+
+const cartStorageKey = 'ggs-product-cart';
+
+function readStoredCart(): CartLine[] {
+  try {
+    const stored: unknown = JSON.parse(window.localStorage.getItem(cartStorageKey) || '[]');
+    if (!Array.isArray(stored)) return [];
+    return stored.filter((item): item is CartLine =>
+      typeof item === 'object' &&
+      item !== null &&
+      Number.isInteger((item as CartLine).productId) &&
+      Number.isInteger((item as CartLine).quantity) &&
+      (item as CartLine).productId > 0 &&
+      (item as CartLine).quantity > 0,
+    );
+  } catch {
+    return [];
+  }
+}
+
 const initialFields: BookingFields = {
   customerName: '',
   email: '',
@@ -49,15 +75,6 @@ const initialFields: BookingFields = {
   notes: '',
 };
 
-const routes = [
-  { href: '/', label: 'Home', icon: House },
-  { href: '/services', label: 'Services', icon: Scissors },
-  { href: '/style-gallery', label: 'Style Gallery', icon: Sparkles },
-  { href: '/offers-membership', label: 'Offers & Membership', icon: Gift },
-  { href: '/branches', label: 'Our Branches', icon: Compass },
-  { href: '/my-ggs', label: 'My GGS', icon: UserRound },
-] as const;
-
 const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
 const money = (amount: number) => `Rp${new Intl.NumberFormat('id-ID').format(amount)}`;
 
@@ -66,21 +83,44 @@ function App() {
   const servicesQuery = useGetGgsPublicServices({
     query: { queryKey: getGetGgsPublicServicesQueryKey() },
   });
+  const productsQuery = useGetGgsPublicProducts({
+    query: { queryKey: getGetGgsPublicProductsQueryKey() },
+  });
   const appointment = useCreateGgsAppointment();
   const [location] = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [headerPanel, setHeaderPanel] = useState<HeaderPanel>(null);
+  const [cartItems, setCartItems] = useState<CartLine[]>(readStoredCart);
   const [fields, setFields] = useState<BookingFields>(initialFields);
   const [submitted, setSubmitted] = useState(false);
   const services = useMemo(
     () => servicesQuery.data?.filter((service) => service.active) ?? [],
     [servicesQuery.data],
   );
+  const products = productsQuery.data ?? [];
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
   const site = siteQuery.data;
 
   useEffect(() => {
-    setMenuOpen(false);
+    try {
+      window.localStorage.setItem(cartStorageKey, JSON.stringify(cartItems));
+    } catch {
+      // Keep the cart available for the current page session when storage is blocked.
+    }
+  }, [cartItems]);
+
+  useEffect(() => {
+    setHeaderPanel(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location]);
+
+  useEffect(() => {
+    if (!headerPanel) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setHeaderPanel(null);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [headerPanel]);
 
   const updateField = (key: keyof BookingFields, value: string) =>
     setFields((current) => ({ ...current, [key]: value }));
@@ -113,12 +153,46 @@ function App() {
     if (serviceId) updateField('serviceId', String(serviceId));
   };
 
+  const addProductToCart = (product: GgsProduct) => {
+    if (!product.active || product.stock < 1) return;
+    setCartItems((current) => {
+      const existing = current.find((item) => item.productId === product.id);
+      if (!existing) return [...current, { productId: product.id, quantity: 1 }];
+      if (existing.quantity >= product.stock) return current;
+      return current.map((item) =>
+        item.productId === product.id ? { ...item, quantity: item.quantity + 1 } : item,
+      );
+    });
+  };
+
+  const changeCartQuantity = (productId: number, change: number) => {
+    const product = products.find((item) => item.id === productId);
+    if (!product) return;
+    setCartItems((current) => current.flatMap((item) => {
+      if (item.productId !== productId) return [item];
+      const quantity = item.quantity + change;
+      if (quantity < 1) return [];
+      const availableQuantity = Math.min(quantity, product.stock);
+      return availableQuantity > 0 ? [{ ...item, quantity: availableQuantity }] : [];
+    }));
+  };
+
+  const removeCartItem = (productId: number) =>
+    setCartItems((current) => current.filter((item) => item.productId !== productId));
+
   const common = {
     services,
     servicesQuery,
     siteQuery,
     site,
     openBooking,
+    products,
+    productsQuery,
+    cartItems,
+    cartCount,
+    addProductToCart,
+    changeCartQuantity,
+    removeCartItem,
   };
 
   return (
@@ -131,48 +205,75 @@ function App() {
             <small>HAIR STUDIO</small>
           </span>
         </Link>
-        <nav className="clearer-nav" aria-label="Navigasi utama">
-          {routes.map((item) => (
-            <Link
-              href={item.href}
-              key={item.href}
-              aria-current={location === item.href ? 'page' : undefined}
-              data-testid={`link-nav-${item.href === '/' ? 'home' : item.href.slice(1)}`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <Link href="/book" className="clearer-book-link" data-testid="link-book-header">
-          Book Appointment <ArrowRight size={17} />
-        </Link>
-        <button
-          className="clearer-menu-button"
-          type="button"
-          aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
-          data-testid="button-menu"
-        >
-          {menuOpen ? <X size={21} /> : <Menu size={21} />}
-        </button>
-        {menuOpen && (
-          <nav className="clearer-mobile-nav" aria-label="Navigasi ponsel">
-            {routes.map((item) => (
-              <Link href={item.href} key={item.href} data-testid={`link-mobile-${item.href.slice(1) || 'home'}`}>
-                {item.label} <ArrowUpRight size={15} />
-              </Link>
-            ))}
-            <Link href="/book" className="mobile-book" data-testid="link-mobile-book">
-              Book Appointment <ArrowRight size={16} />
-            </Link>
-          </nav>
-        )}
+        <div className="clearer-header-tools" aria-label="Notifikasi, keranjang, dan akun">
+          <div className="clearer-header-tool">
+            <button
+              className="clearer-header-icon-button"
+              type="button"
+              aria-label="Notifikasi"
+              aria-expanded={headerPanel === 'notifications'}
+              aria-controls="header-notifications-panel"
+              onClick={() => setHeaderPanel((current) => current === 'notifications' ? null : 'notifications')}
+              data-testid="button-header-notifications"
+            ><Bell size={19} strokeWidth={1.8} /></button>
+            {headerPanel === 'notifications' && (
+              <section className="clearer-header-popover" id="header-notifications-panel" aria-label="Notifikasi">
+                <strong>Notifikasi</strong>
+                <p>Belum ada notifikasi baru.</p>
+              </section>
+            )}
+          </div>
+          <div className="clearer-header-tool">
+            <button
+              className="clearer-header-icon-button"
+              type="button"
+              aria-label="Keranjang"
+              aria-expanded={headerPanel === 'cart'}
+              aria-controls="header-cart-panel"
+              onClick={() => setHeaderPanel((current) => current === 'cart' ? null : 'cart')}
+              data-testid="button-header-cart"
+            ><ShoppingBag size={19} strokeWidth={1.8} />{cartCount > 0 && <span className="clearer-cart-count" aria-label={`${cartCount} produk di keranjang`}>{cartCount > 99 ? '99+' : cartCount}</span>}</button>
+            {headerPanel === 'cart' && (
+              <section className="clearer-header-popover" id="header-cart-panel" aria-label="Keranjang produk">
+                <div className="clearer-cart-heading"><strong>Keranjang</strong><span>{cartCount} item</span></div>
+                {productsQuery.isLoading ? <p>Memuat katalog produk…</p> :
+                  productsQuery.isError ? <p role="alert">Katalog produk belum bisa dimuat.</p> :
+                    cartItems.length ? <div className="clearer-cart-lines">
+                      {cartItems.map((item) => {
+                        const product = products.find((entry) => entry.id === item.productId);
+                        return (
+                          <article className="clearer-cart-line" key={item.productId}>
+                            <div><b>{product?.name || 'Produk tidak lagi tersedia'}</b><small>{product ? money(product.price) : 'Hapus item ini dari keranjang'}</small></div>
+                            <div className="clearer-cart-controls">
+                              {product && <><button type="button" aria-label={`Kurangi ${product.name}`} onClick={() => changeCartQuantity(product.id, -1)}><Minus size={13} /></button><span>{item.quantity}</span><button type="button" aria-label={`Tambah ${product.name}`} disabled={item.quantity >= product.stock} onClick={() => changeCartQuantity(product.id, 1)}><Plus size={13} /></button></>}
+                              <button type="button" aria-label={`Hapus ${product?.name || 'produk'} dari keranjang`} onClick={() => removeCartItem(item.productId)}>×</button>
+                            </div>
+                          </article>
+                        );
+                      })}
+                      <div className="clearer-cart-subtotal"><span>Total sementara</span><strong>{money(cartItems.reduce((sum, item) => sum + (products.find((product) => product.id === item.productId)?.price || 0) * item.quantity, 0))}</strong></div>
+                    </div> : <p>Keranjang masih kosong.</p>}
+                <Link href="/products" className="clearer-cart-link">{cartItems.length ? 'Lihat katalog produk' : 'Jelajahi produk'} <ArrowRight size={14} /></Link>
+                <small>Belum ada checkout atau pembayaran online.</small>
+              </section>
+            )}
+          </div>
+          <Link
+            className="clearer-header-icon-button"
+            href="/my-ggs"
+            aria-label="Akun saya"
+            title="Akun saya"
+            data-testid="link-header-account"
+          ><UserRound size={19} strokeWidth={1.8} /></Link>
+        </div>
       </header>
 
       <Switch>
         <Route path="/">
           <HomePage {...common} />
+        </Route>
+        <Route path="/products">
+          <ProductsPage {...common} />
         </Route>
         <Route path="/services">
           <ServicesPage {...common} />
@@ -238,21 +339,39 @@ type SharedProps = {
   siteQuery: ReturnType<typeof useGetGgsSite>;
   site: GgsSiteContent | undefined;
   openBooking: (serviceId?: number) => void;
+  products: GgsProduct[];
+  productsQuery: ReturnType<typeof useGetGgsPublicProducts>;
+  cartItems: CartLine[];
+  cartCount: number;
+  addProductToCart: (product: GgsProduct) => void;
+  changeCartQuantity: (productId: number, change: number) => void;
+  removeCartItem: (productId: number) => void;
 };
 
 const homeShortcuts = [
-  { label: 'Services', description: 'Pilihan, durasi, dan harga layanan.', href: '/services', icon: Scissors, number: '01' },
-  { label: 'Style Gallery', description: 'Galeri hasil belum tersedia.', href: '/style-gallery', icon: Sparkles, number: '02' },
-  { label: 'Offers & Membership', description: 'Promo dan benefit belum tersedia.', href: '/offers-membership', icon: Gift, number: '03' },
-  { label: 'Our Branches', description: 'Informasi cabang yang dipublikasikan.', href: '/branches', icon: MapPin, number: '04' },
-  { label: 'My GGS', description: 'Riwayat dan preferensi belum terhubung.', href: '/my-ggs', icon: UserRound, number: '05' },
+  { label: 'Beranda', href: '/', icon: House, tone: 'quick-tone-blue' },
+  { label: 'Layanan', href: '/services', icon: Scissors, tone: 'quick-tone-rose' },
+  { label: 'Galeri Gaya', href: '/style-gallery', icon: Sparkles, tone: 'quick-tone-violet' },
+  { label: 'Produk', href: '/products', icon: ShoppingBag, tone: 'quick-tone-plum' },
+  { label: 'Booking', href: '/book', icon: CalendarDays, tone: 'quick-tone-gold' },
+  { label: 'Promo & Membership', href: '/offers-membership', icon: Gift, tone: 'quick-tone-sage' },
+  { label: 'Cabang', href: '/branches', icon: MapPin, tone: 'quick-tone-blue' },
+  { label: 'My GGS', href: '/my-ggs', icon: UserRound, tone: 'quick-tone-plum' },
 ];
+
+const homeMenuPageSize = 8;
 
 function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
+  const [menuPage, setMenuPage] = useState(0);
+  const menuPageCount = Math.ceil(homeShortcuts.length / homeMenuPageSize);
+  const visibleHomeShortcuts = homeShortcuts.slice(
+    menuPage * homeMenuPageSize,
+    (menuPage + 1) * homeMenuPageSize,
+  );
   const slides = [
     {
       eyebrow: 'GGS HAIR STUDIO · MULAI DARI SINI',
@@ -260,6 +379,8 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
       detail: site?.tagline?.trim() || 'Ceritakan kebutuhan rambutmu sebelum memilih layanan.',
       cta: 'Ajukan janji',
       path: '/book',
+      image: site?.heroImageUrl || '/ggs-carousel-consultation.jpg',
+      imageAlt: 'Potret editorial rambut bob untuk konsultasi gaya GGS',
     },
     {
       eyebrow: 'LAYANAN GGS',
@@ -267,6 +388,8 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
       detail: 'Lihat layanan, durasi, dan harga yang saat ini tersedia. Tim GGS akan membahas detail sebelum mengonfirmasi.',
       cta: 'Lihat layanan',
       path: '/services',
+      image: '/ggs-carousel-style.jpg',
+      imageAlt: 'Potret editorial rambut berlayer untuk inspirasi layanan GGS',
     },
     {
       eyebrow: 'AJUKAN JANJI TEMU',
@@ -274,6 +397,8 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
       detail: 'Sampaikan layanan dan waktu yang kamu inginkan. Tim GGS akan menghubungi untuk membahas dan mengonfirmasi permintaan.',
       cta: 'Buat janji',
       path: '/book',
+      image: '/ggs-carousel-care.jpg',
+      imageAlt: 'Potret editorial rambut ikal untuk sorotan perawatan GGS',
     },
   ];
 
@@ -297,12 +422,11 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
     return () => window.clearInterval(timer);
   }, [paused, reducedMotion, pageVisible, slides.length]);
 
-  const slide = slides[active];
   return (
     <>
       <section
-        className="clearer-hero"
-        aria-label="Sorotan GGS"
+        className="ggs-carousel"
+        aria-label="Banner sorotan GGS"
         aria-roledescription="carousel"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
@@ -312,67 +436,109 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
         }}
         data-testid="carousel-home"
       >
-        <div className="clearer-hero-copy" key={active}>
-          <p className="clearer-kicker">{slide.eyebrow}</p>
-          <h1 data-testid="text-hero-title">{slide.headline}</h1>
-          <p className="clearer-lede" data-testid="text-hero-intro">{slide.detail}</p>
-          <div className="clearer-hero-actions">
-            <Link className="clearer-primary-button" href={slide.path} data-testid="link-hero-action">
-              {slide.cta} <ArrowRight size={17} />
-            </Link>
-            <Link className="clearer-text-link" href="/services" data-testid="link-hero-services">
-              Lihat semua layanan <ArrowUpRight size={16} />
-            </Link>
-          </div>
-          <div className="clearer-carousel-controls" aria-label="Kontrol banner">
-            <div className="clearer-carousel-dots" aria-label="Pilih sorotan">
-              {slides.map((item, index) => (
-                <button
-                  type="button"
+        <div className="ggs-carousel-stage">
+          <div className="ggs-carousel-track">
+            {slides.map((item, index) => {
+              const offset = (index - active + slides.length) % slides.length;
+              const position = offset === 0 ? 'active' : offset === 1 ? 'next' : 'previous';
+              return (
+                <article
+                  className={`ggs-carousel-slide ggs-carousel-slide-${position}${index === 0 && site?.heroImageUrl ? ' ggs-carousel-cms-image' : ''}`}
                   key={item.eyebrow}
-                  aria-label={`Tampilkan sorotan ${index + 1}`}
-                  aria-current={active === index ? 'true' : undefined}
-                  onClick={() => setActive(index)}
-                  data-testid={`button-banner-${index + 1}`}
-                ><span /></button>
-              ))}
-            </div>
-            <div className="clearer-carousel-arrows">
-              <span>{String(active + 1).padStart(2, '0')} / 03</span>
-              <button type="button" aria-label="Sorotan sebelumnya" onClick={() => setActive((active + 2) % 3)} data-testid="button-banner-previous"><ArrowLeft size={17} /></button>
-              <button type="button" aria-label="Sorotan berikutnya" onClick={() => setActive((active + 1) % 3)} data-testid="button-banner-next"><ArrowRight size={17} /></button>
-            </div>
+                  aria-roledescription="slide"
+                  aria-label={`${index + 1} dari ${slides.length}`}
+                  aria-hidden={position !== 'active'}
+                  data-testid={`banner-slide-${index + 1}`}
+                >
+                  <img src={item.image} alt={item.imageAlt} />
+                  <div className="ggs-carousel-shade" />
+                  <div className="ggs-carousel-copy">
+                    <p className="ggs-carousel-eyebrow">{item.eyebrow}</p>
+                    <h1 data-testid={position === 'active' ? 'text-hero-title' : undefined}>{item.headline}</h1>
+                    <p className="ggs-carousel-detail" data-testid={position === 'active' ? 'text-hero-intro' : undefined}>{item.detail}</p>
+                    <Link className="ggs-carousel-cta" href={item.path} tabIndex={position === 'active' ? 0 : -1} data-testid={position === 'active' ? 'link-hero-action' : undefined}>
+                      {item.cta} <ArrowRight size={17} />
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
           </div>
+          <button
+            className="ggs-carousel-arrow ggs-carousel-arrow-previous"
+            type="button"
+            aria-label="Sorotan sebelumnya"
+            onClick={() => setActive((active + slides.length - 1) % slides.length)}
+            data-testid="button-banner-previous"
+          ><ArrowLeft size={18} /></button>
+          <button
+            className="ggs-carousel-arrow ggs-carousel-arrow-next"
+            type="button"
+            aria-label="Sorotan berikutnya"
+            onClick={() => setActive((active + 1) % slides.length)}
+            data-testid="button-banner-next"
+          ><ArrowRight size={18} /></button>
         </div>
-        <div className="clearer-hero-image">
-          <img
-            src={site?.heroImageUrl || '/ggs-editorial.jpg'}
-            alt="Foto editorial gaya rambut GGS"
-            data-testid={site?.heroImageUrl ? 'img-hero-api' : 'img-hero-editorial'}
-          />
-          <span className="clearer-hero-image-label">Gaya editorial GGS</span>
+        <div className="ggs-carousel-pagination">
+          <div className="ggs-carousel-dots" aria-label="Pilih sorotan">
+            {slides.map((item, index) => (
+              <button
+                type="button"
+                key={item.eyebrow}
+                aria-label={`Tampilkan sorotan ${index + 1}`}
+                aria-current={active === index ? 'true' : undefined}
+                onClick={() => setActive(index)}
+                data-testid={`button-banner-${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
-        <section className="clearer-home-menu" aria-label="Jelajahi GGS">
-        <div className="clearer-home-menu-heading">
-          <p className="clearer-kicker">JELAJAHI GGS</p>
-          <h2>Mau mulai<br />dari mana?</h2>
-        </div>
-        <div className="clearer-home-menu-grid">
-          {homeShortcuts.map((item) => (
-            <Link className="clearer-home-menu-card" href={item.href} key={item.href} data-testid={`link-home-menu-${item.href.slice(1)}`}>
-              <span className="clearer-home-menu-card-top"><item.icon size={20} /><span>{item.number}</span></span>
-              <strong>{item.label}</strong>
-              <span className="clearer-home-menu-description">{item.description}</span>
-            </Link>
-          ))}
-          <Link className="clearer-home-menu-card clearer-home-book-card" href="/book" data-testid="link-home-menu-book">
-            <span className="clearer-home-menu-card-top"><CalendarDays size={20} /><ArrowUpRight size={16} /></span>
-            <strong>Book Appointment</strong>
-            <span className="clearer-home-menu-description">Ajukan layanan, tanggal, dan waktu kunjungan.</span>
-          </Link>
-        </div>
+        <section className="clearer-home-menu ggs-quick-menu" aria-label="Jelajahi GGS">
+          <nav
+            className="ggs-quick-menu-grid"
+            aria-label={`Pintasan GGS, halaman ${menuPage + 1} dari ${menuPageCount}`}
+            data-count={visibleHomeShortcuts.length}
+            key={menuPage}
+          >
+            {visibleHomeShortcuts.map((item) => (
+              <Link
+                className="ggs-quick-menu-item"
+                href={item.href}
+                key={item.href}
+                data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
+              >
+                <span className={`ggs-quick-menu-icon ${item.tone}`}><item.icon size={27} strokeWidth={1.8} /></span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+          {menuPageCount > 1 && (
+            <div className="ggs-quick-menu-pagination" aria-label="Kontrol halaman menu">
+              <button
+                type="button"
+                aria-label="Halaman menu sebelumnya"
+                onClick={() => setMenuPage((page) => (page + menuPageCount - 1) % menuPageCount)}
+              ><ArrowLeft size={16} /></button>
+              <div className="ggs-quick-menu-dots" aria-label="Pilih halaman menu">
+                {Array.from({ length: menuPageCount }, (_, index) => (
+                  <button
+                    type="button"
+                    key={index}
+                    aria-label={`Tampilkan halaman menu ${index + 1}`}
+                    aria-current={menuPage === index ? 'true' : undefined}
+                    onClick={() => setMenuPage(index)}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                aria-label="Halaman menu berikutnya"
+                onClick={() => setMenuPage((page) => (page + 1) % menuPageCount)}
+              ><ArrowRight size={16} /></button>
+            </div>
+          )}
       </section>
 
       <section className="clearer-promise" data-testid="section-approach">
@@ -426,6 +592,61 @@ function ServicesPage(props: SharedProps) {
       </div>
       <ServiceList {...{ services, servicesQuery, openBooking }} />
       <div className="service-followup"><p>Belum yakin layanan mana yang sesuai?</p><Link href="/book" className="clearer-text-link" data-testid="link-services-consult">Ceritakan kebutuhanmu <ArrowRight size={16} /></Link></div>
+    </PageFrame>
+  );
+}
+
+function ProductsPage({ products, productsQuery, cartItems, cartCount, addProductToCart }: SharedProps) {
+  const quantityInCart = (productId: number) =>
+    cartItems.find((item) => item.productId === productId)?.quantity ?? 0;
+
+  return (
+    <PageFrame
+      kicker="GGS / PRODUK"
+      title={<>Perawatan<br /><em>di rumah.</em></>}
+      intro="Lihat produk yang tersedia dan masukkan pilihanmu ke keranjang. Keranjang menampilkan total sementara; belum ada checkout atau pembayaran online."
+      testId="page-products"
+    >
+      {productsQuery.isLoading ? <div className="clearer-visit-empty" data-testid="status-products-loading">Memuat katalog produk…</div> :
+        productsQuery.isError ? <div className="clearer-visit-empty" role="alert" data-testid="status-products-error"><p>Katalog produk belum bisa dimuat.</p><button type="button" onClick={() => productsQuery.refetch()} data-testid="button-retry-products">Coba lagi</button></div> :
+          products.length ? (
+            <div className="ggs-product-grid" data-testid="list-products">
+              {products.map((product) => {
+                const quantity = quantityInCart(product.id);
+                return (
+                  <article className="ggs-product-card" key={product.id} data-testid={`card-product-${product.id}`}>
+                    {product.imageUrl ? <img className="ggs-product-image" src={product.imageUrl} alt={product.name} /> :
+                      <div className="ggs-product-image ggs-product-image-empty" aria-label="Foto produk belum tersedia"><ShoppingBag size={28} /></div>}
+                    <div className="ggs-product-card-copy">
+                      <span className="ggs-product-category">{product.category || 'GGS'}</span>
+                      <h2>{product.name}</h2>
+                      {product.description && <p>{product.description}</p>}
+                      <div className="ggs-product-price">{money(product.price)}</div>
+                      <div className="ggs-product-card-footer">
+                        <small>{product.stock > 0 ? `Stok ${product.stock}` : 'Stok habis'}</small>
+                        <button type="button" disabled={!product.active || product.stock < 1 || quantity >= product.stock} onClick={() => addProductToCart(product)} data-testid={`button-add-product-${product.id}`}>
+                          {product.stock < 1 ? 'Habis' : quantity ? `${quantity} di keranjang · Tambah` : 'Tambah ke keranjang'}
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <section className="unavailable-panel products-empty" data-testid="status-products-empty">
+              <div className="empty-ornament"><ShoppingBag size={25} /></div>
+              <span className="panel-index">KATALOG / BELUM TERSEDIA</span>
+              <h2>Belum ada produk<br />yang ditampilkan.</h2>
+              <p>GGS belum menambahkan produk ke katalog. Produk dan harga akan tampil setelah datanya dimasukkan oleh studio.</p>
+            </section>
+          )}
+      {cartItems.length > 0 && (
+        <aside className="ggs-products-cart-summary" aria-live="polite" data-testid="products-cart-summary">
+          <div><span>{cartCount} item di keranjang</span><strong>{money(cartItems.reduce((sum, item) => sum + (products.find((product) => product.id === item.productId)?.price || 0) * item.quantity, 0))}</strong></div>
+          <p>Total sementara. Belum ada checkout atau pembayaran.</p>
+        </aside>
+      )}
     </PageFrame>
   );
 }

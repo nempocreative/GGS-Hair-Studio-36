@@ -49,6 +49,22 @@ export const GetGgsPublicServicesResponse = zod.array(GetGgsPublicServicesRespon
 
 
 /**
+ * @summary List active GGS retail products
+ */
+export const GetGgsPublicProductsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().int(),
+  "stock": zod.number().int(),
+  "active": zod.boolean(),
+  "imageUrl": zod.string().nullable()
+})
+export const GetGgsPublicProductsResponse = zod.array(GetGgsPublicProductsResponseItem)
+
+
+/**
  * @summary Request an appointment
  */
 export const createGgsAppointmentBodyCustomerNameMin = 2;
@@ -247,6 +263,110 @@ export const DeleteGgsServiceParams = zod.object({
 })
 
 export const DeleteGgsServiceResponse = zod.void()
+
+
+/**
+ * @summary List all products in GGS CMS
+ */
+export const GetGgsAdminProductsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().int(),
+  "stock": zod.number().int(),
+  "active": zod.boolean(),
+  "imageUrl": zod.string().nullable()
+})
+export const GetGgsAdminProductsResponse = zod.array(GetGgsAdminProductsResponseItem)
+
+
+/**
+ * @summary Create a GGS retail product
+ */
+export const createGgsProductBodyNameMax = 100;
+
+export const createGgsProductBodyCategoryMax = 60;
+
+export const createGgsProductBodyDescriptionMax = 600;
+
+export const createGgsProductBodyPriceMin = 0;
+
+export const createGgsProductBodyStockMin = 0;
+
+
+
+export const CreateGgsProductBody = zod.object({
+  "name": zod.string().min(1).max(createGgsProductBodyNameMax),
+  "category": zod.string().max(createGgsProductBodyCategoryMax),
+  "description": zod.string().max(createGgsProductBodyDescriptionMax),
+  "price": zod.number().int().min(createGgsProductBodyPriceMin),
+  "stock": zod.number().int().min(createGgsProductBodyStockMin),
+  "active": zod.boolean(),
+  "imageUrl": zod.string().url().nullable()
+})
+
+export const CreateGgsProductResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().int(),
+  "stock": zod.number().int(),
+  "active": zod.boolean(),
+  "imageUrl": zod.string().nullable()
+})
+
+
+/**
+ * @summary Update a GGS retail product
+ */
+export const UpdateGgsProductParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateGgsProductBodyNameMax = 100;
+
+export const updateGgsProductBodyCategoryMax = 60;
+
+export const updateGgsProductBodyDescriptionMax = 600;
+
+export const updateGgsProductBodyPriceMin = 0;
+
+export const updateGgsProductBodyStockMin = 0;
+
+
+
+export const UpdateGgsProductBody = zod.object({
+  "name": zod.string().min(1).max(updateGgsProductBodyNameMax),
+  "category": zod.string().max(updateGgsProductBodyCategoryMax),
+  "description": zod.string().max(updateGgsProductBodyDescriptionMax),
+  "price": zod.number().int().min(updateGgsProductBodyPriceMin),
+  "stock": zod.number().int().min(updateGgsProductBodyStockMin),
+  "active": zod.boolean(),
+  "imageUrl": zod.string().url().nullable()
+})
+
+export const UpdateGgsProductResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().int(),
+  "stock": zod.number().int(),
+  "active": zod.boolean(),
+  "imageUrl": zod.string().nullable()
+})
+
+
+/**
+ * @summary Delete a GGS retail product
+ */
+export const DeleteGgsProductParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteGgsProductResponse = zod.void()
 
 
 /**

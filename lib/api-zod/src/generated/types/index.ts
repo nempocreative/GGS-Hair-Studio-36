@@ -12,6 +12,8 @@ export * from './ggsAppointmentInput';
 export * from './ggsAppointmentStatus';
 export * from './ggsAppointmentStatusUpdate';
 export * from './ggsAppointmentStatusUpdateStatus';
+export * from './ggsProduct';
+export * from './ggsProductInput';
 export * from './ggsService';
 export * from './ggsServiceInput';
 export * from './ggsSiteContent';

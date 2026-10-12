@@ -80,6 +80,37 @@ export interface GgsServiceInput {
   imageUrl: string | null;
 }
 
+export interface GgsProduct {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  stock: number;
+  active: boolean;
+  /** @nullable */
+  imageUrl: string | null;
+}
+
+export interface GgsProductInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  /** @maxLength 60 */
+  category: string;
+  /** @maxLength 600 */
+  description: string;
+  /** @minimum 0 */
+  price: number;
+  /** @minimum 0 */
+  stock: number;
+  active: boolean;
+  /** @nullable */
+  imageUrl: string | null;
+}
+
 export interface GgsAppointmentInput {
   /**
      * @minLength 2

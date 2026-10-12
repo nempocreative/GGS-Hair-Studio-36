@@ -39,6 +39,21 @@ export const ggsServicesTable = pgTable("ggs_services", {
     .defaultNow(),
 });
 
+export const ggsProductsTable = pgTable("ggs_products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category").notNull().default(""),
+  description: text("description").notNull().default(""),
+  price: integer("price").notNull(),
+  stock: integer("stock").notNull().default(0),
+  active: boolean("active").notNull().default(true),
+  imageUrl: text("image_url"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const ggsAppointmentsTable = pgTable("ggs_appointments", {
   id: serial("id").primaryKey(),
   customerName: text("customer_name").notNull(),

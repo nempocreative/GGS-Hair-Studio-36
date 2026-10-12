@@ -54,6 +54,20 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GgsService"
+  /ggs/products:
+    get:
+      operationId: getGgsPublicProducts
+      tags: [ggs-public]
+      summary: List active GGS retail products
+      responses:
+        "200":
+          description: Active products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsProduct"
   /ggs/appointments:
     post:
       operationId: createGgsAppointment
@@ -176,6 +190,78 @@ paths:
           description: Service deleted
         "404":
           description: Service not found
+  /ggs/admin/products:
+    get:
+      operationId: getGgsAdminProducts
+      tags: [ggs-admin]
+      summary: List all products in GGS CMS
+      responses:
+        "200":
+          description: All products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsProduct"
+    post:
+      operationId: createGgsProduct
+      tags: [ggs-admin]
+      summary: Create a GGS retail product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsProductInput"
+      responses:
+        "201":
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsProduct"
+  /ggs/admin/products/{id}:
+    patch:
+      operationId: updateGgsProduct
+      tags: [ggs-admin]
+      summary: Update a GGS retail product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsProductInput"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsProduct"
+        "404":
+          description: Product not found
+    delete:
+      operationId: deleteGgsProduct
+      tags: [ggs-admin]
+      summary: Delete a GGS retail product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Product deleted
+        "404":
+          description: Product not found
   /ggs/admin/appointments:
     get:
       operationId: getGgsAdminAppointments
@@ -341,6 +427,66 @@ components:
         - description
         - durationMinutes
         - price
+        - active
+        - imageUrl
+    GgsProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        price:
+          type: integer
+        stock:
+          type: integer
+        active:
+          type: boolean
+        imageUrl:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - category
+        - description
+        - price
+        - stock
+        - active
+        - imageUrl
+    GgsProductInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        category:
+          type: string
+          maxLength: 60
+        description:
+          type: string
+          maxLength: 600
+        price:
+          type: integer
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+        active:
+          type: boolean
+        imageUrl:
+          type: ["string", "null"]
+          format: uri
+      required:
+        - name
+        - category
+        - description
+        - price
+        - stock
         - active
         - imageUrl
     GgsAppointmentInput:

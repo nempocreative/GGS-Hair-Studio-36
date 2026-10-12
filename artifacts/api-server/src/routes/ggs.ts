@@ -4,13 +4,18 @@ import { Router, type IRouter, type RequestHandler } from "express";
 import {
   CreateGgsAppointmentBody,
   CreateGgsAppointmentResponse,
+  CreateGgsProductBody,
+  CreateGgsProductResponse,
   CreateGgsServiceBody,
   CreateGgsServiceResponse,
   DeleteGgsServiceParams,
+  DeleteGgsProductParams,
+  GetGgsAdminProductsResponse,
   GetGgsAdminAppointmentsResponse,
   GetGgsAdminServicesResponse,
   GetGgsAdminSummaryResponse,
   GetGgsPublicServicesResponse,
+  GetGgsPublicProductsResponse,
   GetGgsSiteResponse,
   UpdateGgsAppointmentBody,
   UpdateGgsAppointmentParams,
@@ -18,12 +23,16 @@ import {
   UpdateGgsServiceBody,
   UpdateGgsServiceParams,
   UpdateGgsServiceResponse,
+  UpdateGgsProductBody,
+  UpdateGgsProductParams,
+  UpdateGgsProductResponse,
   UpdateGgsSiteBody,
   UpdateGgsSiteResponse,
 } from "@workspace/api-zod";
 import {
   db,
   ggsAppointmentsTable,
+  ggsProductsTable,
   ggsServicesTable,
   ggsSiteContentTable,
 } from "@workspace/db";
@@ -147,6 +156,19 @@ function serializeService(service: typeof ggsServicesTable.$inferSelect) {
   };
 }
 
+function serializeProduct(product: typeof ggsProductsTable.$inferSelect) {
+  return {
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    description: product.description,
+    price: product.price,
+    stock: product.stock,
+    active: product.active,
+    imageUrl: product.imageUrl,
+  };
+}
+
 function serializeAppointment(
   appointment: typeof ggsAppointmentsTable.$inferSelect,
 ) {
@@ -215,6 +237,16 @@ router.get("/ggs/services", async (_req, res): Promise<void> => {
     .where(eq(ggsServicesTable.active, true))
     .orderBy(asc(ggsServicesTable.sortOrder), asc(ggsServicesTable.name));
   res.json(GetGgsPublicServicesResponse.parse(services.map(serializeService)));
+});
+
+router.get("/ggs/products", async (_req, res): Promise<void> => {
+  await ensureInitialContent();
+  const products = await db
+    .select()
+    .from(ggsProductsTable)
+    .where(eq(ggsProductsTable.active, true))
+    .orderBy(asc(ggsProductsTable.sortOrder), asc(ggsProductsTable.name));
+  res.json(GetGgsPublicProductsResponse.parse(products.map(serializeProduct)));
 });
 
 router.post("/ggs/appointments", async (req, res): Promise<void> => {
@@ -410,6 +442,69 @@ router.delete("/ggs/admin/services/:id", async (req, res): Promise<void> => {
     .returning({ id: ggsServicesTable.id });
   if (!service) {
     res.status(404).json({ error: "Layanan tidak ditemukan." });
+    return;
+  }
+  res.sendStatus(204);
+});
+
+router.get("/ggs/admin/products", async (_req, res): Promise<void> => {
+  await ensureInitialContent();
+  const products = await db
+    .select()
+    .from(ggsProductsTable)
+    .orderBy(asc(ggsProductsTable.sortOrder), asc(ggsProductsTable.name));
+  res.json(GetGgsAdminProductsResponse.parse(products.map(serializeProduct)));
+});
+
+router.post("/ggs/admin/products", async (req, res): Promise<void> => {
+  const parsed = CreateGgsProductBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  await ensureInitialContent();
+  const [product] = await db
+    .insert(ggsProductsTable)
+    .values({ ...parsed.data, sortOrder: 99 })
+    .returning();
+  res.status(201).json(CreateGgsProductResponse.parse(serializeProduct(product)));
+});
+
+router.patch("/ggs/admin/products/:id", async (req, res): Promise<void> => {
+  const params = UpdateGgsProductParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const parsed = UpdateGgsProductBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const [product] = await db
+    .update(ggsProductsTable)
+    .set(parsed.data)
+    .where(eq(ggsProductsTable.id, params.data.id))
+    .returning();
+  if (!product) {
+    res.status(404).json({ error: "Produk tidak ditemukan." });
+    return;
+  }
+  res.json(UpdateGgsProductResponse.parse(serializeProduct(product)));
+});
+
+router.delete("/ggs/admin/products/:id", async (req, res): Promise<void> => {
+  const params = DeleteGgsProductParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [product] = await db
+    .delete(ggsProductsTable)
+    .where(eq(ggsProductsTable.id, params.data.id))
+    .returning({ id: ggsProductsTable.id });
+  if (!product) {
+    res.status(404).json({ error: "Produk tidak ditemukan." });
     return;
   }
   res.sendStatus(204);

@@ -24,6 +24,8 @@ import type {
   GgsAppointment,
   GgsAppointmentInput,
   GgsAppointmentStatusUpdate,
+  GgsProduct,
+  GgsProductInput,
   GgsService,
   GgsServiceInput,
   GgsSiteContent,
@@ -278,6 +280,83 @@ export function useGetGgsPublicServices<TData = Awaited<ReturnType<typeof getGgs
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetGgsPublicServicesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGgsPublicProductsUrl = () => {
+
+
+
+
+  return `/api/ggs/products`
+}
+
+/**
+ * @summary List active GGS retail products
+ */
+export const getGgsPublicProducts = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsProduct[]> => {
+
+  return customFetch<GgsProduct[]>(getGetGgsPublicProductsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsPublicProductsQueryKey = () => {
+    return [
+    `/api/ggs/products`
+    ] as const;
+    }
+
+
+export const getGetGgsPublicProductsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsPublicProducts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsPublicProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsPublicProductsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsPublicProducts>>> = ({ signal }) => getGgsPublicProducts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsPublicProducts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsPublicProductsQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsPublicProducts>>>
+export type GetGgsPublicProductsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List active GGS retail products
+ */
+
+export function useGetGgsPublicProducts<TData = Awaited<ReturnType<typeof getGgsPublicProducts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsPublicProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsPublicProductsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -869,6 +948,334 @@ export const useDeleteGgsService = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteGgsServiceMutationOptions(options));
+    }
+
+export const getGetGgsAdminProductsUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/products`
+}
+
+/**
+ * @summary List all products in GGS CMS
+ */
+export const getGgsAdminProducts = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsProduct[]> => {
+
+  return customFetch<GgsProduct[]>(getGetGgsAdminProductsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsAdminProductsQueryKey = () => {
+    return [
+    `/api/ggs/admin/products`
+    ] as const;
+    }
+
+
+export const getGetGgsAdminProductsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsAdminProducts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsAdminProductsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsAdminProducts>>> = ({ signal }) => getGgsAdminProducts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminProducts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsAdminProductsQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsAdminProducts>>>
+export type GetGgsAdminProductsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all products in GGS CMS
+ */
+
+export function useGetGgsAdminProducts<TData = Awaited<ReturnType<typeof getGgsAdminProducts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsAdminProductsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateGgsProductUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/products`
+}
+
+/**
+ * @summary Create a GGS retail product
+ */
+export const createGgsProduct = async (ggsProductInput: GgsProductInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsProduct> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsProduct>(getCreateGgsProductUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsProductInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGgsProductMutationKey = () => ['createGgsProduct'] as const;
+
+export const getCreateGgsProductMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsProduct>>, TError,CreateGgsProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGgsProduct>>, TError,CreateGgsProductMutationVariables, TContext> => {
+
+const mutationKey = getCreateGgsProductMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGgsProduct>>, CreateGgsProductMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGgsProduct(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGgsProductMutationResult = NonNullable<Awaited<ReturnType<typeof createGgsProduct>>>
+    export type CreateGgsProductMutationBody = BodyType<GgsProductInput>
+    export type CreateGgsProductMutationError = ErrorType<unknown>
+    export type CreateGgsProductMutationVariables = {data: BodyType<GgsProductInput>}
+
+    /**
+ * @summary Create a GGS retail product
+ */
+export const useCreateGgsProduct = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsProduct>>, TError,CreateGgsProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGgsProduct>>,
+        TError,
+        CreateGgsProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGgsProductMutationOptions(options));
+    }
+
+export const getUpdateGgsProductUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/products/${id}`
+}
+
+/**
+ * @summary Update a GGS retail product
+ */
+export const updateGgsProduct = async (id: number,
+    ggsProductInput: GgsProductInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsProduct> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsProduct>(getUpdateGgsProductUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsProductInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateGgsProductMutationKey = () => ['updateGgsProduct'] as const;
+
+export const getUpdateGgsProductMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsProduct>>, TError,UpdateGgsProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGgsProduct>>, TError,UpdateGgsProductMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGgsProductMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGgsProduct>>, UpdateGgsProductMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateGgsProduct(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGgsProductMutationResult = NonNullable<Awaited<ReturnType<typeof updateGgsProduct>>>
+    export type UpdateGgsProductMutationBody = BodyType<GgsProductInput>
+    export type UpdateGgsProductMutationError = ErrorType<void>
+    export type UpdateGgsProductMutationVariables = {id: number;data: BodyType<GgsProductInput>}
+
+    /**
+ * @summary Update a GGS retail product
+ */
+export const useUpdateGgsProduct = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsProduct>>, TError,UpdateGgsProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGgsProduct>>,
+        TError,
+        UpdateGgsProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGgsProductMutationOptions(options));
+    }
+
+export const getDeleteGgsProductUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/products/${id}`
+}
+
+/**
+ * @summary Delete a GGS retail product
+ */
+export const deleteGgsProduct = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteGgsProductUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteGgsProductMutationKey = () => ['deleteGgsProduct'] as const;
+
+export const getDeleteGgsProductMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGgsProduct>>, TError,DeleteGgsProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGgsProduct>>, TError,DeleteGgsProductMutationVariables, TContext> => {
+
+const mutationKey = getDeleteGgsProductMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGgsProduct>>, DeleteGgsProductMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteGgsProduct(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGgsProductMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGgsProduct>>>
+
+    export type DeleteGgsProductMutationError = ErrorType<void>
+    export type DeleteGgsProductMutationVariables = {id: number}
+
+    /**
+ * @summary Delete a GGS retail product
+ */
+export const useDeleteGgsProduct = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGgsProduct>>, TError,DeleteGgsProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGgsProduct>>,
+        TError,
+        DeleteGgsProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteGgsProductMutationOptions(options));
     }
 
 export const getGetGgsAdminAppointmentsUrl = () => {
