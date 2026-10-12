@@ -765,7 +765,7 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
 
                 return (
                   <div
-                    className="home-mens-service-slide"
+                    className={`home-mens-service-slide${!reducedMotion && mensServiceIndex === index && index > 0 ? ' home-mens-service-slide-pop' : ''}`}
                     key={service.id}
                     role="group"
                     aria-roledescription="slide"
