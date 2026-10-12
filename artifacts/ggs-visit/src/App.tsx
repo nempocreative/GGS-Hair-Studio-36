@@ -433,22 +433,21 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [paused, setPaused] = useState(false);
   const [whyActive, setWhyActive] = useState(0);
   const [whyPaused, setWhyPaused] = useState(false);
-  const [mensServiceActive, setMensServiceActive] = useState(0);
   const [mensServicePaused, setMensServicePaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [menuPage, setMenuPage] = useState(0);
-  const mensServiceImages: Record<string, string> = {
-    'cut & styling': '/men-cut-service.jpg',
-    color: '/men-color-service.jpg',
-    styling: '/men-styling-service.jpg',
-  };
+  const [mensServicePage, setMensServicePage] = useState(0);
+  const mensServicePageSize = 4;
   const mensServices = useMemo(
     () => services.filter((service) => service.active && audienceCategoryMap.men.has(service.category.trim().toLowerCase())),
     [services],
   );
-  const activeMensServiceIndex = mensServices.length ? mensServiceActive % mensServices.length : 0;
-  const activeMensService = mensServices[activeMensServiceIndex];
+  const mensServicePageCount = Math.ceil(mensServices.length / mensServicePageSize);
+  const visibleMensServices = mensServices.slice(
+    mensServicePage * mensServicePageSize,
+    (mensServicePage + 1) * mensServicePageSize,
+  );
   const menuPageCount = Math.ceil(homeShortcuts.length / homeMenuPageSize);
   const visibleHomeShortcuts = homeShortcuts.slice(
     menuPage * homeMenuPageSize,
@@ -528,13 +527,17 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   }, [whyPaused, reducedMotion, pageVisible, whyReasons.length]);
 
   useEffect(() => {
-    if (mensServicePaused || reducedMotion || !pageVisible || mensServices.length < 2) return;
+    if (mensServicePaused || reducedMotion || !pageVisible || mensServicePageCount < 2) return;
     const timer = window.setInterval(
-      () => setMensServiceActive((index) => (index + 1) % mensServices.length),
+      () => setMensServicePage((page) => (page + 1) % mensServicePageCount),
       6000,
     );
     return () => window.clearInterval(timer);
-  }, [mensServicePaused, reducedMotion, pageVisible, mensServices.length]);
+  }, [mensServicePaused, reducedMotion, pageVisible, mensServicePageCount]);
+
+  useEffect(() => {
+    if (mensServicePageCount > 0 && mensServicePage >= mensServicePageCount) setMensServicePage(0);
+  }, [mensServicePage, mensServicePageCount]);
 
   return (
     <>
@@ -718,8 +721,7 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
         </div>
         {servicesQuery.isLoading ? (
           <div className="home-mens-service-skeleton" role="status" aria-label="Layanan pria sedang dimuat">
-            <span />
-            <span />
+            {Array.from({ length: 4 }, (_, index) => <span key={index} />)}
           </div>
         ) : servicesQuery.isError ? (
           <div className="home-mens-service-state" role="alert">
@@ -732,44 +734,79 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
           </div>
         ) : (
           <>
-            <article
-              className="home-mens-service-slide"
-              key={activeMensService.id}
-              aria-roledescription="slide"
-              aria-label={`Layanan ${activeMensServiceIndex + 1} dari ${mensServices.length}: ${activeMensService.name}`}
-              data-testid={`card-home-mens-service-${activeMensService.id}`}
+            <div
+              className="home-mens-service-grid"
+              key={mensServicePage}
+              aria-label={`Layanan pria, halaman ${mensServicePage + 1} dari ${mensServicePageCount}`}
+              aria-live={reducedMotion ? 'polite' : 'off'}
             >
-              <div className="home-mens-service-image">
-                <img
-                  src={activeMensService.imageUrl || mensServiceImages[activeMensService.category.trim().toLowerCase()]}
-                  alt={activeMensService.imageUrl ? `Foto layanan ${activeMensService.name} di GGS Hair Studio` : `Ilustrasi AI layanan ${activeMensService.name}, bukan hasil aktual GGS`}
-                  loading="lazy"
-                />
-              </div>
-              <div className="home-mens-service-copy">
-                <p className="home-mens-service-index">LAYANAN {String(activeMensServiceIndex + 1).padStart(2, '0')} / {String(mensServices.length).padStart(2, '0')}</p>
-                <p className="home-mens-service-category">{activeMensService.category}</p>
-                <h3>{activeMensService.name}</h3>
-                <p className="home-mens-service-description">{activeMensService.description}</p>
-                <div className="home-mens-service-meta">
-                  <span>{activeMensService.durationMinutes} menit</span>
-                  <strong>{money(activeMensService.price)}</strong>
-                </div>
-                <Link
-                  href="/book"
-                  className="home-mens-service-book"
-                  onClick={() => openBooking(activeMensService.id)}
-                  data-testid={`link-home-book-service-${activeMensService.id}`}
-                >
-                  Ajukan layanan
-                </Link>
-              </div>
-            </article>
-            {!activeMensService.imageUrl && (
-              <div className="home-mens-grooming-footer">
-                <p>Foto AI merupakan ilustrasi layanan, bukan hasil aktual GGS.</p>
+              {visibleMensServices.map((service) => {
+                const serviceName = service.name.toLowerCase();
+                const serviceCategory = service.category.trim().toLowerCase();
+                const fallbackPhoto = serviceName.includes('shampoo') || serviceName.includes('wash') || serviceName.includes('cuci')
+                  ? 'men-wash-service.jpg'
+                  : serviceCategory === 'color' || serviceName.includes('color') || serviceName.includes('warna')
+                    ? 'men-color-service.jpg'
+                    : serviceCategory === 'styling' || serviceName.includes('styling') || serviceName.includes('blow')
+                      ? 'men-styling-service.jpg'
+                      : 'men-cut-service.jpg';
+                const description = service.description || '';
+                const isSimulatedPrice = /^Simulasi:/i.test(description.trim());
+                const displayDescription = description.replace(/^Simulasi:\s*/i, '').trim();
+
+                return (
+                  <article
+                    className="home-mens-service-card"
+                    key={service.id}
+                    aria-label={`Layanan ${service.name}`}
+                    data-testid={`card-home-mens-service-${service.id}`}
+                  >
+                    <div className="home-mens-service-image">
+                      <img
+                        src={service.imageUrl || `${import.meta.env.BASE_URL}${fallbackPhoto}`}
+                        alt={service.imageUrl ? `Foto layanan ${service.name} di GGS Hair Studio` : `Ilustrasi layanan ${service.name}`}
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="home-mens-service-copy">
+                      <p className="home-mens-service-category">{service.category}</p>
+                      <h3>{service.name}</h3>
+                      {displayDescription && <p className="home-mens-service-description">{displayDescription}</p>}
+                      {isSimulatedPrice && <span className="home-mens-service-simulation">Harga simulasi</span>}
+                      <div className="home-mens-service-meta">
+                        <span>{service.durationMinutes} menit</span>
+                        <strong>{money(service.price)}</strong>
+                      </div>
+                      <Link
+                        href="/book"
+                        className="home-mens-service-book"
+                        onClick={() => openBooking(service.id)}
+                        data-testid={`link-home-book-service-${service.id}`}
+                      >
+                        Booking
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            {mensServicePageCount > 1 && (
+              <div className="home-mens-service-pagination" aria-label="Pilih halaman layanan pria">
+                {Array.from({ length: mensServicePageCount }, (_, index) => (
+                  <button
+                    type="button"
+                    key={index}
+                    aria-label={`Tampilkan halaman layanan ${index + 1}`}
+                    aria-current={mensServicePage === index ? 'true' : undefined}
+                    onClick={() => setMensServicePage(index)}
+                    data-testid={`button-home-mens-service-page-${index + 1}`}
+                  />
+                ))}
               </div>
             )}
+            <div className="home-mens-grooming-footer">
+              <p>Foto AI merupakan ilustrasi, bukan hasil aktual GGS.</p>
+            </div>
           </>
         )}
       </section>
