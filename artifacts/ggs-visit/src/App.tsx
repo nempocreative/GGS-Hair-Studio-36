@@ -5,12 +5,15 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bell,
+  BookOpen,
+  Briefcase,
   CalendarDays,
   Check,
   Clock3,
   Compass,
   Droplets,
   Gift,
+  GraduationCap,
   House,
   Instagram,
   MapPin,
@@ -21,6 +24,7 @@ import {
   Scissors,
   Sparkles,
   UserRound,
+  UsersRound,
 } from 'lucide-react';
 import {
   getGetGgsPublicServicesQueryKey,
@@ -298,6 +302,24 @@ function App() {
         <Route path="/services">
           <ServicesPage />
         </Route>
+        <Route path="/kelas">
+          <ClassesPage />
+        </Route>
+        <Route path="/hair-journal">
+          <HairJournalPage />
+        </Route>
+        <Route path="/events-community">
+          <EventsCommunityPage />
+        </Route>
+        <Route path="/our-team">
+          <OurTeamPage />
+        </Route>
+        <Route path="/karir">
+          <CareerPage />
+        </Route>
+        <Route path="/home-service">
+          <HomeServicePage />
+        </Route>
         <Route path="/mens-grooming">
           <AudienceServicesPage {...common} audience="men" />
         </Route>
@@ -326,6 +348,12 @@ function App() {
         </Route>
         <Route path="/offers-membership">
           <OffersPage />
+        </Route>
+        <Route path="/voucher">
+          <VoucherPage />
+        </Route>
+        <Route path="/membership">
+          <MembershipPage />
         </Route>
         <Route path="/branches">
           <BranchesPage {...common} />
@@ -387,9 +415,15 @@ const homeShortcuts = [
   { label: 'Galeri Gaya', href: '/style-gallery', icon: Sparkles, tone: 'quick-tone-violet' },
   { label: 'Produk', href: '/products', icon: ShoppingBag, tone: 'quick-tone-plum' },
   { label: 'Booking', href: '/book', icon: CalendarDays, tone: 'quick-tone-gold' },
-  { label: 'Promo & Membership', href: '/offers-membership', icon: Gift, tone: 'quick-tone-sage' },
+  { label: 'Voucher', href: '/voucher', icon: Gift, tone: 'quick-tone-sage' },
+  { label: 'Membership', href: '/membership', icon: UserRound, tone: 'quick-tone-plum' },
   { label: 'Cabang', href: '/branches', icon: MapPin, tone: 'quick-tone-blue' },
-  { label: 'My GGS', href: '/my-ggs', icon: UserRound, tone: 'quick-tone-plum' },
+  { label: 'Kelas', href: '/kelas', icon: GraduationCap, tone: 'quick-tone-gold' },
+  { label: 'Hair Journal', href: '/hair-journal', icon: BookOpen, tone: 'quick-tone-violet' },
+  { label: 'Events & Community', href: '/events-community', icon: UsersRound, tone: 'quick-tone-sage' },
+  { label: 'Our Team', href: '/our-team', icon: UsersRound, tone: 'quick-tone-plum' },
+  { label: 'Karir', href: '/karir', icon: Briefcase, tone: 'quick-tone-gold' },
+  { label: 'Home Service', href: '/home-service', icon: House, tone: 'quick-tone-sage' },
 ];
 
 const homeMenuPageSize = 8;
@@ -641,6 +675,126 @@ function ServicesPage() {
       </div>
       <div className="service-page-note" data-testid="text-service-category-note">
         <Sparkles size={18} /> Harga, durasi, dan ketersediaan mengikuti layanan aktif yang ditampilkan di masing-masing kategori. Beard grooming hanya tersedia jika dikonfirmasi tim GGS.
+      </div>
+    </PageFrame>
+  );
+}
+
+function ClassesPage() {
+  return (
+    <PageFrame
+      kicker="GGS / KELAS"
+      title={<>Kelas<br /><em>GGS.</em></>}
+      intro="Informasi kelas GGS belum tersedia."
+      testId="page-classes"
+    >
+      <div className="unavailable-panel" data-testid="classes-empty-state">
+        <span className="panel-index">KELAS GGS</span>
+        <h2>Informasi kelas belum tersedia.</h2>
+        <p>Detail jadwal dan materi kelas belum dicantumkan.</p>
+        <Link href="/" className="clearer-text-link" data-testid="link-classes-home">
+          Kembali ke beranda <ArrowRight size={16} />
+        </Link>
+      </div>
+    </PageFrame>
+  );
+}
+
+function HairJournalPage() {
+  return (
+    <PageFrame
+      kicker="GGS / HAIR JOURNAL"
+      title={<>Hair<br /><em>Journal.</em></>}
+      intro="Artikel Hair Journal GGS belum tersedia."
+      testId="page-hair-journal"
+    >
+      <div className="unavailable-panel" data-testid="hair-journal-empty-state">
+        <span className="panel-index">HAIR JOURNAL</span>
+        <h2>Artikel belum tersedia.</h2>
+        <p>Konten untuk Hair Journal belum dicantumkan.</p>
+        <Link href="/" className="clearer-text-link" data-testid="link-hair-journal-home">
+          Kembali ke beranda <ArrowRight size={16} />
+        </Link>
+      </div>
+    </PageFrame>
+  );
+}
+
+function EventsCommunityPage() {
+  return (
+    <PageFrame
+      kicker="GGS / EVENTS & COMMUNITY"
+      title={<>Events &amp;<br /><em>Community.</em></>}
+      intro="Informasi acara dan kegiatan komunitas GGS belum tersedia."
+      testId="page-events-community"
+    >
+      <div className="unavailable-panel" data-testid="events-community-empty-state">
+        <span className="panel-index">EVENTS &amp; COMMUNITY</span>
+        <h2>Belum ada informasi acara.</h2>
+        <p>Detail acara dan kegiatan komunitas GGS belum dicantumkan.</p>
+        <Link href="/" className="clearer-text-link" data-testid="link-events-community-home">
+          Kembali ke beranda <ArrowRight size={16} />
+        </Link>
+      </div>
+    </PageFrame>
+  );
+}
+
+function OurTeamPage() {
+  return (
+    <PageFrame
+      kicker="GGS / OUR TEAM"
+      title={<>Our<br /><em>Team.</em></>}
+      intro="Profil anggota tim GGS belum tersedia."
+      testId="page-our-team"
+    >
+      <div className="unavailable-panel" data-testid="our-team-empty-state">
+        <span className="panel-index">OUR TEAM</span>
+        <h2>Informasi tim belum tersedia.</h2>
+        <p>Profil anggota tim belum dicantumkan.</p>
+        <Link href="/" className="clearer-text-link" data-testid="link-our-team-home">
+          Kembali ke beranda <ArrowRight size={16} />
+        </Link>
+      </div>
+    </PageFrame>
+  );
+}
+
+function CareerPage() {
+  return (
+    <PageFrame
+      kicker="GGS / KARIR"
+      title={<>Karir<br /><em>GGS.</em></>}
+      intro="Informasi lowongan di GGS belum tersedia."
+      testId="page-careers"
+    >
+      <div className="unavailable-panel" data-testid="careers-empty-state">
+        <span className="panel-index">KARIR GGS</span>
+        <h2>Belum ada informasi lowongan.</h2>
+        <p>Detail posisi dan cara melamar belum dicantumkan.</p>
+        <Link href="/" className="clearer-text-link" data-testid="link-careers-home">
+          Kembali ke beranda <ArrowRight size={16} />
+        </Link>
+      </div>
+    </PageFrame>
+  );
+}
+
+function HomeServicePage() {
+  return (
+    <PageFrame
+      kicker="GGS / HOME SERVICE"
+      title={<>Home<br /><em>Service.</em></>}
+      intro="Informasi layanan Home Service GGS belum tersedia."
+      testId="page-home-service"
+    >
+      <div className="unavailable-panel" data-testid="home-service-empty-state">
+        <span className="panel-index">HOME SERVICE</span>
+        <h2>Informasi layanan belum tersedia.</h2>
+        <p>Detail layanan, wilayah, dan cara pemesanan belum dicantumkan.</p>
+        <Link href="/" className="clearer-text-link" data-testid="link-home-service-home">
+          Kembali ke beranda <ArrowRight size={16} />
+        </Link>
       </div>
     </PageFrame>
   );
@@ -922,18 +1076,64 @@ function GalleryPage({ onChooseStyle }: { onChooseStyle: (style: string) => void
 
 function OffersPage() {
   return (
-    <PageFrame kicker="GGS / OFFERS & MEMBERSHIP" title={<>Promo &amp;<br /><em>keanggotaan.</em></>} intro="Halaman ini akan memuat promo, paket bundling, poin, voucher, dan benefit member jika programnya sudah tersedia." testId="page-offers">
-      <section className="unavailable-panel member-empty" data-testid="status-membership-unavailable">
-        <div className="empty-ornament"><Gift size={25} /></div>
-        <span className="panel-index">PROGRAM MEMBER / BELUM TERSEDIA</span>
-        <h2>Belum ada promo atau<br />program member.</h2>
-        <p>Belum ada informasi promo, paket bundling, poin, atau voucher dari GGS. Belum ada saldo member yang bisa ditampilkan dan halaman ini belum menyediakan pendaftaran.</p>
-        <Link href="/book" className="clearer-primary-button" data-testid="link-membership-book">Tanyakan saat mengajukan janji <ArrowRight size={16} /></Link>
-      </section>
-      <div className="member-feature-list">
-        <article><span>01</span><div><strong>Promo</strong><p>Belum ada promo aktif yang dicantumkan.</p></div></article>
-        <article><span>02</span><div><strong>Poin & voucher</strong><p>Belum ada data poin atau voucher.</p></div></article>
-        <article><span>03</span><div><strong>Benefit member</strong><p>Informasi keanggotaan belum tersedia.</p></div></article>
+    <PageFrame kicker="GGS / PROGRAM" title={<>Program<br /><em>GGS.</em></>} intro="Voucher dan Membership memiliki halaman masing-masing." testId="page-offers">
+      <div className="service-category-grid" data-testid="offers-split-links">
+        <article className="service-category-card">
+          <p className="clearer-kicker">VOUCHER</p>
+          <h3>Voucher GGS</h3>
+          <p className="service-category-description">Informasi voucher dan ketentuannya.</p>
+          <Link className="service-category-link" href="/voucher" data-testid="link-offers-voucher">
+            Lihat Voucher <ArrowRight size={16} />
+          </Link>
+        </article>
+        <article className="service-category-card">
+          <p className="clearer-kicker">MEMBERSHIP</p>
+          <h3>Membership GGS</h3>
+          <p className="service-category-description">Informasi program, manfaat, dan keanggotaan.</p>
+          <Link className="service-category-link" href="/membership" data-testid="link-offers-membership">
+            Lihat Membership <ArrowRight size={16} />
+          </Link>
+        </article>
+      </div>
+    </PageFrame>
+  );
+}
+
+function VoucherPage() {
+  return (
+    <PageFrame
+      kicker="GGS / VOUCHER"
+      title={<>Voucher<br /><em>GGS.</em></>}
+      intro="Informasi voucher dari GGS belum tersedia."
+      testId="page-voucher"
+    >
+      <div className="unavailable-panel" data-testid="voucher-empty-state">
+        <span className="panel-index">VOUCHER GGS</span>
+        <h2>Informasi voucher belum tersedia.</h2>
+        <p>Detail, syarat, dan masa berlaku voucher belum dicantumkan.</p>
+        <Link href="/offers-membership" className="clearer-text-link" data-testid="link-voucher-programs">
+          Lihat pilihan program GGS <ArrowRight size={16} />
+        </Link>
+      </div>
+    </PageFrame>
+  );
+}
+
+function MembershipPage() {
+  return (
+    <PageFrame
+      kicker="GGS / MEMBERSHIP"
+      title={<>Membership<br /><em>GGS.</em></>}
+      intro="Informasi Membership GGS belum tersedia."
+      testId="page-membership"
+    >
+      <div className="unavailable-panel" data-testid="membership-empty-state">
+        <span className="panel-index">MEMBERSHIP GGS</span>
+        <h2>Informasi Membership belum tersedia.</h2>
+        <p>Manfaat, syarat, dan cara bergabung belum dicantumkan.</p>
+        <Link href="/offers-membership" className="clearer-text-link" data-testid="link-membership-programs">
+          Lihat pilihan program GGS <ArrowRight size={16} />
+        </Link>
       </div>
     </PageFrame>
   );

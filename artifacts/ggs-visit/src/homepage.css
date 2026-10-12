@@ -841,15 +841,15 @@
   justify-content: center;
   gap: 12px;
   border: 1px solid transparent;
-  background: rgb(255 255 255 / 17%);
+  background: transparent;
   padding: 15px 10px;
   color: var(--clearer-ink);
   font-size: 13px;
   font-weight: 700;
   text-align: center;
-  transition: color .2s, transform .2s, border-color .2s, background .2s;
+  transition: color .2s, transform .2s;
 }
-.ggs-quick-menu-item:hover { color: var(--clearer-accent); transform: translateY(-3px); border-color: var(--clearer-line); background: #f8f5ee; }
+.ggs-quick-menu-item:hover { color: var(--clearer-accent); transform: translateY(-3px); }
 .ggs-quick-menu-item.ggs-menu-mens > span:last-child,
 .ggs-quick-menu-item.ggs-menu-womens > span:last-child,
 .ggs-quick-menu-item.ggs-menu-self-care > span:last-child { max-width: 180px; }
