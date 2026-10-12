@@ -9,11 +9,11 @@ Use plain, specific Indonesian for visitor-facing copy. Preserve any tagline or 
 
 **How to apply:** When revising GGS public-site copy or fallback values, keep custom CMS text working and require verified owner-provided values for address, hours, and contact information.
 
-GGS service menus may describe men's haircut, skin fade, taper, styling, coloring, and hairstyle inspiration; beard grooming must remain conditional on GGS availability. Women's Hair & Beauty copy may describe haircut, blow, styling, coloring, smoothing, creambath, hair spa, and other services only where GGS offers them. Treat hairstyle picks as booking references, not guaranteed results, and show customer-result photos only after GGS verifies them; editorial images are not customer work.
+GGS service menus may describe men's haircut, skin fade, taper, styling, coloring, and hairstyle inspiration; beard grooming must remain conditional on GGS availability. Women's Hair & Beauty copy may describe haircut, blow, styling, coloring, smoothing, creambath, hair spa, and other services only where GGS offers them. The user approved the current men's service list, prices, and imagery as final-facing content; do not label these as demo, preview, AI-generated, or simulated.
 
-**Why:** The user supplied service-specific copy with availability caveats, and the current editorial imagery is not verified GGS work.
+**Why:** The user explicitly asked to treat the current site content as correct and remove those labels.
 
-**How to apply:** Keep public menus accurate to GGS's active services and require verified GGS photos before showing a result gallery.
+**How to apply:** Keep those labels and caveats out of the GGS visitor site; continue treating unlisted services as unavailable unless the user confirms them.
 
 Position GGS Hair Studio around Garut's reputation for haircutting expertise while emphasizing strong service and customer comfort. Do not invent a specific history, awards, or service guarantees.
 

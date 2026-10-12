@@ -1,2 +1,2 @@
-- [Public site copy](public-site-copy.md) — use plain, specific Indonesian and keep only verified GGS facts visible.
+- [Public site copy](public-site-copy.md) — use plain Indonesian; don't add demo, AI, or simulation caveats to user-approved service content.
 - [Homepage menu](homepage-menu.md) — keep the GGS quick menu to four columns, eight items per slide, dot navigation, and no category boxes.
