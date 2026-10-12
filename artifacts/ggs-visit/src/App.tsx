@@ -428,19 +428,34 @@ const homeShortcuts = [
 
 const homeMenuPageSize = 8;
 
+const previewMensServices: GgsService[] = [
+  { id: -1, name: 'Skin Fade', category: 'Cut & Styling', description: 'Simulasi: Contoh layanan pratinjau, bukan layanan aktif GGS.', durationMinutes: 45, price: 75000, active: true, imageUrl: null },
+  { id: -2, name: 'Taper Modern', category: 'Cut & Styling', description: 'Simulasi: Contoh layanan pratinjau, bukan layanan aktif GGS.', durationMinutes: 40, price: 70000, active: true, imageUrl: null },
+  { id: -3, name: 'Crew Cut', category: 'Cut & Styling', description: 'Simulasi: Contoh layanan pratinjau, bukan layanan aktif GGS.', durationMinutes: 35, price: 60000, active: true, imageUrl: null },
+  { id: -4, name: 'Textured Styling', category: 'Styling', description: 'Simulasi: Contoh layanan pratinjau, bukan layanan aktif GGS.', durationMinutes: 30, price: 50000, active: true, imageUrl: null },
+  { id: -5, name: 'Cuci & Styling', category: 'Styling', description: 'Simulasi: Contoh layanan pratinjau, bukan layanan aktif GGS.', durationMinutes: 35, price: 45000, active: true, imageUrl: null },
+  { id: -6, name: 'Warna Natural', category: 'Color', description: 'Simulasi: Contoh layanan pratinjau, bukan layanan aktif GGS.', durationMinutes: 100, price: 250000, active: true, imageUrl: null },
+  { id: -7, name: 'Highlight Rambut', category: 'Color', description: 'Simulasi: Contoh layanan pratinjau, bukan layanan aktif GGS.', durationMinutes: 120, price: 350000, active: true, imageUrl: null },
+  { id: -8, name: 'Buzz Cut', category: 'Cut & Styling', description: 'Simulasi: Contoh layanan pratinjau, bukan layanan aktif GGS.', durationMinutes: 25, price: 45000, active: true, imageUrl: null },
+];
+
 function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [whyActive, setWhyActive] = useState(0);
   const [whyPaused, setWhyPaused] = useState(false);
-  const [mensServicePaused, setMensServicePaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [menuPage, setMenuPage] = useState(0);
   const [mensServicePage, setMensServicePage] = useState(0);
   const mensServicePageSize = 4;
   const mensServices = useMemo(
-    () => services.filter((service) => service.active && audienceCategoryMap.men.has(service.category.trim().toLowerCase())),
+    () => {
+      const activeMensServices = services.filter(
+        (service) => service.active && audienceCategoryMap.men.has(service.category.trim().toLowerCase()),
+      );
+      return import.meta.env.DEV ? [...activeMensServices, ...previewMensServices] : activeMensServices;
+    },
     [services],
   );
   const mensServicePageCount = Math.ceil(mensServices.length / mensServicePageSize);
@@ -527,13 +542,13 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   }, [whyPaused, reducedMotion, pageVisible, whyReasons.length]);
 
   useEffect(() => {
-    if (mensServicePaused || reducedMotion || !pageVisible || mensServicePageCount < 2) return;
+    if (reducedMotion || !pageVisible || mensServicePageCount < 2) return;
     const timer = window.setInterval(
       () => setMensServicePage((page) => (page + 1) % mensServicePageCount),
-      6000,
+      4000,
     );
     return () => window.clearInterval(timer);
-  }, [mensServicePaused, reducedMotion, pageVisible, mensServicePageCount]);
+  }, [reducedMotion, pageVisible, mensServicePageCount]);
 
   useEffect(() => {
     if (mensServicePageCount > 0 && mensServicePage >= mensServicePageCount) setMensServicePage(0);
@@ -700,12 +715,6 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
         className="home-mens-grooming"
         aria-labelledby="home-mens-grooming-title"
         aria-roledescription="carousel"
-        onMouseEnter={() => setMensServicePaused(true)}
-        onMouseLeave={() => setMensServicePaused(false)}
-        onFocusCapture={() => setMensServicePaused(true)}
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setMensServicePaused(false);
-        }}
         data-testid="section-home-mens-grooming"
       >
         <div className="home-mens-grooming-heading">
@@ -752,6 +761,7 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
                       : 'men-cut-service.jpg';
                 const description = service.description || '';
                 const isSimulatedPrice = /^Simulasi:/i.test(description.trim());
+                const isPreviewDemoService = import.meta.env.DEV && service.id < 0;
                 const displayDescription = description.replace(/^Simulasi:\s*/i, '').trim();
 
                 return (
@@ -767,24 +777,46 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
                         alt={service.imageUrl ? `Foto layanan ${service.name} di GGS Hair Studio` : `Ilustrasi layanan ${service.name}`}
                         loading="lazy"
                       />
+                      <span className="home-mens-service-image-category">{service.category}</span>
                     </div>
                     <div className="home-mens-service-copy">
-                      <p className="home-mens-service-category">{service.category}</p>
                       <h3>{service.name}</h3>
                       {displayDescription && <p className="home-mens-service-description">{displayDescription}</p>}
-                      {isSimulatedPrice && <span className="home-mens-service-simulation">Harga simulasi</span>}
+                      {isSimulatedPrice && (
+                        <span className="home-mens-service-simulation">
+                          {isPreviewDemoService ? 'Contoh pratinjau' : 'Harga simulasi'}
+                        </span>
+                      )}
                       <div className="home-mens-service-meta">
-                        <span>{service.durationMinutes} menit</span>
-                        <strong>{money(service.price)}</strong>
+                        <span className="home-mens-service-duration">
+                          <Clock3 size={14} aria-hidden="true" />
+                          {service.durationMinutes} menit
+                        </span>
+                        <div className="home-mens-service-price">
+                          <span>{isPreviewDemoService ? 'Harga contoh' : 'Harga'}</span>
+                          <strong>{money(service.price)}</strong>
+                        </div>
                       </div>
-                      <Link
-                        href="/book"
-                        className="home-mens-service-book"
-                        onClick={() => openBooking(service.id)}
-                        data-testid={`link-home-book-service-${service.id}`}
-                      >
-                        Booking
-                      </Link>
+                      {isPreviewDemoService ? (
+                        <button
+                          type="button"
+                          className="home-mens-service-book home-mens-service-book-demo"
+                          disabled
+                          data-testid={`button-home-demo-service-${Math.abs(service.id)}`}
+                        >
+                          Contoh saja
+                        </button>
+                      ) : (
+                        <Link
+                          href="/book"
+                          className="home-mens-service-book"
+                          onClick={() => openBooking(service.id)}
+                          data-testid={`link-home-book-service-${service.id}`}
+                        >
+                          Booking layanan
+                          <ArrowRight size={16} aria-hidden="true" />
+                        </Link>
+                      )}
                     </div>
                   </article>
                 );
