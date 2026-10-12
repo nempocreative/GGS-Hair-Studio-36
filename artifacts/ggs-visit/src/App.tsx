@@ -465,8 +465,17 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   const [menuPage, setMenuPage] = useState(0);
   const [mensServiceIndex, setMensServiceIndex] = useState(0);
   const [mensServiceSnapCount, setMensServiceSnapCount] = useState(0);
+  const [womenServiceIndex, setWomenServiceIndex] = useState(0);
+  const [womenServiceSnapCount, setWomenServiceSnapCount] = useState(0);
   const [mensSlidesPerView, setMensSlidesPerView] = useState(4);
+  const [womenSlidesPerView, setWomenSlidesPerView] = useState(4);
   const [mensServicesViewportRef, mensServicesApi] = useEmblaCarousel({
+    align: 'start',
+    containScroll: false,
+    loop: true,
+    slidesToScroll: 1,
+  });
+  const [womenServicesViewportRef, womenServicesApi] = useEmblaCarousel({
     align: 'start',
     containScroll: false,
     loop: true,
@@ -552,6 +561,7 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
     const tabletQuery = window.matchMedia('(max-width: 900px)');
     const updateVisibleSlides = () => {
       setMensSlidesPerView(mobileQuery.matches ? 1 : tabletQuery.matches ? 2 : 4);
+      setWomenSlidesPerView(mobileQuery.matches ? 1 : tabletQuery.matches ? 2 : 4);
     };
     updateVisibleSlides();
     mobileQuery.addEventListener('change', updateVisibleSlides);
@@ -587,6 +597,12 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
   }, [mensServicesApi, mensServiceSnapCount, reducedMotion, pageVisible]);
 
   useEffect(() => {
+    if (!womenServicesApi || reducedMotion || !pageVisible || womenServiceSnapCount < 2) return;
+    const timer = window.setInterval(() => womenServicesApi.scrollNext(), 4000);
+    return () => window.clearInterval(timer);
+  }, [womenServicesApi, womenServiceSnapCount, reducedMotion, pageVisible]);
+
+  useEffect(() => {
     if (!mensServicesApi) return;
     const updateSelectedService = () => {
       setMensServiceIndex(mensServicesApi.selectedScrollSnap());
@@ -600,6 +616,21 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
       mensServicesApi.off('reInit', updateSelectedService);
     };
   }, [mensServicesApi]);
+
+  useEffect(() => {
+    if (!womenServicesApi) return;
+    const updateSelectedService = () => {
+      setWomenServiceIndex(womenServicesApi.selectedScrollSnap());
+      setWomenServiceSnapCount(womenServicesApi.scrollSnapList().length);
+    };
+    updateSelectedService();
+    womenServicesApi.on('select', updateSelectedService);
+    womenServicesApi.on('reInit', updateSelectedService);
+    return () => {
+      womenServicesApi.off('select', updateSelectedService);
+      womenServicesApi.off('reInit', updateSelectedService);
+    };
+  }, [womenServicesApi]);
 
   return (
     <>
@@ -912,58 +943,93 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
             <p>Belum ada layanan wanita aktif yang tersedia saat ini.</p>
           </div>
         ) : (
-          <div className="home-womens-service-grid">
-            {womenServices.map((service) => {
-              const serviceName = service.name.trim().toLowerCase();
-              const imageUrl = service.imageUrl || `${import.meta.env.BASE_URL}${homeWomenServicePhotos[serviceName]}`;
+          <>
+            <div
+              className="home-womens-service-viewport"
+              ref={womenServicesViewportRef}
+              aria-label="Slider layanan wanita"
+              aria-roledescription="carousel"
+            >
+              <div className="home-womens-service-track" aria-live={reducedMotion ? 'polite' : 'off'}>
+                {womenServices.map((service, index) => {
+                  const serviceName = service.name.trim().toLowerCase();
+                  const imageUrl = service.imageUrl || `${import.meta.env.BASE_URL}${homeWomenServicePhotos[serviceName]}`;
+                  const shouldPop = !reducedMotion
+                    && womenSlidesPerView > 1
+                    && womenServiceSnapCount > 0
+                    && womenServices.length > 1
+                    && index === (womenServiceIndex + 1) % womenServices.length;
 
-              return (
-                <article
-                  className="home-mens-service-card"
-                  key={service.id}
-                  aria-label={`Layanan ${service.name}`}
-                  data-testid={`card-home-womens-service-${service.id}`}
-                >
-                  <div className="home-mens-service-image">
-                    <img
-                      src={imageUrl}
-                      alt={`Foto layanan wanita ${service.name} di GGS Hair Studio`}
-                      loading="eager"
-                    />
-                    <span className="home-mens-service-image-category">{service.category}</span>
-                  </div>
-                  <div className="home-mens-service-copy">
-                    <h3>{service.name}</h3>
-                    {service.description && <p className="home-mens-service-description">{service.description}</p>}
-                    {homeWomenEstimateServiceNames.has(serviceName) && (
-                      <p className="home-womens-estimate">
-                        Contoh sementara · harga dan durasi perkiraan
-                      </p>
-                    )}
-                    <div className="home-mens-service-meta">
-                      <span className="home-mens-service-duration">
-                        <Clock3 size={14} aria-hidden="true" />
-                        {service.durationMinutes} menit
-                      </span>
-                      <div className="home-mens-service-price">
-                        <span>Harga</span>
-                        <strong>{money(service.price)}</strong>
-                      </div>
-                    </div>
-                    <Link
-                      href="/book"
-                      className="home-mens-service-book"
-                      onClick={() => openBooking(service.id)}
-                      data-testid={`link-home-book-womens-service-${service.id}`}
+                  return (
+                    <div
+                      className={`home-womens-service-slide${shouldPop ? ' home-womens-service-slide-pop' : ''}`}
+                      key={service.id}
+                      role="group"
+                      aria-roledescription="slide"
+                      aria-label={`${index + 1} dari ${womenServices.length}: ${service.name}`}
                     >
-                      Booking layanan
-                      <ArrowRight size={16} aria-hidden="true" />
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                      <article
+                        className="home-mens-service-card"
+                        aria-label={`Layanan ${service.name}`}
+                        data-testid={`card-home-womens-service-${service.id}`}
+                      >
+                        <div className="home-mens-service-image">
+                          <img
+                            src={imageUrl}
+                            alt={`Foto layanan wanita ${service.name} di GGS Hair Studio`}
+                            loading="lazy"
+                          />
+                          <span className="home-mens-service-image-category">{service.category}</span>
+                        </div>
+                        <div className="home-mens-service-copy">
+                          <h3>{service.name}</h3>
+                          {service.description && <p className="home-mens-service-description">{service.description}</p>}
+                          {homeWomenEstimateServiceNames.has(serviceName) && (
+                            <p className="home-womens-estimate">
+                              Contoh sementara · harga dan durasi perkiraan
+                            </p>
+                          )}
+                          <div className="home-mens-service-meta">
+                            <span className="home-mens-service-duration">
+                              <Clock3 size={14} aria-hidden="true" />
+                              {service.durationMinutes} menit
+                            </span>
+                            <div className="home-mens-service-price">
+                              <span>Harga</span>
+                              <strong>{money(service.price)}</strong>
+                            </div>
+                          </div>
+                          <Link
+                            href="/book"
+                            className="home-mens-service-book"
+                            onClick={() => openBooking(service.id)}
+                            data-testid={`link-home-book-womens-service-${service.id}`}
+                          >
+                            Booking layanan
+                            <ArrowRight size={16} aria-hidden="true" />
+                          </Link>
+                        </div>
+                      </article>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {womenServiceSnapCount > 1 && (
+              <div className="home-womens-service-pagination" aria-label="Pilih halaman layanan wanita">
+                {Array.from({ length: womenServiceSnapCount }, (_, index) => (
+                  <button
+                    type="button"
+                    key={index}
+                    aria-label={`Tampilkan layanan ${womenServices[index]?.name ?? index + 1}`}
+                    aria-current={womenServiceIndex === index ? 'true' : undefined}
+                    onClick={() => womenServicesApi?.scrollTo(index)}
+                    data-testid={`button-home-womens-service-slide-${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
 

@@ -441,7 +441,14 @@
 .home-mens-service-skeleton { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; max-width: 1260px; margin: 0 auto; }
 .home-mens-service-skeleton span { aspect-ratio: .69; background: linear-gradient(100deg, #ded7ca 20%, #e9e3d7 38%, #ded7ca 56%); background-size: 220% 100%; animation: home-mens-skeleton 1.4s ease-in-out infinite; }
 .home-womens-grooming { border-top: 1px solid #ddd5c9; background: #f3efe7; }
-.home-womens-service-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; max-width: 1260px; margin: 0 auto; }
+.home-womens-service-viewport { max-width: 1260px; margin: -10px auto 0; overflow: hidden; padding-top: 10px; }
+.home-womens-service-track { display: flex; width: calc(100% + 17px); margin-left: -17px; touch-action: pan-y pinch-zoom; }
+.home-womens-service-slide { box-sizing: border-box; min-width: 0; flex: 0 0 25%; padding-left: 17px; }
+.home-womens-service-slide-pop { position: relative; z-index: 2; }
+.home-womens-service-slide-pop .home-mens-service-card { animation: home-mens-service-pop 1.45s cubic-bezier(.2,.7,.25,1) both; transform-origin: center center; }
+.home-womens-service-pagination { display: flex; justify-content: center; gap: 9px; margin: 25px auto 0; }
+.home-womens-service-pagination button { width: 8px; height: 8px; border: 0; border-radius: 50%; background: #b8ad9d; padding: 0; cursor: pointer; transition: background .2s, transform .2s; }
+.home-womens-service-pagination button[aria-current="true"] { background: var(--clearer-accent); transform: scale(1.25); }
 .home-womens-estimate-notice { max-width: 1260px; margin: -22px auto 24px; color: var(--clearer-muted); font-size: 12px; line-height: 1.6; }
 .home-womens-estimate { margin: 0 0 10px; border-left: 2px solid var(--clearer-accent); padding-left: 8px; color: #77554b; font-size: 10px; line-height: 1.45; }
 @keyframes home-mens-service-pop {
@@ -611,9 +618,8 @@
   .clearer-mobile-nav .mobile-book { color: var(--clearer-accent); font-weight: 700; }
   .booking-page-layout { grid-template-columns: .65fr 1.35fr; gap: 30px; }
   .inner-page-content .clearer-service-row { grid-template-columns: 34px minmax(0,1fr) 150px 80px; gap: 14px; }
-  .home-mens-service-slide { flex-basis: 50%; }
+  .home-mens-service-slide, .home-womens-service-slide { flex-basis: 50%; }
   .home-mens-service-skeleton { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-womens-service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 680px) {
   .clearer-page { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
@@ -629,9 +635,8 @@
   .home-mens-grooming-heading { grid-template-columns: 1fr; gap: 19px; margin-bottom: 27px; }
   .home-mens-grooming-heading h2 { font-size: 48px; }
   .home-mens-grooming-intro { max-width: 440px; font-size: 14px; }
-  .home-mens-service-slide { flex-basis: 100%; }
+  .home-mens-service-slide, .home-womens-service-slide { flex-basis: 100%; }
   .home-mens-service-skeleton { grid-template-columns: 1fr; gap: 13px; }
-  .home-womens-service-grid { grid-template-columns: 1fr; gap: 13px; }
   .home-mens-service-image { aspect-ratio: 1.45; }
   .home-mens-service-copy { padding: 20px 18px 18px; }
   .home-mens-service-copy h3 { min-height: 0; font-size: 31px; }
