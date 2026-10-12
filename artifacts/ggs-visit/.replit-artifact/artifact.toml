@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "GGS Hair Studio — Visitor Website"
+description = "The customer-facing GGS Hair Studio website for discovering services, meeting stylists, and requesting an appointment."
+version = "1.0.0"
+id = "artifacts/ggs-visit"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24553
+
+[services.development]
+run = "pnpm --filter @workspace/ggs-visit run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ggs-visit", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ggs-visit/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24553"
+BASE_PATH = "/"
