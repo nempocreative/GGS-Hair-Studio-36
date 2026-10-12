@@ -14,11 +14,9 @@ import {
   Droplets,
   Gift,
   GraduationCap,
-  Heart,
   House,
   Instagram,
   MapPin,
-  MessageCircle,
   Minus,
   Phone,
   Plus,
@@ -476,17 +474,14 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
     {
       title: 'Keahlian mencukur dari Garut',
       description: 'GGS berangkat dari reputasi Garut dalam keahlian mencukur.',
-      icon: Scissors,
     },
     {
       title: 'Konsultasi sebelum janji',
       description: 'Sampaikan gaya yang diinginkan. Tim GGS akan membahas pilihan dan detail sebelum janji dikonfirmasi.',
-      icon: MessageCircle,
     },
     {
       title: 'Pelayanan dan kenyamanan',
       description: 'GGS mengutamakan pelayanan yang baik dan kenyamanan pelanggan selama kunjungan.',
-      icon: Heart,
     },
   ];
 
@@ -630,7 +625,6 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
 
       <section className="clearer-promise" data-testid="section-why-ggs">
         <div className="clearer-promise-intro">
-          <p className="clearer-kicker">TENTANG GGS HAIR STUDIO</p>
           <h2>Mengapa memilih<br /><em>GGS?</em></h2>
           <p>GGS mengutamakan keahlian mencukur, pelayanan yang baik, dan kenyamanan pelanggan.</p>
           <div className="clearer-promise-actions">
@@ -660,10 +654,6 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
             aria-roledescription="slide"
             aria-label={whyReasons[whyActive].title}
           >
-            {(() => {
-              const Icon = whyReasons[whyActive].icon;
-              return <span className="clearer-why-icon"><Icon size={31} strokeWidth={1.6} /></span>;
-            })()}
             <h3>{whyReasons[whyActive].title}</h3>
             <p className="clearer-why-description">{whyReasons[whyActive].description}</p>
           </article>
@@ -678,19 +668,6 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
               />
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="clearer-promise" data-testid="section-approach">
-        <div className="clearer-promise-intro">
-          <p className="clearer-kicker">CARA KERJA</p>
-          <h2>Mulai dengan<br />lebih jelas.</h2>
-          <p>{site?.introduction?.trim() || 'Informasi tentang GGS belum tersedia.'}</p>
-        </div>
-        <div className="clearer-steps">
-          <article><span>01</span><h3>Ceritakan</h3><p>Gaya yang kamu suka dan perubahan yang ingin dicoba.</p></article>
-          <article><span>02</span><h3>Pilih bersama</h3><p>Tim GGS akan membahas pilihan, waktu, dan harga sebelum janji dikonfirmasi.</p></article>
-          <article><span>03</span><h3>Konfirmasi</h3><p>Permintaanmu menjadi awal percakapan dengan tim studio.</p></article>
         </div>
       </section>
 
