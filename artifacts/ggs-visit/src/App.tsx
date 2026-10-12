@@ -956,9 +956,7 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
                   const imageUrl = service.imageUrl || `${import.meta.env.BASE_URL}${homeWomenServicePhotos[serviceName]}`;
                   const shouldPop = !reducedMotion
                     && womenSlidesPerView > 1
-                    && womenServiceSnapCount > 0
-                    && womenServices.length > 1
-                    && index === (womenServiceIndex + 1) % womenServices.length;
+                    && index === 1;
 
                   return (
                     <div
