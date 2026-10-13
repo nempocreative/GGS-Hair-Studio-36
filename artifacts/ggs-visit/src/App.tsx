@@ -437,14 +437,14 @@ const homeShortcuts = [
 
 const homeMenuPageSize = 8;
 const sampleVouchers = [
-  { name: 'Kenalan di GGS', value: 'Diskon contoh 10%', detail: 'Untuk layanan pertama', code: 'KENALANGGS' },
-  { name: 'Potong & Segar', value: 'Potongan contoh Rp15.000', detail: 'Untuk layanan potong', code: 'POTONG15' },
-  { name: 'Ritual Perawatan', value: 'Diskon contoh 15%', detail: 'Untuk layanan Hair Care', code: 'CARE15' },
-  { name: 'Cuci & Styling', value: 'Diskon contoh 10%', detail: 'Untuk layanan styling', code: 'STYLING10' },
-  { name: 'Ajak Teman', value: 'Potongan contoh Rp25.000', detail: 'Ilustrasi voucher teman', code: 'TEMANGGS' },
-  { name: 'Waktu Santai', value: 'Potongan contoh Rp20.000', detail: 'Untuk kunjungan hari kerja', code: 'WEEKDAY20' },
-  { name: 'Warna Favorit', value: 'Diskon contoh 10%', detail: 'Untuk layanan warna', code: 'COLOR10' },
-  { name: 'Hari Spesial', value: 'Diskon contoh 15%', detail: 'Untuk layanan pilihan', code: 'HARI15' },
+  { name: 'Kenalan di GGS', value: '10%', code: 'KENALANGGS' },
+  { name: 'Potong & Segar', value: 'Rp15.000', code: 'POTONG15' },
+  { name: 'Ritual Perawatan', value: '15%', code: 'CARE15' },
+  { name: 'Cuci & Styling', value: '10%', code: 'STYLING10' },
+  { name: 'Ajak Teman', value: 'Rp25.000', code: 'TEMANGGS' },
+  { name: 'Waktu Santai', value: 'Rp20.000', code: 'WEEKDAY20' },
+  { name: 'Warna Favorit', value: '10%', code: 'COLOR10' },
+  { name: 'Hari Spesial', value: '15%', code: 'HARI15' },
 ];
 const homeWomenServiceNames = new Set([
   'signature cut',
@@ -797,41 +797,25 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
 
       <section className="home-programs" aria-labelledby="home-programs-title" data-testid="section-home-programs">
         <div className="home-programs-heading">
-          <div>
-            <p className="clearer-kicker">CONTOH PROGRAM GGS</p>
-            <h2 id="home-programs-title">Sedikit gambaran<br /><em>untuk nanti.</em></h2>
-          </div>
-          <p>Kenali contoh voucher dan ilustrasi GGS Points. Semua angka dan kode di halaman ini hanya untuk memperlihatkan kemungkinan program.</p>
+          <h2 id="home-programs-title">Voucher</h2>
+          <Link href="/voucher" data-testid="link-home-all-vouchers">Lihat 8 voucher <ArrowRight size={16} /></Link>
         </div>
         <div className="home-programs-layout">
           <div className="home-voucher-preview">
-            <div className="home-programs-subhead">
-              <div><span>01 / VOUCHER</span><h3>Contoh voucher</h3></div>
-              <Link href="/voucher" data-testid="link-home-all-vouchers">Lihat 8 contoh <ArrowRight size={16} /></Link>
-            </div>
             <div className="sample-voucher-grid home-sample-voucher-grid">
               {sampleVouchers.slice(0, 4).map((voucher, index) => (
                 <article className="sample-voucher-card" key={voucher.code} data-testid={`card-home-sample-voucher-${index + 1}`}>
-                  <div className="sample-voucher-top"><span>CONTOH {String(index + 1).padStart(2, '0')}</span><Gift size={17} aria-hidden="true" /></div>
-                  <h4>{voucher.name}</h4>
-                  <strong>{voucher.value}</strong>
-                  <p>{voucher.detail}</p>
-                  <code>{voucher.code}</code>
+                  <span className="sample-voucher-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                  <div className="sample-voucher-ticket-copy">
+                    <h4>{voucher.name}</h4>
+                    <strong>{voucher.value}</strong>
+                    <code><span className="sr-only">Kode contoh: </span>{voucher.code}</code>
+                  </div>
                 </article>
               ))}
             </div>
             <p className="program-disclaimer">Kode dan nilai voucher hanya ilustrasi, bukan penawaran aktif, dan saat ini tidak dapat ditukarkan.</p>
           </div>
-          <aside className="home-points-preview" aria-labelledby="home-points-title">
-            <span className="points-index">02 / GGS POINTS</span>
-            <div className="points-mark" aria-hidden="true"><Sparkles size={25} strokeWidth={1.5} /></div>
-            <h3 id="home-points-title">Poin yang tumbuh<br /><em>bersama kunjungan.</em></h3>
-            <p className="points-intro">Simulasi mekanik program, bukan saldo atau akun member.</p>
-            <div className="points-example-row"><span>Contoh perolehan</span><strong>1 poin / Rp10.000</strong><small>transaksi layanan</small></div>
-            <div className="points-example-row"><span>Contoh penukaran</span><strong>100 poin = Rp10.000</strong><small>potongan ilustrasi</small></div>
-            <p className="points-inactive-note">Aturan dan saldo nyata belum aktif atau tercatat.</p>
-            <Link href="/membership" className="points-detail-link" data-testid="link-home-membership">Pelajari contoh GGS Points <ArrowRight size={16} /></Link>
-          </aside>
         </div>
       </section>
 
@@ -988,6 +972,8 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
           </div>
         </div>
       </section>
+
+      <OurTeamShowcase variant="home" />
 
       <section
         className="home-mens-grooming"
@@ -1602,22 +1588,103 @@ function EventsCommunityPage() {
   );
 }
 
+const teamIllustrationCategories = [
+  {
+    label: 'Grooming',
+    image: 'team-illustration-grooming.jpg',
+    alt: 'Ilustrasi AI kategori grooming di lingkungan studio rambut',
+    number: '01',
+  },
+  {
+    label: 'Styling',
+    image: 'team-illustration-styling.jpg',
+    alt: 'Ilustrasi AI kategori styling di lingkungan studio rambut',
+    number: '02',
+  },
+  {
+    label: 'Hair care',
+    image: 'team-illustration-care.jpg',
+    alt: 'Ilustrasi AI kategori hair care di lingkungan studio rambut',
+    number: '03',
+  },
+];
+
+function OurTeamShowcase({ variant }: { variant: 'home' | 'page' }) {
+  const isHome = variant === 'home';
+  return (
+    <section
+      className={`ggs-team-showcase${isHome ? ' ggs-team-showcase-home' : ' ggs-team-showcase-page'}`}
+      aria-labelledby={isHome ? 'home-team-title' : 'our-team-title'}
+      data-testid={isHome ? 'section-home-our-team' : 'section-our-team-illustrations'}
+    >
+      <div className="ggs-team-heading">
+        <div className="ggs-team-heading-copy">
+          <p className="clearer-kicker">{isHome ? 'GGS / OUR TEAM' : 'ILUSTRASI / KATEGORI'}</p>
+          <h2 id={isHome ? 'home-team-title' : 'our-team-title'}>
+            {isHome ? <>Ruang untuk<br /><em>berkarya.</em></> : <>Kenali<br /><em>arah kami.</em></>}
+          </h2>
+        </div>
+        <div className="ggs-team-intro">
+          <p>
+            {isHome
+              ? 'Setiap kebutuhan rambut punya pendekatannya sendiri. Lihat tiga kategori ilustratif yang menjadi inspirasi layanan di GGS.'
+              : 'Halaman ini memperlihatkan kategori layanan melalui ilustrasi editorial, bukan profil atau dokumentasi anggota tim.'}
+          </p>
+          <p className="ggs-team-ai-notice" role="note" data-testid="notice-team-ai-illustrations">
+            <Sparkles size={16} aria-hidden="true" />
+            <span><strong>Gambar adalah ilustrasi AI, bukan foto staf GGS yang sebenarnya.</strong> Figur di sini bersifat fiktif dan hanya mewakili kategori ilustratif.</span>
+          </p>
+        </div>
+      </div>
+      <div className="ggs-team-grid" role="list" aria-label="Kategori ilustratif layanan GGS">
+        {teamIllustrationCategories.map((category) => (
+          <article className="ggs-team-card" role="listitem" key={category.number} data-testid={`card-team-category-${category.number}`}>
+            <div className="ggs-team-image">
+              <img
+                src={`${import.meta.env.BASE_URL}${category.image}`}
+                alt={category.alt}
+                loading="lazy"
+                data-testid={`img-team-illustration-${category.number}`}
+              />
+              <span className="ggs-team-image-tag">ILUSTRASI AI</span>
+              <span className="ggs-team-image-index" aria-hidden="true">{category.number}</span>
+            </div>
+            <div className="ggs-team-card-caption">
+              <span>KATEGORI ILUSTRATIF</span>
+              <h3>{category.label}</h3>
+            </div>
+          </article>
+        ))}
+      </div>
+      {isHome && (
+        <div className="ggs-team-footer">
+          <p>Ilustrasi ini tidak menggambarkan staf aktual maupun susunan tim.</p>
+          <Link href="/our-team" className="ggs-team-link" data-testid="link-home-our-team">
+            Selengkapnya tentang tim <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+      )}
+      {!isHome && (
+        <div className="ggs-team-page-note">
+          <p>Profil, nama, dan informasi anggota staf tidak ditampilkan di halaman ini.</p>
+          <Link href="/" className="clearer-text-link" data-testid="link-our-team-home">
+            Kembali ke beranda <ArrowRight size={16} />
+          </Link>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function OurTeamPage() {
   return (
     <PageFrame
       kicker="GGS / OUR TEAM"
       title={<>Our<br /><em>Team.</em></>}
-      intro="Profil anggota tim GGS belum tersedia."
+      intro="Kategori ilustratif layanan dan pendekatan yang dapat dibicarakan sebelum janji."
       testId="page-our-team"
     >
-      <div className="unavailable-panel" data-testid="our-team-empty-state">
-        <span className="panel-index">OUR TEAM</span>
-        <h2>Informasi tim belum tersedia.</h2>
-        <p>Profil anggota tim belum dicantumkan.</p>
-        <Link href="/" className="clearer-text-link" data-testid="link-our-team-home">
-          Kembali ke beranda <ArrowRight size={16} />
-        </Link>
-      </div>
+      <OurTeamShowcase variant="page" />
     </PageFrame>
   );
 }
@@ -2041,11 +2108,12 @@ function VoucherPage() {
         <div className="sample-voucher-grid voucher-full-grid">
           {sampleVouchers.map((voucher, index) => (
             <article className="sample-voucher-card" key={voucher.code} data-testid={`card-sample-voucher-${index + 1}`}>
-              <div className="sample-voucher-top"><span>CONTOH {String(index + 1).padStart(2, '0')} / 08</span><Gift size={18} aria-hidden="true" /></div>
-              <h3>{voucher.name}</h3>
-              <strong>{voucher.value}</strong>
-              <p>{voucher.detail}</p>
-              <div className="sample-voucher-code"><span>KODE ILUSTRASI</span><code>{voucher.code}</code></div>
+              <span className="sample-voucher-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <div className="sample-voucher-ticket-copy">
+                <h3>{voucher.name}</h3>
+                <strong>{voucher.value}</strong>
+                <code><span className="sr-only">Kode ilustrasi: </span>{voucher.code}</code>
+              </div>
             </article>
           ))}
         </div>
@@ -2053,7 +2121,7 @@ function VoucherPage() {
           <strong>Catatan untuk semua contoh</strong>
           <p>Nama, kode, nilai, dan ketentuan di atas hanya ilustrasi. Voucher-voucher ini tidak sedang ditawarkan dan tidak dapat ditukarkan.</p>
         </div>
-        <Link href="/membership" className="program-crosslink" data-testid="link-voucher-membership">Lihat ilustrasi GGS Points <ArrowRight size={16} /></Link>
+        <Link href="/offers-membership" className="program-crosslink" data-testid="link-voucher-programs">Lihat pilihan program GGS <ArrowRight size={16} /></Link>
       </section>
     </PageFrame>
   );
@@ -2063,40 +2131,18 @@ function MembershipPage() {
   return (
     <PageFrame
       kicker="GGS / MEMBERSHIP"
-      title={<>GGS Points,<br /><em>sebagai simulasi.</em></>}
-      intro="Gambaran sederhana tentang mekanik poin yang mungkin digunakan. Ini bukan program aktif."
+      title={<>Membership<br /><em>GGS.</em></>}
+      intro="Informasi Membership GGS belum tersedia."
       testId="page-membership"
     >
-      <section className="membership-page-content" aria-labelledby="membership-mechanics-title" data-testid="section-membership-mechanics">
-        <div className="membership-feature">
-          <div className="membership-feature-copy">
-            <span className="panel-index">ILUSTRASI MEKANIK / BUKAN SALDO</span>
-            <h2 id="membership-mechanics-title">Setiap transaksi,<br /><em>sebuah contoh.</em></h2>
-            <p>GGS Points di sini hanya memperlihatkan cara hitung secara simulasi. Tidak ada akun member, saldo, atau pencatatan poin yang terhubung ke website ini.</p>
-          </div>
-          <div className="membership-point-mark" aria-hidden="true"><Sparkles size={32} strokeWidth={1.4} /><span>GGS<br />POINTS</span></div>
-        </div>
-        <div className="membership-mechanics-grid">
-          <article className="membership-mechanic">
-            <span>01 / CONTOH PEROLEHAN</span>
-            <strong>1 poin</strong>
-            <p>untuk setiap Rp10.000 transaksi layanan</p>
-            <small>Angka simulasi, bukan poin yang diperoleh.</small>
-          </article>
-          <article className="membership-mechanic membership-redeem">
-            <span>02 / CONTOH PENUKARAN</span>
-            <strong>100 poin</strong>
-            <p>untuk ilustrasi potongan Rp10.000</p>
-            <small>Contoh mekanik saja, bukan penukaran aktif.</small>
-          </article>
-        </div>
-        <div className="membership-inactive-notice" role="note" data-testid="notice-membership-inactive">
-          <strong>Program belum aktif atau tercatat.</strong>
-          <p>Aturan sebenarnya belum berlaku, dan website ini tidak menyimpan saldo maupun riwayat poin. Tidak ada poin yang dapat diperoleh atau ditukarkan melalui contoh ini.</p>
-        </div>
-        <Link href="/my-ggs" className="program-crosslink" data-testid="link-membership-my-ggs">Tentang My GGS yang belum terhubung <ArrowRight size={16} /></Link>
-        <Link href="/voucher" className="program-secondary-link" data-testid="link-membership-vouchers">Lihat contoh voucher GGS</Link>
-      </section>
+      <div className="unavailable-panel" data-testid="membership-empty-state">
+        <span className="panel-index">MEMBERSHIP GGS</span>
+        <h2>Informasi Membership belum tersedia.</h2>
+        <p>Manfaat, syarat, dan cara bergabung belum dicantumkan.</p>
+        <Link href="/offers-membership" className="clearer-text-link" data-testid="link-membership-programs">
+          Lihat pilihan program GGS <ArrowRight size={16} />
+        </Link>
+      </div>
     </PageFrame>
   );
 }
@@ -2134,7 +2180,7 @@ function BranchesPage({ site, siteQuery }: SharedProps) {
 
 function MyGgsPage() {
   return (
-    <PageFrame kicker="GGS / MY GGS" title={<>My GGS,<br /><em>belum aktif.</em></>} intro="Tempat untuk melihat booking mendatang, riwayat kunjungan, poin, voucher, dan preferensi gaya. Data tersebut belum terhubung." testId="page-my-ggs">
+    <PageFrame kicker="GGS / MY GGS" title={<>My GGS,<br /><em>belum aktif.</em></>} intro="Tempat untuk melihat booking mendatang, riwayat kunjungan, voucher, dan preferensi gaya. Data tersebut belum terhubung." testId="page-my-ggs">
       <section className="unavailable-panel myggs-empty" data-testid="status-my-ggs-unavailable">
         <div className="empty-ornament"><UserRound size={25} /></div>
         <span className="panel-index">MY GGS / DATA PRIBADI BELUM TERHUBUNG</span>
@@ -2146,7 +2192,7 @@ function MyGgsPage() {
         {[
           { label: 'Booking mendatang', value: 'Belum terhubung', note: 'Data booking akun belum tersedia' },
           { label: 'Riwayat kunjungan', value: 'Belum terhubung', note: 'Data kunjungan pelanggan belum tersedia' },
-          { label: 'Poin & voucher', value: 'Belum tersedia', note: 'Belum ada saldo atau voucher yang dicantumkan' },
+          { label: 'Voucher pribadi', value: 'Belum tersedia', note: 'Voucher pribadi belum terhubung' },
           { label: 'Preferensi gaya', value: 'Belum disimpan', note: 'Website ini belum menyimpan data profil' },
         ].map((item, index) => <article key={item.label} data-testid={`card-my-ggs-${index}`}><span>0{index + 1} / {item.label}</span><strong>{item.value}</strong><p>{item.note}</p></article>)}
       </div>
