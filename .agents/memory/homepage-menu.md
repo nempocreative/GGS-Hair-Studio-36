@@ -9,8 +9,8 @@ For the GGS visitor website, show four menu shortcuts per row and eight per slid
 
 **How to apply:** Preserve this layout, overflow behavior, navigation control, and background-free styling when adding or changing homepage shortcuts.
 
-Use distinct category symbols for homepage shortcuts, except Men's Grooming and Women's Hair & Beauty, which should keep centered face-and-hair portrait icons in their colored rounded-square tiles.
+Use distinct category symbols for homepage shortcuts, except Men's Grooming and Women's Hair & Beauty, which should keep the original illustrated face-and-hair portraits—not photo portraits—in their colored rounded-square tiles. Keep extra hair-strand lines off the Men's Grooming portrait.
 
-**Why:** The user found the repeated portraits odd and asked for new menu icons, then clarified to retain face icons specifically for Men's Grooming and Women's Hair & Beauty.
+**Why:** The user found the repeated portraits odd, then clarified to retain the original face illustrations specifically for Men's Grooming and Women's Hair & Beauty, rejected a photorealistic replacement, and asked to remove lines from the male icon's hair.
 
-**How to apply:** Choose clear, recognizable symbols for other shortcuts; preserve the two specified portraits, existing tile colors, and background-free shortcut links.
+**How to apply:** Choose clear, recognizable symbols for other shortcuts; preserve the two illustrated portraits, the plain male hairstyle, existing tile colors, and background-free shortcut links.

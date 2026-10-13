@@ -552,7 +552,9 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
       />
       <path d="M14.7 22c-2.1-1.2-3.6.2-2.7 2.6.6 1.6 1.7 2.3 3.3 2m17.4-4.6c2.1-1.2 3.6.2 2.7 2.6-.6 1.6-1.7 2.3-3.3 2" fill="#e9b994" />
       <path d={style.fringe} fill="#382a27" />
-      <path d={style.strands} fill="none" stroke="#9a7058" strokeWidth="1.05" strokeLinecap="round" opacity=".9" />
+      {hairstyle !== 'fade' && (
+        <path d={style.strands} fill="none" stroke="#9a7058" strokeWidth="1.05" strokeLinecap="round" opacity=".9" />
+      )}
       <path
         d="M17.2 24.8c1.3-.9 3-.9 4.3 0m6.8 0c1.3-.9 3-.9 4.3 0"
         fill="none"

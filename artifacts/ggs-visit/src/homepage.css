@@ -1738,6 +1738,7 @@
   display: block;
   width: 62px;
   height: 62px;
+  object-fit: contain;
 }
 .ggs-quick-menu-item:hover .ggs-quick-menu-icon,
 .ggs-quick-menu-item:focus-visible .ggs-quick-menu-icon {
