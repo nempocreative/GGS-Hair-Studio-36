@@ -522,44 +522,48 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
       fill="none"
       aria-hidden="true"
     >
-      <path d={style.back} fill="#382a27" />
       <path
-        d="M14 19c0-7 4-11 10-11s10 4 10 11v7c0 7-5 12-10 12s-10-5-10-12Z"
-        fill="#f3cfad"
+        d="M8 48c.8-4.9 4.1-7.6 9.5-9l6.5-1.6 6.5 1.6c5.4 1.4 8.7 4.1 9.5 9Z"
+        fill="#ead9c9"
         stroke="#70473b"
-        strokeWidth="1.3"
+        strokeWidth="1.1"
         strokeLinejoin="round"
       />
-      <path d="M14 21c-3-2-5 0-4 3 1 2 3 3 5 2m19-4c3-2 5 0 4 3-1 2-3 3-5 2" fill="#edc39f" stroke="#70473b" strokeWidth="1.2" />
+      <path d={style.back} fill="#382a27" />
+      <path
+        d="M10.5 22c-1.4-5.2-.8-11.5 2.4-15.2C16 2.6 20 1.5 24 1.5s8 1.1 11.1 5.3c3.2 3.7 3.8 10 2.4 15.2l-4-3.7c-5.3 2.5-13.7 2.5-19 0Z"
+        fill="#382a27"
+      />
+      <path
+        d="M15 9c2.5-3.4 6.4-4.9 10.5-4.7M31.5 5.8c2.8 2.2 4.4 5.2 4.7 8.7"
+        fill="none"
+        stroke="#956b50"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+        opacity=".9"
+      />
+      <path d="M20 36v5c2 1.8 6 1.8 8 0v-5" fill="#e9bf9d" stroke="#70473b" strokeWidth="1" />
+      <path
+        d="M14 19c0-7 4-11 10-11s10 4 10 11v7c0 7-5 12-10 12s-10-5-10-12Z"
+        fill="#f1c9a7"
+        stroke="#70473b"
+        strokeWidth="1.15"
+        strokeLinejoin="round"
+      />
+      <path d="M14 21c-2.8-1.8-4.7 0-3.7 2.6.8 1.8 2.3 2.6 4.2 2.1m19-4.7c2.8-1.8 4.7 0 3.7 2.6-.8 1.8-2.3 2.6-4.2 2.1" fill="#edc39f" stroke="#70473b" strokeWidth="1.1" />
       <path d={style.fringe} fill="#382a27" />
-      <path d="M19 26h.1m9.8 0h.1" stroke="#382a27" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M24 27v3m-3 3c2 1.5 4 1.5 6 0" stroke="#9e5e4c" strokeWidth="1.2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function HairWrapFrame({ hairstyle }: { hairstyle: string }) {
-  const isCurly = ['curls', 'afro', 'shag'].includes(hairstyle);
-  const isBraided = ['braids', 'locs'].includes(hairstyle);
-  const isLong = ['bob', 'waves', 'longLayers', 'ponytail', 'curtain'].includes(hairstyle);
-  const silhouette = isCurly
-    ? 'M23 10c-7-5-15 0-13 8-7 3-8 12-2 16-5 6-3 14 3 17-3 8 4 15 12 12 7 7 15 7 22 3 8 5 17 3 20-3 9 2 15-5 12-13 7-4 8-12 3-17 5-7 3-14-3-17 2-8-5-14-12-10-7-7-16-7-22-2-7-5-15-3-20 6Z'
-    : isBraided
-      ? 'M23 10c-8-5-15 1-12 9-8 3-8 12-2 16-5 7-2 14 4 17-2 9 6 14 14 10 7 7 16 7 22 2 8 5 16 1 17-7 7-5 6-13 0-17 5-7 3-14-4-17 2-8-5-14-12-10-8-6-16-5-21 3-7-6-14-5-21 3Z'
-      : isLong
-        ? 'M23 10c9-6 34-6 44 0 10-1 16 8 12 17 6 8 4 15-2 19 6 8 3 16-4 19 1 10-7 15-15 10-8 7-16 7-23 2-8 6-16 3-20-3-9 3-16-3-13-12-8-5-8-13-2-19-6-8-3-16 4-19-4-8 1-15 10-14Z'
-        : 'M23 10c9-6 34-6 44 0 10-1 16 8 12 17 6 8 4 15-2 19 6 8 3 15-4 19-8 5-16 5-23 1-8 5-16 5-23 0-8 4-16 0-14-9-8-5-8-13-2-19-6-8-3-16 4-19-4-8 1-15 10-14Z';
-  const strands = isBraided
-    ? 'M13 23c-6 8-4 14 2 17-6 6-4 12 2 15m58-32c6 8 4 14-2 17 6 6 4 12-2 15M22 12c8-5 14-3 18 2 5-6 11-5 15-1'
-    : isCurly
-      ? 'M15 20c-4 5-4 9 1 12-5 4-5 8 0 12m58-24c4 5 4 9-1 12 5 4 5 8 0 12M25 12c6-4 11-3 14 2 4-5 9-5 14-2'
-      : isLong
-        ? 'M16 21c-5 8-4 14 2 18-5 7-3 13 3 17m51-35c5 8 4 14-2 18 5 7 3 13-3 17M26 11c8-4 13-2 17 3 4-5 10-6 17-2'
-        : 'M23 11c8-4 14-3 18 2 5-5 12-5 19-1M12 28c-4 7-3 13 2 17m62-17c4 7 3 13-2 17M28 78c8 4 16 4 22 0';
-  return (
-    <svg className="ggs-quick-menu-hair-wrap" viewBox="0 0 90 90" aria-hidden="true">
-      <path d={silhouette} fill="#382a27" />
-      <path d={strands} fill="none" stroke="#9c6b4f" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M16.5 24.2c1.3-.9 3.1-.9 4.4 0m6.2 0c1.3-.9 3.1-.9 4.4 0"
+        fill="none"
+        stroke="#765043"
+        strokeWidth="1"
+        strokeLinecap="round"
+      />
+      <ellipse cx="19" cy="26.4" rx="1" ry="1.25" fill="#382a27" />
+      <ellipse cx="29" cy="26.4" rx="1" ry="1.25" fill="#382a27" />
+      <path d="M24 27.1v3.3c.6.5 1.1.5 1.7.2" fill="none" stroke="#ac765c" strokeWidth="1" strokeLinecap="round" />
+      <path d="M21.4 33.3c1.8.9 3.7.9 5.4 0" fill="none" stroke="#a65f51" strokeWidth="1.1" strokeLinecap="round" />
+      <path d="M16.2 30.4c1.2.7 2.3.9 3.3.7m12.3-.7c-1.2.7-2.3.9-3.3.7" fill="none" stroke="#de9f83" strokeWidth="1.4" strokeLinecap="round" opacity=".58" />
     </svg>
   );
 }
@@ -1040,14 +1044,11 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                 key={item.href}
                 data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
               >
-                <span className="ggs-quick-menu-shell">
-                  <HairWrapFrame hairstyle={item.hairstyle} />
-                  <span className={`ggs-quick-menu-icon ${item.tone}`}>
-                    <HairModelMenuIcon
-                      className="ggs-quick-menu-avatar"
-                      hairstyle={item.hairstyle}
-                    />
-                  </span>
+                <span className={`ggs-quick-menu-icon ${item.tone}`}>
+                  <HairModelMenuIcon
+                    className="ggs-quick-menu-avatar"
+                    hairstyle={item.hairstyle}
+                  />
                 </span>
                 <span>{item.label}</span>
               </Link>
