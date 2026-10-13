@@ -1867,3 +1867,18 @@
   .sample-voucher-ticket-copy { padding-right: 14px; padding-left: 14px; }
   .voucher-full-grid { grid-template-columns: 1fr; }
 }
+
+/* Place the voucher tickets immediately after the homepage quick menu. */
+.clearer-home-menu.ggs-quick-menu { padding-bottom: 20px; }
+.home-programs.home-programs-direct {
+  padding-top: 18px;
+  padding-bottom: 54px;
+}
+.home-programs-direct::before { display: none; }
+@media (max-width: 680px) {
+  .clearer-home-menu.ggs-quick-menu { padding-bottom: 18px; }
+  .home-programs.home-programs-direct {
+    padding-top: 14px;
+    padding-bottom: 42px;
+  }
+}

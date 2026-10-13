@@ -795,26 +795,19 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
           )}
       </section>
 
-      <section className="home-programs" aria-labelledby="home-programs-title" data-testid="section-home-programs">
-        <div className="home-programs-heading">
-          <h2 id="home-programs-title">Voucher</h2>
-          <Link href="/voucher" data-testid="link-home-all-vouchers">Lihat 8 voucher <ArrowRight size={16} /></Link>
-        </div>
-        <div className="home-programs-layout">
-          <div className="home-voucher-preview">
-            <div className="sample-voucher-grid home-sample-voucher-grid">
-              {sampleVouchers.slice(0, 4).map((voucher, index) => (
-                <article className="sample-voucher-card" key={voucher.code} data-testid={`card-home-sample-voucher-${index + 1}`}>
-                  <span className="sample-voucher-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-                  <div className="sample-voucher-ticket-copy">
-                    <h4>{voucher.name}</h4>
-                    <strong>{voucher.value}</strong>
-                    <code><span className="sr-only">Kode contoh: </span>{voucher.code}</code>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <p className="program-disclaimer">Kode dan nilai voucher hanya ilustrasi, bukan penawaran aktif, dan saat ini tidak dapat ditukarkan.</p>
+      <section className="home-programs home-programs-direct" aria-label="Voucher GGS" data-testid="section-home-programs">
+        <div className="home-voucher-preview">
+          <div className="sample-voucher-grid home-sample-voucher-grid">
+            {sampleVouchers.slice(0, 4).map((voucher, index) => (
+              <article className="sample-voucher-card" key={voucher.code} data-testid={`card-home-sample-voucher-${index + 1}`}>
+                <span className="sample-voucher-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <div className="sample-voucher-ticket-copy">
+                  <h4>{voucher.name}</h4>
+                  <strong>{voucher.value}</strong>
+                  <code><span className="sr-only">Kode contoh: </span>{voucher.code}</code>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
