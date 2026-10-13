@@ -14,6 +14,7 @@ import {
   Compass,
   Copy,
   Droplets,
+  Flower2,
   Gift,
   GraduationCap,
   House,
@@ -437,7 +438,7 @@ type SharedProps = {
 const homeShortcuts = [
   { label: 'Beranda', href: '/', icon: House, tone: 'quick-tone-blue' },
   { label: "Men's Grooming", href: '/mens-grooming', icon: Scissors, tone: 'quick-tone-rose' },
-  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', icon: Sparkles, tone: 'quick-tone-violet' },
+  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', icon: Flower2, tone: 'quick-tone-violet' },
   { label: 'Hair & Self Care', href: '/hair-self-care', icon: Droplets, tone: 'quick-tone-sage' },
   { label: 'Galeri Gaya', href: '/style-gallery', icon: Image, tone: 'quick-tone-violet' },
   { label: 'Produk', href: '/products', icon: ShoppingBag, tone: 'quick-tone-plum' },
@@ -910,7 +911,7 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                 key={item.href}
                 data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
               >
-                <span className={`ggs-quick-menu-icon ${item.tone}`}><item.icon size={27} strokeWidth={1.8} /></span>
+                <span className={`ggs-quick-menu-icon ${item.tone}`}><item.icon className="ggs-quick-menu-glyph" size={27} strokeWidth={2} /></span>
                 <span>{item.label}</span>
               </Link>
             ))}

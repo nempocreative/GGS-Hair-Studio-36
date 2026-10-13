@@ -1750,10 +1750,13 @@
   content: '';
   pointer-events: none;
 }
-.ggs-quick-menu-icon svg {
+.ggs-quick-menu-glyph {
   position: relative;
   z-index: 1;
-  filter: drop-shadow(0 1px 1px rgb(47 39 32 / 24%));
+  filter:
+    drop-shadow(-1px -1px 0 rgb(255 255 255 / 70%))
+    drop-shadow(1px 1px 0 rgb(48 38 32 / 55%))
+    drop-shadow(0 3px 3px rgb(47 39 32 / 32%));
 }
 .ggs-quick-menu-item:hover .ggs-quick-menu-icon,
 .ggs-quick-menu-item:focus-visible .ggs-quick-menu-icon {
