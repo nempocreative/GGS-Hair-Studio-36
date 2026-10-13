@@ -1043,9 +1043,13 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
         <div className="home-service-promo-heading">
           <p className="clearer-kicker">GGS / HOME SERVICE</p>
           <h2 id="home-service-promo-title">Home<br /><em>Service.</em></h2>
+          <span className="home-service-promo-caption">Perawatan rambut, lebih dekat dengan rumah.</span>
         </div>
         <div className="home-service-promo-details">
-          <p>Home Service adalah permintaan layanan GGS untuk kunjungan ke rumah. Pilih layanan dan waktu, lalu tuliskan alamat di catatan. Tim GGS akan mengonfirmasi wilayah serta ketersediaan.</p>
+          <div className="home-service-promo-copy">
+            <span className="home-service-promo-index">LAYANAN KUNJUNGAN</span>
+            <p>Home Service adalah permintaan layanan GGS untuk kunjungan ke rumah. Pilih layanan dan waktu, lalu tuliskan alamat di catatan. Tim GGS akan mengonfirmasi wilayah serta ketersediaan.</p>
+          </div>
           <Link
             href="/book"
             className="clearer-text-link"
@@ -1227,17 +1231,33 @@ function HomeServicePage({ openBooking }: { openBooking: SharedProps['openBookin
       testId="page-home-service"
     >
       <div className="home-service-detail-panel" data-testid="home-service-detail-panel">
-        <span className="panel-index">CARA MENGAJUKAN</span>
-        <h2>Pilih layanan dan waktu.</h2>
-        <p>Pilih layanan yang diinginkan, masukkan tanggal dan waktu, lalu cantumkan alamat kunjungan di catatan untuk tim GGS.</p>
-        <Link
-          href="/book"
-          className="clearer-primary-button"
-          onClick={() => openBooking(undefined, homeServiceBookingNote)}
-          data-testid="link-home-service-booking"
-        >
-          Booking Home Service <ArrowRight size={17} aria-hidden="true" />
-        </Link>
+        <div className="home-service-detail-main">
+          <span className="panel-index">CARA MENGAJUKAN</span>
+          <h2>Perawatan di rumah, dimulai dari permintaan Anda.</h2>
+          <p>Ajukan layanan yang diinginkan, tentukan tanggal dan waktu, lalu cantumkan alamat kunjungan pada catatan untuk tim GGS.</p>
+          <Link
+            href="/book"
+            className="clearer-primary-button"
+            onClick={() => openBooking(undefined, homeServiceBookingNote)}
+            data-testid="link-home-service-booking"
+          >
+            Booking Home Service <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+        </div>
+        <ol className="home-service-steps" aria-label="Langkah mengajukan Home Service">
+          <li>
+            <span>01</span>
+            <div><strong>Pilih layanan</strong><p>Tentukan layanan serta waktu yang Anda inginkan.</p></div>
+          </li>
+          <li>
+            <span>02</span>
+            <div><strong>Tulis alamat</strong><p>Cantumkan alamat kunjungan di bagian catatan.</p></div>
+          </li>
+          <li>
+            <span>03</span>
+            <div><strong>Tunggu konfirmasi</strong><p>Tim GGS akan mengonfirmasi wilayah dan ketersediaan.</p></div>
+          </li>
+        </ol>
       </div>
     </PageFrame>
   );
