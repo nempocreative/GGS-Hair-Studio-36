@@ -6,18 +6,12 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bell,
-  BookOpen,
-  Briefcase,
   CalendarDays,
   Check,
   Clock3,
   Compass,
   Copy,
-  Droplets,
-  Gift,
-  GraduationCap,
   House,
-  Image,
   Instagram,
   MapPin,
   Minus,
@@ -28,9 +22,7 @@ import {
   ShoppingBag,
   Scissors,
   Sparkles,
-  Ticket,
   UserRound,
-  UsersRound,
 } from 'lucide-react';
 import {
   getGetGgsPublicServicesQueryKey,
@@ -440,91 +432,74 @@ type QuickMenuFaceIconProps = {
   hairstyle: string;
 };
 
-const menuHairstyles: Record<string, { back: string; fringe: string; strands: string }> = {
+const menuHairstyles: Record<string, { back: string; fringe: string }> = {
   crop: {
     back: 'M11 27C8 20 8 11 14 6c3-3 7-4 11-4 8 0 14 6 14 15 0 5-1 9-3 13l-4-8c-5 2-11 2-17 0Z',
     fringe: 'M13 17c2-5 5-8 9-10 2 4 6 6 12 7l3 6c-5 0-9-2-13-5-2 3-6 5-11 6Z',
-    strands: 'M15 10c2-3 5-5 8-6m4 1c3 1 5 3 7 6',
   },
   fade: {
     back: 'M12 27C9 20 9 12 14 7c3-3 6-5 11-5 8 0 13 6 13 14 0 5-1 9-3 13l-4-8c-5 2-11 2-16 0Z',
     fringe: 'M13 19C11 9 16 2 24 2s13 7 11 17c-5-1-8-4-11-8-3 4-6 7-11 8Z',
-    strands: 'M16 10c2-3 4-5 7-6m5 1c3 1 5 3 6 5',
   },
   curls: {
     back: 'M13 37c-7 0-10-6-7-11-5-6-2-13 4-15 0-7 7-11 13-7 5-5 13-3 15 4 7 0 11 7 7 13 4 7-1 14-8 14l-4-11c-6 4-13 4-20 0Z',
     fringe: 'M12 18c1-5 4-8 8-9 2-4 7-4 9 0 4 0 7 3 8 8-5 0-9-2-12-5-3 4-7 6-13 6Z',
-    strands: 'M12 15c1-4 3-6 6-8m7-2c4-.5 7 1 9 4m-26 11c-1 3 0 5 2 7m28-9c2 2 2 5 0 7',
   },
   sidePart: {
     back: 'M11 30C8 22 8 11 14 6c3-3 7-4 11-4 8 0 14 6 14 15 0 6-1 10-4 14l-4-9c-6 3-12 3-18 0Z',
     fringe: 'M12 18c6-2 11-7 14-13 2 4 6 7 11 9l1 7c-5-1-9-3-12-6-3 4-7 6-13 7Z',
-    strands: 'M15 10c3-3 6-5 10-6m2 3c-1 3-3 5-6 7m9-3 4 3',
   },
   bob: {
     back: 'M11 31 9 17C8 8 15 2 24 2s16 6 15 16l-2 25-8 2-2-20-3 9-4-9-2 20-8-2Z',
     fringe: 'M13 18c2-5 6-8 11-8s9 3 11 8c-4 0-8-2-11-5-3 3-6 5-11 5Z',
-    strands: 'M14 11c2-4 6-6 10-6m4 1c4 2 6 5 7 9m-20 9 1 13m15-13-1 13',
   },
   waves: {
     back: 'M11 31 9 17C8 8 15 2 24 2s16 6 15 16l-1 26-7 2-2-14-5 10-4-13-4 17-7-3Z',
     fringe: 'M13 17c3-6 7-8 11-8 5 0 9 3 11 8-3 0-5-1-7-3 1 3 2 5 4 6-5 0-8-2-10-5-2 2-5 3-9 3Z',
-    strands: 'M14 11c2-4 6-6 10-6m5 2c3 2 4 5 5 8m-20 12-1 14m12-14 3 12',
   },
   longLayers: {
     back: 'M11 31 9 17C8 8 15 2 24 2s16 6 15 16l-1 27-7 2-2-23-5 19-4-22-4 26-7-3Z',
     fringe: 'M13 17c2-5 6-8 11-8s9 3 11 8c-4 0-8-2-11-5-3 3-6 5-11 5Z',
-    strands: 'M14 11c2-4 6-6 10-6m5 2c3 2 5 5 5 9m-18 11-1 13m13-14 2 13',
   },
   ponytail: {
     back: 'M12 30C9 22 9 12 14 7c3-3 6-5 11-5 8 0 13 6 13 14 0 5-1 9-3 13l-4-9c-6 3-12 3-17 0Zm22-13c7-3 11 1 10 7-1 7-5 11-10 14l-4-5c4-4 6-8 4-12Z',
     fringe: 'M13 18c4-1 8-4 11-10 3 4 7 7 12 8l1 6c-5-1-9-3-12-6-3 4-7 6-12 6Z',
-    strands: 'M15 11c2-4 6-6 9-6m6 2c3 2 5 5 5 8m8 7c0 4-2 7-5 10',
   },
   bun: {
     back: 'M12 30C9 22 9 12 14 7c3-3 6-5 11-5 8 0 13 6 13 14 0 5-1 9-3 13l-4-9c-6 3-12 3-17 0ZM17 7c-4-4-1-7 7-7s11 3 7 7c-4-2-10-2-14 0Z',
     fringe: 'M13 17c3-5 7-8 11-8 5 0 9 3 11 8-4 0-8-2-11-5-3 3-6 5-11 5Z',
-    strands: 'M15 7c2-2 5-3 9-3m-4-2c3-1 6 0 8 2m-14 9c2-2 4-3 6-4',
   },
   pixie: {
     back: 'M12 29C9 21 9 12 14 7c3-3 6-5 11-5 8 0 13 6 13 14 0 5-1 9-3 12l-4-8c-6 3-12 3-17 0Z',
     fringe: 'M13 17c2-5 5-8 9-9-1 3-1 5 0 7 3-3 7-5 12-5-2 5-6 8-12 9-3 1-6 0-9-2Z',
-    strands: 'M15 11c2-4 5-6 8-7m8 1c2 2 3 4 3 6',
   },
   shag: {
     back: 'M11 31 9 17C8 8 15 2 24 2s16 6 15 16l-2 10-2 11-6-7-4 15-5-9-6 8-1-18-7 8Z',
     fringe: 'M13 17c2-5 6-8 11-8 5 0 9 3 11 8-4 0-6-1-8-3l-3 5-3-4c-2 2-5 3-8 3Z',
-    strands: 'M14 11c2-4 6-6 10-6m5 2c3 2 5 5 5 8m-20 13 1 10m9-11-1 12m10-13-1 9',
   },
   braids: {
     back: 'M11 30 9 17C8 8 15 2 24 2s16 6 15 16l-2 9-4-9c-6 3-12 3-18 0Zm0-7c-5 5-6 15-2 23l5-1c-3-8-2-14 1-20Zm26 0c5 5 6 15 2 23l-5-1c3-8 2-14-1-20Z',
     fringe: 'M13 17c2-5 6-8 11-8s9 3 11 8c-4 0-8-2-11-5-3 3-6 5-11 5Z',
-    strands: 'M14 11c2-4 6-6 10-6m-12 20c-2 4-1 8 0 11m24-11c2 4 1 8 0 11',
   },
   locs: {
     back: 'M11 30 9 17C8 8 15 2 24 2s16 6 15 16l-2 9-4-9c-6 3-12 3-18 0Zm-3-8-5 25 5 1 6-24Zm15 1-2 25 5 1 2-27Zm13-1 5 25-5 1-6-24Z',
     fringe: 'M13 17c2-5 6-8 11-8s9 3 11 8c-4 0-8-2-11-5-3 3-6 5-11 5Z',
-    strands: 'M14 11c2-4 6-6 10-6m-12 19-2 15m14-13-1 17m11-19 2 15',
   },
   pompadour: {
     back: 'M11 29C8 21 8 12 14 7c3-3 6-5 11-5 8 0 14 6 14 15 0 5-1 9-3 12l-4-8c-6 3-12 3-18 0Z',
     fringe: 'M12 16c-2-5 1-11 7-12 0-4 5-6 9-3 6-1 10 4 8 10-2-2-5-3-8-3-3 4-8 7-16 8Z',
-    strands: 'M13 10c1-5 5-8 10-9m2 1c4 0 7 2 9 5',
   },
   undercut: {
     back: 'M12 29C9 21 9 12 14 7c3-3 6-5 11-5 8 0 13 6 13 14 0 5-1 9-3 13l-4-8c-6 3-12 3-17 0Z',
     fringe: 'M12 15c1-6 5-10 11-10 6 0 10 4 12 9-3-1-6-3-8-6-3 4-8 7-15 7Z',
-    strands: 'M14 10c2-4 6-6 10-6m5 2c2 2 4 4 5 7',
   },
   curtain: {
     back: 'M11 30 9 17C8 8 15 2 24 2s16 6 15 16l-2 27-7 2-2-22-4 12-4-12-2 22-7-2Z',
     fringe: 'M13 17c2-6 6-9 11-9s9 3 11 9c-4-1-7-3-9-6v8h-3v-8c-2 3-5 5-10 6Z',
-    strands: 'M14 11c2-4 6-6 10-6m5 2c3 2 5 5 5 9m-18 10-1 13m13-14 2 13',
   },
   afro: {
     back: 'M13 36c-7 0-10-6-7-11-5-6-2-13 4-15 0-7 7-11 13-7 5-5 13-3 15 4 7 0 11 7 7 13 4 7-1 14-8 14l-4-10c-6 4-13 4-20 0Z',
     fringe: 'M12 18c1-5 4-8 8-9 2-4 7-4 9 0 4 0 7 3 8 8-5 0-9-2-12-5-3 4-7 6-13 6Z',
-    strands: 'M12 15c1-4 3-6 6-8m7-2c4-.5 7 1 9 4m-27 8c-1 3 0 5 2 7m30-8c2 2 2 5 0 7',
   },
 };
 
@@ -550,7 +525,7 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
         fill="#f1c9a7"
       />
       <path d="M14.7 22c-2.1-1.2-3.6.2-2.7 2.6.6 1.6 1.7 2.3 3.3 2m17.4-4.6c2.1-1.2 3.6.2 2.7 2.6-.6 1.6-1.7 2.3-3.3 2" fill="#e9b994" />
-      <path d={style.fringe} fill="#382a27" />
+      <path d="M12 19C10 9 15 2 24 2s14 7 12 17c-5-1-9-3-12-8-3 5-7 7-12 8Z" fill="#382a27" />
       <path
         d="M17.2 24.8c1.3-.9 3-.9 4.3 0m6.8 0c1.3-.9 3-.9 4.3 0"
         fill="none"
@@ -568,42 +543,23 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
 }
 
 const homeShortcuts = [
-  { label: 'Beranda', href: '/', icon: 'home', tone: 'quick-tone-blue' },
-  { label: "Men's Grooming", href: '/mens-grooming', icon: 'grooming', tone: 'quick-tone-rose' },
-  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', icon: 'beauty', tone: 'quick-tone-violet' },
-  { label: 'Hair & Self Care', href: '/hair-self-care', icon: 'care', tone: 'quick-tone-sage' },
-  { label: 'Galeri Gaya', href: '/style-gallery', icon: 'gallery', tone: 'quick-tone-violet' },
-  { label: 'Produk', href: '/products', icon: 'products', tone: 'quick-tone-plum' },
-  { label: 'Booking', href: '/book', icon: 'booking', tone: 'quick-tone-gold' },
-  { label: 'Voucher', href: '/voucher', icon: 'voucher', tone: 'quick-tone-sage' },
-  { label: 'Membership', href: '/membership', icon: 'membership', tone: 'quick-tone-plum' },
-  { label: 'Cabang', href: '/branches', icon: 'branches', tone: 'quick-tone-blue' },
-  { label: 'Kelas', href: '/kelas', icon: 'classes', tone: 'quick-tone-gold' },
-  { label: 'Hair Journal', href: '/hair-journal', icon: 'journal', tone: 'quick-tone-violet' },
-  { label: 'Events & Community', href: '/events-community', icon: 'community', tone: 'quick-tone-sage' },
-  { label: 'Our Team', href: '/our-team', icon: 'team', tone: 'quick-tone-plum' },
-  { label: 'Karir', href: '/karir', icon: 'careers', tone: 'quick-tone-gold' },
-  { label: 'Home Service', href: '/home-service', icon: 'homeService', tone: 'quick-tone-sage' },
+  { label: 'Beranda', href: '/', hairstyle: 'crop', tone: 'quick-tone-blue' },
+  { label: "Men's Grooming", href: '/mens-grooming', hairstyle: 'fade', tone: 'quick-tone-rose' },
+  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', hairstyle: 'curls', tone: 'quick-tone-violet' },
+  { label: 'Hair & Self Care', href: '/hair-self-care', hairstyle: 'longLayers', tone: 'quick-tone-sage' },
+  { label: 'Galeri Gaya', href: '/style-gallery', hairstyle: 'sidePart', tone: 'quick-tone-violet' },
+  { label: 'Produk', href: '/products', hairstyle: 'bob', tone: 'quick-tone-plum' },
+  { label: 'Booking', href: '/book', hairstyle: 'pixie', tone: 'quick-tone-gold' },
+  { label: 'Voucher', href: '/voucher', hairstyle: 'waves', tone: 'quick-tone-sage' },
+  { label: 'Membership', href: '/membership', hairstyle: 'bun', tone: 'quick-tone-plum' },
+  { label: 'Cabang', href: '/branches', hairstyle: 'ponytail', tone: 'quick-tone-blue' },
+  { label: 'Kelas', href: '/kelas', hairstyle: 'shag', tone: 'quick-tone-gold' },
+  { label: 'Hair Journal', href: '/hair-journal', hairstyle: 'pompadour', tone: 'quick-tone-violet' },
+  { label: 'Events & Community', href: '/events-community', hairstyle: 'braids', tone: 'quick-tone-sage' },
+  { label: 'Our Team', href: '/our-team', hairstyle: 'locs', tone: 'quick-tone-plum' },
+  { label: 'Karir', href: '/karir', hairstyle: 'undercut', tone: 'quick-tone-gold' },
+  { label: 'Home Service', href: '/home-service', hairstyle: 'curtain', tone: 'quick-tone-sage' },
 ];
-
-const homeMenuIcons = {
-  home: House,
-  grooming: Scissors,
-  beauty: Sparkles,
-  care: Droplets,
-  gallery: Image,
-  products: ShoppingBag,
-  booking: CalendarDays,
-  voucher: Ticket,
-  membership: Gift,
-  branches: MapPin,
-  classes: GraduationCap,
-  journal: BookOpen,
-  community: Compass,
-  team: UsersRound,
-  careers: Briefcase,
-  homeService: Phone,
-} as const;
 
 const homeMenuPageSize = 8;
 
@@ -1056,11 +1012,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
             key={menuPage}
           >
             {visibleHomeShortcuts.map((item) => {
-              const MenuIcon = homeMenuIcons[item.icon as keyof typeof homeMenuIcons];
-              const portraitHairstyle =
-                item.href === '/mens-grooming' ? 'fade' :
-                item.href === '/womens-hair-beauty' ? 'curls' :
-                null;
               return (
                 <Link
                   className={`ggs-quick-menu-item${item.href === '/mens-grooming' ? ' ggs-menu-mens' : ''}${item.href === '/womens-hair-beauty' ? ' ggs-menu-womens' : ''}${item.href === '/hair-self-care' ? ' ggs-menu-self-care' : ''}`}
@@ -1069,11 +1020,7 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                   data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
                 >
                   <span className={`ggs-quick-menu-icon ${item.tone}`}>
-                    {portraitHairstyle ? (
-                      <HairModelMenuIcon className="ggs-quick-menu-avatar" hairstyle={portraitHairstyle} />
-                    ) : (
-                      <MenuIcon className="ggs-quick-menu-symbol" aria-hidden="true" strokeWidth={1.9} />
-                    )}
+                    <HairModelMenuIcon className="ggs-quick-menu-avatar" hairstyle={item.hairstyle} />
                   </span>
                   <span>{item.label}</span>
                 </Link>
