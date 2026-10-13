@@ -543,7 +543,6 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
         d="M5 48c1-5.4 5.2-8.3 12-9.5l7-1.3 7 1.3c6.8 1.2 11 4.1 12 9.5Z"
         fill="#f0d7c7"
       />
-      <path d="M18 39.2 24 44l6-4.8-1.7-1.5h-8.6Z" fill="#f8eee3" opacity=".9" />
       <path d={style.back} fill="#382a27" />
       <path d="M20 34.5v5.2c2 2 6 2 8 0v-5.2Z" fill="#e6b593" />
       <path
