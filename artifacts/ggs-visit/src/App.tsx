@@ -621,23 +621,20 @@ function VoucherTicketCard({
         {voucher.expiresAt && (
           <small className="voucher-ticket-expiry">Berlaku sampai {formatVoucherDate(voucher.expiresAt)}</small>
         )}
-        <div className="voucher-ticket-redemption">
-          <code>{voucher.code}</code>
-          <button
-            type="button"
-            onClick={() => void copyCode()}
-            aria-label={`Salin kode voucher ${voucher.code}`}
-            data-testid={`button-copy-${testId}`}
-          >
-            {copyState === 'copied' ? <Check size={12} /> : <Copy size={12} />}
-            {copyState === 'copied' ? 'Tersalin' : copyState === 'failed' ? 'Salin gagal' : 'Salin kode'}
-          </button>
-        </div>
       </div>
-      <span className="voucher-ticket-stub" aria-hidden="true">
-        <span className="voucher-ticket-seal">G</span>
-        <span className="voucher-ticket-studio">SALON<br />GGS</span>
-      </span>
+      <div className="voucher-ticket-stub">
+        <span className="voucher-ticket-studio">KODE VOUCHER</span>
+        <code>{voucher.code}</code>
+        <button
+          type="button"
+          onClick={() => void copyCode()}
+          aria-label={`Salin kode voucher ${voucher.code}`}
+          data-testid={`button-copy-${testId}`}
+        >
+          {copyState === 'copied' ? <Check size={12} /> : <Copy size={12} />}
+          {copyState === 'copied' ? 'Tersalin' : copyState === 'failed' ? 'Salin gagal' : 'Salin kode'}
+        </button>
+      </div>
     </article>
   );
 }
