@@ -538,6 +538,32 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
   );
 }
 
+function HairWrapFrame({ hairstyle }: { hairstyle: string }) {
+  const isCurly = ['curls', 'afro', 'shag'].includes(hairstyle);
+  const isBraided = ['braids', 'locs'].includes(hairstyle);
+  const isLong = ['bob', 'waves', 'longLayers', 'ponytail', 'curtain'].includes(hairstyle);
+  const silhouette = isCurly
+    ? 'M23 10c-7-5-15 0-13 8-7 3-8 12-2 16-5 6-3 14 3 17-3 8 4 15 12 12 7 7 15 7 22 3 8 5 17 3 20-3 9 2 15-5 12-13 7-4 8-12 3-17 5-7 3-14-3-17 2-8-5-14-12-10-7-7-16-7-22-2-7-5-15-3-20 6Z'
+    : isBraided
+      ? 'M23 10c-8-5-15 1-12 9-8 3-8 12-2 16-5 7-2 14 4 17-2 9 6 14 14 10 7 7 16 7 22 2 8 5 16 1 17-7 7-5 6-13 0-17 5-7 3-14-4-17 2-8-5-14-12-10-8-6-16-5-21 3-7-6-14-5-21 3Z'
+      : isLong
+        ? 'M23 10c9-6 34-6 44 0 10-1 16 8 12 17 6 8 4 15-2 19 6 8 3 16-4 19 1 10-7 15-15 10-8 7-16 7-23 2-8 6-16 3-20-3-9 3-16-3-13-12-8-5-8-13-2-19-6-8-3-16 4-19-4-8 1-15 10-14Z'
+        : 'M23 10c9-6 34-6 44 0 10-1 16 8 12 17 6 8 4 15-2 19 6 8 3 15-4 19-8 5-16 5-23 1-8 5-16 5-23 0-8 4-16 0-14-9-8-5-8-13-2-19-6-8-3-16 4-19-4-8 1-15 10-14Z';
+  const strands = isBraided
+    ? 'M13 23c-6 8-4 14 2 17-6 6-4 12 2 15m58-32c6 8 4 14-2 17 6 6 4 12-2 15M22 12c8-5 14-3 18 2 5-6 11-5 15-1'
+    : isCurly
+      ? 'M15 20c-4 5-4 9 1 12-5 4-5 8 0 12m58-24c4 5 4 9-1 12 5 4 5 8 0 12M25 12c6-4 11-3 14 2 4-5 9-5 14-2'
+      : isLong
+        ? 'M16 21c-5 8-4 14 2 18-5 7-3 13 3 17m51-35c5 8 4 14-2 18 5 7 3 13-3 17M26 11c8-4 13-2 17 3 4-5 10-6 17-2'
+        : 'M23 11c8-4 14-3 18 2 5-5 12-5 19-1M12 28c-4 7-3 13 2 17m62-17c4 7 3 13-2 17M28 78c8 4 16 4 22 0';
+  return (
+    <svg className="ggs-quick-menu-hair-wrap" viewBox="0 0 90 90" aria-hidden="true">
+      <path d={silhouette} fill="#382a27" />
+      <path d={strands} fill="none" stroke="#9c6b4f" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 const homeShortcuts = [
   { label: 'Beranda', href: '/', hairstyle: 'crop', tone: 'quick-tone-blue' },
   { label: "Men's Grooming", href: '/mens-grooming', hairstyle: 'fade', tone: 'quick-tone-rose' },
@@ -1014,11 +1040,14 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                 key={item.href}
                 data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
               >
-                <span className={`ggs-quick-menu-icon ${item.tone}`}>
-                  <HairModelMenuIcon
-                    className="ggs-quick-menu-avatar"
-                    hairstyle={item.hairstyle}
-                  />
+                <span className="ggs-quick-menu-shell">
+                  <HairWrapFrame hairstyle={item.hairstyle} />
+                  <span className={`ggs-quick-menu-icon ${item.tone}`}>
+                    <HairModelMenuIcon
+                      className="ggs-quick-menu-avatar"
+                      hairstyle={item.hairstyle}
+                    />
+                  </span>
                 </span>
                 <span>{item.label}</span>
               </Link>

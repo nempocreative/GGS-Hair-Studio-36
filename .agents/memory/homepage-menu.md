@@ -9,8 +9,8 @@ For the GGS visitor website, show four menu shortcuts per row and eight per slid
 
 **How to apply:** Preserve this layout, overflow behavior, navigation control, and background-free styling when adding or changing homepage shortcuts.
 
-Each shortcut icon retains its colored rounded-square tile, filled by a large face portrait whose hairstyle wraps around and frames the face. Do not remove the tile or use a small unrelated icon centered inside it.
+Each shortcut icon retains its colored rounded-square tile and face portrait, with hairstyle elements visibly wrapping around the tile's outer edges like a frame. Do not remove the tile or leave hair confined to the face portrait.
 
-**Why:** The user clarified on October 13, 2026 that the tile should remain and its shape should be wrapped by the hair portrait rather than removed.
+**Why:** The user clarified on October 13, 2026 that the tile should remain and chose hair wrapping around the outside of the box, not just filling its interior.
 
 **How to apply:** Keep this treatment on every homepage shortcut, using a different hairstyle for each menu item while leaving the surrounding shortcut link unboxed.
