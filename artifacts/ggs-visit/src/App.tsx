@@ -898,111 +898,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
         </section>
       )}
 
-      <section
-        className="home-products"
-        aria-labelledby="home-products-title"
-        data-testid="section-home-products"
-      >
-        <div className="home-products-heading">
-          <div className="home-products-title-block">
-            <p className="clearer-kicker">RAWATAN RAMBUT, PILIHAN GGS</p>
-            <h2 id="home-products-title">Bawa pulang<br /><em>ritual yang cocok.</em></h2>
-          </div>
-          <div className="home-products-intro">
-            <p>Produk pilihan untuk menemani perawatan di studio dan di rumah. Bingung mulai dari mana? Tanyakan langsung pada tim GGS.</p>
-            <Link href="/products" className="home-products-all-link" data-testid="link-home-all-products">
-              Lihat semua produk <ArrowUpRight size={16} />
-            </Link>
-          </div>
-        </div>
-
-        {productsQuery.isLoading ? (
-          <div className="home-products-skeletons" role="status" aria-label="Produk sedang dimuat">
-            {Array.from({ length: 4 }, (_, index) => <div className="home-product-skeleton" key={index} />)}
-          </div>
-        ) : productsQuery.isError ? (
-          <div className="home-products-message" role="alert">
-            <div><strong>Produk belum dapat ditampilkan.</strong><p>Coba muat ulang katalog sebentar lagi.</p></div>
-            <button type="button" onClick={() => productsQuery.refetch()} data-testid="button-retry-home-products">Coba lagi</button>
-          </div>
-        ) : featuredProducts.length === 0 ? (
-          <div className="home-products-message home-products-empty" data-testid="status-home-products-empty">
-            <div><strong>Belum ada produk untuk ditampilkan.</strong><p>Tim GGS sedang menyiapkan pilihan perawatan berikutnya.</p></div>
-            <Link href="/products" data-testid="link-home-empty-products">Jelajahi katalog <ArrowRight size={15} /></Link>
-          </div>
-        ) : (
-          <>
-            <div className="home-products-carousel" aria-roledescription="carousel" aria-label="Produk pilihan GGS">
-              <div className="home-products-viewport" ref={productsViewportRef}>
-                <div className="home-products-track">
-                  {featuredProducts.map((product, index) => {
-                    const available = product.stock > 0;
-                    const inCartQuantity = cartItems.find((line) => line.productId === product.id)?.quantity ?? 0;
-                    const canAddToCart = available && inCartQuantity < product.stock;
-                    return (
-                      <article
-                        className="home-product-card"
-                        key={product.id}
-                        role="group"
-                        aria-roledescription="slide"
-                        aria-label={`${index + 1} dari ${featuredProducts.length}: ${product.name}`}
-                        data-testid={`card-home-product-${product.id}`}
-                      >
-                        <div className="home-product-art">
-                          {product.imageUrl ? (
-                            <img src={product.imageUrl} alt={product.name} loading="lazy" />
-                          ) : (
-                            <div className="home-product-art-fallback" aria-label="Gambar produk belum tersedia">
-                              <span>GGS</span><small>RITUAL RAMBUT</small>
-                            </div>
-                          )}
-                          <span className="home-product-category">{product.category}</span>
-                        </div>
-                        <div className="home-product-copy">
-                          <div className="home-product-name-row">
-                            <h3>{product.name}</h3>
-                            {!available && <span className="home-product-stock">Habis</span>}
-                          </div>
-                          <p>{product.description || 'Pilihan perawatan rambut dari GGS untuk rutinitas yang lebih nyaman.'}</p>
-                          <div className="home-product-bottom">
-                            <strong className="home-product-price">{money(product.price)}</strong>
-                            <button
-                              type="button"
-                              className="home-product-add"
-                              disabled={!canAddToCart}
-                              onClick={() => {
-                                addProductToCart(product);
-                                setProductCartNotice(`${product.name} ditambahkan ke keranjang.`);
-                              }}
-                              aria-label={canAddToCart ? `Tambahkan ${product.name} ke keranjang` : available ? `Batas stok ${product.name} sudah ada di keranjang` : `${product.name} sedang habis`}
-                              data-testid={`button-home-add-product-${product.id}`}
-                            >
-                              <ShoppingBag size={15} /> {canAddToCart ? 'Tambah' : available ? 'Batas tercapai' : 'Tidak tersedia'}
-                            </button>
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="home-products-controls">
-                <div>
-                  <button type="button" aria-label="Produk sebelumnya" disabled={!productsApi?.canScrollPrev()} onClick={() => productsApi?.scrollPrev()} data-testid="button-home-products-previous"><ArrowLeft size={18} /></button>
-                  <button type="button" aria-label="Produk berikutnya" disabled={!productsApi?.canScrollNext()} onClick={() => productsApi?.scrollNext()} data-testid="button-home-products-next"><ArrowRight size={18} /></button>
-                </div>
-              </div>
-              <span className="sr-only" aria-live="polite">{productCartNotice}</span>
-              <span className="sr-only" aria-live="polite">{productSnapCount} halaman produk tersedia</span>
-            </div>
-            <div className="home-products-footnote">
-              <span><span className="home-products-footnote-mark" />Bisa dibeli dan dibawa pulang</span>
-              <span>Perlu rekomendasi? Mulai dari konsultasi singkat di studio.</span>
-            </div>
-          </>
-        )}
-      </section>
-
       <section className="clearer-promise" data-testid="section-why-ggs">
         <div className="clearer-promise-intro">
           <h2>Mengapa memilih<br /><em>GGS?</em></h2>
@@ -1411,6 +1306,110 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
             </article>
           ))}
         </div>
+      </section>
+      <section
+        className="home-products"
+        aria-labelledby="home-products-title"
+        data-testid="section-home-products"
+      >
+        <div className="home-products-heading">
+          <div className="home-products-title-block">
+            <p className="clearer-kicker">RAWATAN RAMBUT, PILIHAN GGS</p>
+            <h2 id="home-products-title">Bawa pulang<br /><em>ritual yang cocok.</em></h2>
+          </div>
+          <div className="home-products-intro">
+            <p>Produk pilihan untuk menemani perawatan di studio dan di rumah. Bingung mulai dari mana? Tanyakan langsung pada tim GGS.</p>
+            <Link href="/products" className="home-products-all-link" data-testid="link-home-all-products">
+              Lihat semua produk <ArrowUpRight size={16} />
+            </Link>
+          </div>
+        </div>
+
+        {productsQuery.isLoading ? (
+          <div className="home-products-skeletons" role="status" aria-label="Produk sedang dimuat">
+            {Array.from({ length: 4 }, (_, index) => <div className="home-product-skeleton" key={index} />)}
+          </div>
+        ) : productsQuery.isError ? (
+          <div className="home-products-message" role="alert">
+            <div><strong>Produk belum dapat ditampilkan.</strong><p>Coba muat ulang katalog sebentar lagi.</p></div>
+            <button type="button" onClick={() => productsQuery.refetch()} data-testid="button-retry-home-products">Coba lagi</button>
+          </div>
+        ) : featuredProducts.length === 0 ? (
+          <div className="home-products-message home-products-empty" data-testid="status-home-products-empty">
+            <div><strong>Belum ada produk untuk ditampilkan.</strong><p>Tim GGS sedang menyiapkan pilihan perawatan berikutnya.</p></div>
+            <Link href="/products" data-testid="link-home-empty-products">Jelajahi katalog <ArrowRight size={15} /></Link>
+          </div>
+        ) : (
+          <>
+            <div className="home-products-carousel" aria-roledescription="carousel" aria-label="Produk pilihan GGS">
+              <div className="home-products-viewport" ref={productsViewportRef}>
+                <div className="home-products-track">
+                  {featuredProducts.map((product, index) => {
+                    const available = product.stock > 0;
+                    const inCartQuantity = cartItems.find((line) => line.productId === product.id)?.quantity ?? 0;
+                    const canAddToCart = available && inCartQuantity < product.stock;
+                    return (
+                      <article
+                        className="home-product-card"
+                        key={product.id}
+                        role="group"
+                        aria-roledescription="slide"
+                        aria-label={`${index + 1} dari ${featuredProducts.length}: ${product.name}`}
+                        data-testid={`card-home-product-${product.id}`}
+                      >
+                        <div className="home-product-art">
+                          {product.imageUrl ? (
+                            <img src={product.imageUrl} alt={product.name} loading="lazy" />
+                          ) : (
+                            <div className="home-product-art-fallback" aria-label="Gambar produk belum tersedia">
+                              <span>GGS</span><small>RITUAL RAMBUT</small>
+                            </div>
+                          )}
+                          <span className="home-product-category">{product.category}</span>
+                        </div>
+                        <div className="home-product-copy">
+                          <div className="home-product-name-row">
+                            <h3>{product.name}</h3>
+                            {!available && <span className="home-product-stock">Habis</span>}
+                          </div>
+                          <p>{product.description || 'Pilihan perawatan rambut dari GGS untuk rutinitas yang lebih nyaman.'}</p>
+                          <div className="home-product-bottom">
+                            <strong className="home-product-price">{money(product.price)}</strong>
+                            <button
+                              type="button"
+                              className="home-product-add"
+                              disabled={!canAddToCart}
+                              onClick={() => {
+                                addProductToCart(product);
+                                setProductCartNotice(`${product.name} ditambahkan ke keranjang.`);
+                              }}
+                              aria-label={canAddToCart ? `Tambahkan ${product.name} ke keranjang` : available ? `Batas stok ${product.name} sudah ada di keranjang` : `${product.name} sedang habis`}
+                              data-testid={`button-home-add-product-${product.id}`}
+                            >
+                              <ShoppingBag size={15} /> {canAddToCart ? 'Tambah' : available ? 'Batas tercapai' : 'Tidak tersedia'}
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="home-products-controls">
+                <div>
+                  <button type="button" aria-label="Produk sebelumnya" disabled={!productsApi?.canScrollPrev()} onClick={() => productsApi?.scrollPrev()} data-testid="button-home-products-previous"><ArrowLeft size={18} /></button>
+                  <button type="button" aria-label="Produk berikutnya" disabled={!productsApi?.canScrollNext()} onClick={() => productsApi?.scrollNext()} data-testid="button-home-products-next"><ArrowRight size={18} /></button>
+                </div>
+              </div>
+              <span className="sr-only" aria-live="polite">{productCartNotice}</span>
+              <span className="sr-only" aria-live="polite">{productSnapCount} halaman produk tersedia</span>
+            </div>
+            <div className="home-products-footnote">
+              <span><span className="home-products-footnote-mark" />Bisa dibeli dan dibawa pulang</span>
+              <span>Perlu rekomendasi? Mulai dari konsultasi singkat di studio.</span>
+            </div>
+          </>
+        )}
       </section>
       <HomeTestimonials />
       <section className="home-last-cta">
