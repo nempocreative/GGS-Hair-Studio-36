@@ -1724,7 +1724,7 @@
   border-bottom: 3px solid var(--quick-icon-edge);
   border-radius: 22px;
   color: #fffaf1;
-  transform: perspective(320px) rotateX(4deg);
+  transform: none;
   box-shadow:
     0 5px 0 var(--quick-icon-edge),
     0 10px 17px rgb(47 39 32 / 18%),
@@ -1761,7 +1761,7 @@
 }
 .ggs-quick-menu-item:hover .ggs-quick-menu-icon,
 .ggs-quick-menu-item:focus-visible .ggs-quick-menu-icon {
-  transform: perspective(320px) rotateX(0deg) translateY(-2px);
+  transform: translateY(-2px);
   box-shadow:
     0 7px 0 var(--quick-icon-edge),
     0 14px 20px rgb(47 39 32 / 20%),
