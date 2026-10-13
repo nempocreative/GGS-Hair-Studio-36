@@ -12,6 +12,7 @@ import {
   Check,
   Clock3,
   Compass,
+  Copy,
   Droplets,
   Gift,
   GraduationCap,
@@ -33,12 +34,14 @@ import {
   getGetGgsPublicServicesQueryKey,
   getGetGgsSiteQueryKey,
   getGetGgsPublicProductsQueryKey,
+  getGetGgsPublicVouchersQueryKey,
   useCreateGgsAppointment,
   useGetGgsPublicProducts,
   useGetGgsPublicServices,
+  useGetGgsPublicVouchers,
   useGetGgsSite,
 } from '@workspace/api-client-react';
-import type { GgsProduct, GgsService, GgsSiteContent } from '@workspace/api-client-react';
+import type { GgsProduct, GgsPublicVoucher, GgsService, GgsSiteContent } from '@workspace/api-client-react';
 import './homepage.css';
 
 type BookingFields = {
@@ -95,6 +98,14 @@ function App() {
   const productsQuery = useGetGgsPublicProducts({
     query: { queryKey: getGetGgsPublicProductsQueryKey() },
   });
+  const vouchersQuery = useGetGgsPublicVouchers({
+    query: {
+      queryKey: getGetGgsPublicVouchersQueryKey(),
+      staleTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: true,
+    },
+  });
   const appointment = useCreateGgsAppointment();
   const [location] = useLocation();
   const [headerPanel, setHeaderPanel] = useState<HeaderPanel>(null);
@@ -108,6 +119,7 @@ function App() {
     [servicesQuery.data],
   );
   const products = productsQuery.data ?? [];
+  const vouchers = vouchersQuery.data ?? [];
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
   const site = siteQuery.data;
 
@@ -221,6 +233,8 @@ function App() {
     openBooking,
     products,
     productsQuery,
+    vouchers,
+    vouchersQuery,
     cartItems,
     cartCount,
     addProductToCart,
@@ -359,7 +373,7 @@ function App() {
           <OffersPage />
         </Route>
         <Route path="/voucher">
-          <VoucherPage />
+          <VoucherPage vouchers={vouchers} vouchersQuery={vouchersQuery} />
         </Route>
         <Route path="/membership">
           <MembershipPage />
@@ -409,6 +423,8 @@ type SharedProps = {
   openBooking: (serviceId?: number, notePrefix?: string) => void;
   products: GgsProduct[];
   productsQuery: ReturnType<typeof useGetGgsPublicProducts>;
+  vouchers: GgsPublicVoucher[];
+  vouchersQuery: ReturnType<typeof useGetGgsPublicVouchers>;
   cartItems: CartLine[];
   cartCount: number;
   addProductToCart: (product: GgsProduct) => void;
@@ -436,16 +452,86 @@ const homeShortcuts = [
 ];
 
 const homeMenuPageSize = 8;
-const sampleVouchers = [
-  { name: 'Kenalan di GGS', value: '10%' },
-  { name: 'Potong & Segar', value: 'Rp15.000' },
-  { name: 'Ritual Perawatan', value: '15%' },
-  { name: 'Cuci & Styling', value: '10%' },
-  { name: 'Ajak Teman', value: 'Rp25.000' },
-  { name: 'Waktu Santai', value: 'Rp20.000' },
-  { name: 'Warna Favorit', value: '10%' },
-  { name: 'Hari Spesial', value: '15%' },
-];
+
+function formatVoucherDate(date: string) {
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Asia/Jakarta',
+  }).format(new Date(`${date}T12:00:00+07:00`));
+}
+
+function VoucherTicketCard({
+  voucher,
+  heading = 'h3',
+  testId,
+}: {
+  voucher: GgsPublicVoucher;
+  heading?: 'h3' | 'h4';
+  testId: string;
+}) {
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const Heading = heading;
+
+  useEffect(() => {
+    if (copyState === 'idle') return;
+    const timer = window.setTimeout(() => setCopyState('idle'), 2200);
+    return () => window.clearTimeout(timer);
+  }, [copyState]);
+
+  const copyCode = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(voucher.code);
+      } else {
+        const input = document.createElement('textarea');
+        input.value = voucher.code;
+        input.setAttribute('readonly', '');
+        input.style.position = 'fixed';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+        input.select();
+        const copied = document.execCommand('copy');
+        input.remove();
+        if (!copied) throw new Error('Clipboard is unavailable');
+      }
+      setCopyState('copied');
+    } catch {
+      setCopyState('failed');
+    }
+  };
+
+  return (
+    <article className="sample-voucher-card voucher-ticket-card" data-testid={testId}>
+      <div className="sample-voucher-ticket-copy">
+        <span className="voucher-ticket-kicker">GGS HAIR STUDIO</span>
+        <Heading>{voucher.name}</Heading>
+        <strong>{voucher.value}</strong>
+        {voucher.expiresAt && (
+          <small className="voucher-ticket-expiry">Berlaku sampai {formatVoucherDate(voucher.expiresAt)}</small>
+        )}
+        <div className="voucher-ticket-redemption">
+          <code>{voucher.code}</code>
+          <button
+            type="button"
+            onClick={() => void copyCode()}
+            aria-label={`Salin kode voucher ${voucher.code}`}
+            data-testid={`button-copy-${testId}`}
+          >
+            {copyState === 'copied' ? <Check size={12} /> : <Copy size={12} />}
+            {copyState === 'copied' ? 'Tersalin' : copyState === 'failed' ? 'Salin gagal' : 'Salin kode'}
+          </button>
+        </div>
+      </div>
+      <span className="voucher-ticket-stub" aria-hidden="true">
+        <span className="voucher-ticket-seal">G</span>
+        <span className="voucher-ticket-studio">SALON<br />GGS</span>
+      </span>
+    </article>
+  );
+}
+
 const homeWomenServiceNames = new Set([
   'signature cut',
   'color expression',
@@ -473,7 +559,7 @@ const homeWomenServicePhotos: Record<string, string> = {
   'smoothing sleek': 'ggs-editorial.jpg',
 };
 
-function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle, products, productsQuery, addProductToCart, cartItems }: SharedProps & {
+function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle, products, productsQuery, vouchers, addProductToCart, cartItems }: SharedProps & {
   chooseHairStyle: (style: string) => void;
 }) {
   const [active, setActive] = useState(0);
@@ -795,25 +881,22 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
           )}
       </section>
 
-      <section className="home-programs home-programs-direct" aria-label="Voucher GGS" data-testid="section-home-programs">
-        <div className="home-voucher-preview">
-          <div className="sample-voucher-grid home-sample-voucher-grid">
-            {sampleVouchers.slice(0, 4).map((voucher, index) => (
-              <article className="sample-voucher-card voucher-ticket-card" key={voucher.name} data-testid={`card-home-sample-voucher-${index + 1}`}>
-                <div className="sample-voucher-ticket-copy">
-                  <span className="voucher-ticket-kicker">GGS HAIR STUDIO</span>
-                  <h4>{voucher.name}</h4>
-                  <strong>{voucher.value}</strong>
-                </div>
-                <span className="voucher-ticket-stub" aria-hidden="true">
-                  <span className="voucher-ticket-seal">G</span>
-                  <span className="voucher-ticket-studio">SALON<br />GGS</span>
-                </span>
-              </article>
-            ))}
+      {vouchers.length > 0 && (
+        <section className="home-programs home-programs-direct" aria-label="Voucher GGS" data-testid="section-home-programs">
+          <div className="home-voucher-preview">
+            <div className="sample-voucher-grid home-sample-voucher-grid">
+              {vouchers.slice(0, 4).map((voucher) => (
+                <VoucherTicketCard
+                  key={voucher.id}
+                  voucher={voucher}
+                  heading="h4"
+                  testId={`card-home-voucher-${voucher.id}`}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section
         className="home-products"
@@ -2082,39 +2165,38 @@ function OffersPage() {
   );
 }
 
-function VoucherPage() {
+function VoucherPage({
+  vouchers,
+  vouchersQuery,
+}: {
+  vouchers: GgsPublicVoucher[];
+  vouchersQuery: ReturnType<typeof useGetGgsPublicVouchers>;
+}) {
   return (
     <PageFrame
       kicker="GGS / VOUCHER"
       title={<>Voucher<br /><em>GGS.</em></>}
-      intro="Beberapa contoh voucher untuk memberi gambaran jenis penawaran yang mungkin ditampilkan."
+      intro="Voucher GGS yang sedang berlaku dan bisa digunakan."
       testId="page-voucher"
     >
-      <section className="voucher-page-content" aria-labelledby="voucher-examples-title" data-testid="section-voucher-examples">
-        <div className="program-page-heading">
-          <div><span className="panel-index">KOLEKSI VOUCHER</span><h2 id="voucher-examples-title">Voucher sebagai<br /><em>contoh saja.</em></h2></div>
-          <p>Contoh berikut bukan penawaran aktif. Kode dan nilai seluruhnya hanya ilustrasi dan saat ini tidak dapat ditukarkan.</p>
-        </div>
-        <div className="sample-voucher-grid voucher-full-grid">
-          {sampleVouchers.map((voucher, index) => (
-            <article className="sample-voucher-card voucher-ticket-card" key={voucher.name} data-testid={`card-sample-voucher-${index + 1}`}>
-              <div className="sample-voucher-ticket-copy">
-                <span className="voucher-ticket-kicker">GGS HAIR STUDIO</span>
-                <h3>{voucher.name}</h3>
-                <strong>{voucher.value}</strong>
-              </div>
-              <span className="voucher-ticket-stub" aria-hidden="true">
-                <span className="voucher-ticket-seal">G</span>
-                <span className="voucher-ticket-studio">SALON<br />GGS</span>
-              </span>
-            </article>
-          ))}
-        </div>
-        <div className="program-disclaimer voucher-disclaimer" role="note" data-testid="notice-voucher-examples">
-          <strong>Catatan untuk semua contoh</strong>
-          <p>Nama, kode, nilai, dan ketentuan di atas hanya ilustrasi. Voucher-voucher ini tidak sedang ditawarkan dan tidak dapat ditukarkan.</p>
-        </div>
-        <Link href="/offers-membership" className="program-crosslink" data-testid="link-voucher-programs">Lihat pilihan program GGS <ArrowRight size={16} /></Link>
+      <section className="voucher-page-content" aria-label="Voucher yang sedang berlaku" data-testid="section-vouchers">
+        {vouchersQuery.isLoading ? (
+          <p className="voucher-list-state" role="status">Memuat voucher…</p>
+        ) : vouchersQuery.isError ? (
+          <p className="voucher-list-state" role="alert">Voucher belum bisa dimuat. Silakan coba lagi nanti.</p>
+        ) : vouchers.length ? (
+          <div className="sample-voucher-grid voucher-full-grid">
+            {vouchers.map((voucher) => (
+              <VoucherTicketCard
+                key={voucher.id}
+                voucher={voucher}
+                testId={`card-voucher-${voucher.id}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="voucher-list-state" role="status">Belum ada voucher aktif saat ini.</p>
+        )}
       </section>
     </PageFrame>
   );

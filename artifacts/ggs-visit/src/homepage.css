@@ -1971,6 +1971,52 @@
   line-height: 1.4;
   text-align: center;
 }
+.voucher-ticket-expiry {
+  color: #766b5e;
+  font-size: 9px;
+  line-height: 1.35;
+}
+.voucher-ticket-redemption {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.voucher-ticket-redemption code {
+  min-width: 0;
+  color: #494136;
+  font: 600 10px/1.35 'DM Mono', monospace;
+  letter-spacing: .04em;
+  overflow-wrap: anywhere;
+}
+.voucher-ticket-redemption button {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #9a554d;
+  border-radius: 2px;
+  background: transparent;
+  padding: 3px 7px;
+  color: #843f38;
+  cursor: pointer;
+  font: 600 9px/1.2 'DM Sans', sans-serif;
+  white-space: nowrap;
+}
+.voucher-ticket-redemption button:hover { background: rgb(146 61 54 / 8%); }
+.voucher-ticket-redemption button:focus-visible { outline: 2px solid #9a554d; outline-offset: 2px; }
+.voucher-list-state {
+  margin: 0;
+  border: 1px solid #c9bdae;
+  background: #f5f0e7;
+  padding: 20px 22px;
+  color: #62574e;
+  font-size: 14px;
+  line-height: 1.6;
+}
 @media (max-width: 680px) {
   .voucher-ticket-card {
     min-height: 148px;
@@ -1978,6 +2024,10 @@
   }
   .voucher-ticket-card .sample-voucher-ticket-copy {
     padding: 16px 13px 15px 17px;
+  }
+  .voucher-ticket-redemption {
+    grid-template-columns: 1fr;
+    justify-items: start;
   }
 }
 @media (max-width: 390px) {

@@ -68,6 +68,20 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GgsProduct"
+  /ggs/vouchers:
+    get:
+      operationId: getGgsPublicVouchers
+      tags: [ggs-public]
+      summary: List currently valid GGS vouchers
+      responses:
+        "200":
+          description: Active vouchers that are within their validity dates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsPublicVoucher"
   /ggs/appointments:
     post:
       operationId: createGgsAppointment
@@ -262,6 +276,86 @@ paths:
           description: Product deleted
         "404":
           description: Product not found
+  /ggs/admin/vouchers:
+    get:
+      operationId: getGgsAdminVouchers
+      tags: [ggs-admin]
+      summary: List all vouchers in GGS CMS
+      responses:
+        "200":
+          description: All vouchers, including drafts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsVoucher"
+    post:
+      operationId: createGgsVoucher
+      tags: [ggs-admin]
+      summary: Create a GGS voucher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsVoucherInput"
+      responses:
+        "201":
+          description: Created voucher
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsVoucher"
+        "400":
+          description: Invalid voucher details
+        "409":
+          description: Voucher code already exists
+  /ggs/admin/vouchers/{id}:
+    patch:
+      operationId: updateGgsVoucher
+      tags: [ggs-admin]
+      summary: Update a GGS voucher
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsVoucherInput"
+      responses:
+        "200":
+          description: Updated voucher
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsVoucher"
+        "400":
+          description: Invalid voucher details
+        "404":
+          description: Voucher not found
+        "409":
+          description: Voucher code already exists
+    delete:
+      operationId: deleteGgsVoucher
+      tags: [ggs-admin]
+      summary: Delete a GGS voucher
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Voucher deleted
+        "404":
+          description: Voucher not found
   /ggs/admin/appointments:
     get:
       operationId: getGgsAdminAppointments
@@ -489,6 +583,82 @@ components:
         - stock
         - active
         - imageUrl
+    GgsPublicVoucher:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        value:
+          type: string
+        code:
+          type: string
+        expiresAt:
+          type: ["string", "null"]
+          format: date
+      required:
+        - id
+        - name
+        - value
+        - code
+        - expiresAt
+    GgsVoucher:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        value:
+          type: string
+        code:
+          type: ["string", "null"]
+        startsAt:
+          type: ["string", "null"]
+          format: date
+        expiresAt:
+          type: ["string", "null"]
+          format: date
+        active:
+          type: boolean
+      required:
+        - id
+        - name
+        - value
+        - code
+        - startsAt
+        - expiresAt
+        - active
+    GgsVoucherInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        value:
+          type: string
+          minLength: 1
+          maxLength: 80
+        code:
+          type: ["string", "null"]
+          maxLength: 40
+        startsAt:
+          type: ["string", "null"]
+          format: date
+        expiresAt:
+          type: ["string", "null"]
+          format: date
+        active:
+          type: boolean
+      required:
+        - name
+        - value
+        - code
+        - startsAt
+        - expiresAt
+        - active
     GgsAppointmentInput:
       type: object
       properties:

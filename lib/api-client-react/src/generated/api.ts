@@ -26,10 +26,13 @@ import type {
   GgsAppointmentStatusUpdate,
   GgsProduct,
   GgsProductInput,
+  GgsPublicVoucher,
   GgsService,
   GgsServiceInput,
   GgsSiteContent,
   GgsSiteUpdate,
+  GgsVoucher,
+  GgsVoucherInput,
   HealthStatus
 } from './api.schemas';
 
@@ -357,6 +360,83 @@ export function useGetGgsPublicProducts<TData = Awaited<ReturnType<typeof getGgs
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetGgsPublicProductsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGgsPublicVouchersUrl = () => {
+
+
+
+
+  return `/api/ggs/vouchers`
+}
+
+/**
+ * @summary List currently valid GGS vouchers
+ */
+export const getGgsPublicVouchers = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsPublicVoucher[]> => {
+
+  return customFetch<GgsPublicVoucher[]>(getGetGgsPublicVouchersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsPublicVouchersQueryKey = () => {
+    return [
+    `/api/ggs/vouchers`
+    ] as const;
+    }
+
+
+export const getGetGgsPublicVouchersQueryOptions = <TData = Awaited<ReturnType<typeof getGgsPublicVouchers>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsPublicVouchers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsPublicVouchersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsPublicVouchers>>> = ({ signal }) => getGgsPublicVouchers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsPublicVouchers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsPublicVouchersQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsPublicVouchers>>>
+export type GetGgsPublicVouchersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List currently valid GGS vouchers
+ */
+
+export function useGetGgsPublicVouchers<TData = Awaited<ReturnType<typeof getGgsPublicVouchers>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsPublicVouchers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsPublicVouchersQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -1276,6 +1356,334 @@ export const useDeleteGgsProduct = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteGgsProductMutationOptions(options));
+    }
+
+export const getGetGgsAdminVouchersUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/vouchers`
+}
+
+/**
+ * @summary List all vouchers in GGS CMS
+ */
+export const getGgsAdminVouchers = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsVoucher[]> => {
+
+  return customFetch<GgsVoucher[]>(getGetGgsAdminVouchersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsAdminVouchersQueryKey = () => {
+    return [
+    `/api/ggs/admin/vouchers`
+    ] as const;
+    }
+
+
+export const getGetGgsAdminVouchersQueryOptions = <TData = Awaited<ReturnType<typeof getGgsAdminVouchers>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminVouchers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsAdminVouchersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsAdminVouchers>>> = ({ signal }) => getGgsAdminVouchers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminVouchers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsAdminVouchersQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsAdminVouchers>>>
+export type GetGgsAdminVouchersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all vouchers in GGS CMS
+ */
+
+export function useGetGgsAdminVouchers<TData = Awaited<ReturnType<typeof getGgsAdminVouchers>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminVouchers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsAdminVouchersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateGgsVoucherUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/vouchers`
+}
+
+/**
+ * @summary Create a GGS voucher
+ */
+export const createGgsVoucher = async (ggsVoucherInput: GgsVoucherInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsVoucher> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsVoucher>(getCreateGgsVoucherUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsVoucherInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGgsVoucherMutationKey = () => ['createGgsVoucher'] as const;
+
+export const getCreateGgsVoucherMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsVoucher>>, TError,CreateGgsVoucherMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGgsVoucher>>, TError,CreateGgsVoucherMutationVariables, TContext> => {
+
+const mutationKey = getCreateGgsVoucherMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGgsVoucher>>, CreateGgsVoucherMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGgsVoucher(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGgsVoucherMutationResult = NonNullable<Awaited<ReturnType<typeof createGgsVoucher>>>
+    export type CreateGgsVoucherMutationBody = BodyType<GgsVoucherInput>
+    export type CreateGgsVoucherMutationError = ErrorType<void>
+    export type CreateGgsVoucherMutationVariables = {data: BodyType<GgsVoucherInput>}
+
+    /**
+ * @summary Create a GGS voucher
+ */
+export const useCreateGgsVoucher = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsVoucher>>, TError,CreateGgsVoucherMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGgsVoucher>>,
+        TError,
+        CreateGgsVoucherMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGgsVoucherMutationOptions(options));
+    }
+
+export const getUpdateGgsVoucherUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/vouchers/${id}`
+}
+
+/**
+ * @summary Update a GGS voucher
+ */
+export const updateGgsVoucher = async (id: number,
+    ggsVoucherInput: GgsVoucherInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsVoucher> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsVoucher>(getUpdateGgsVoucherUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsVoucherInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateGgsVoucherMutationKey = () => ['updateGgsVoucher'] as const;
+
+export const getUpdateGgsVoucherMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsVoucher>>, TError,UpdateGgsVoucherMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGgsVoucher>>, TError,UpdateGgsVoucherMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGgsVoucherMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGgsVoucher>>, UpdateGgsVoucherMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateGgsVoucher(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGgsVoucherMutationResult = NonNullable<Awaited<ReturnType<typeof updateGgsVoucher>>>
+    export type UpdateGgsVoucherMutationBody = BodyType<GgsVoucherInput>
+    export type UpdateGgsVoucherMutationError = ErrorType<void>
+    export type UpdateGgsVoucherMutationVariables = {id: number;data: BodyType<GgsVoucherInput>}
+
+    /**
+ * @summary Update a GGS voucher
+ */
+export const useUpdateGgsVoucher = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsVoucher>>, TError,UpdateGgsVoucherMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGgsVoucher>>,
+        TError,
+        UpdateGgsVoucherMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGgsVoucherMutationOptions(options));
+    }
+
+export const getDeleteGgsVoucherUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/vouchers/${id}`
+}
+
+/**
+ * @summary Delete a GGS voucher
+ */
+export const deleteGgsVoucher = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteGgsVoucherUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteGgsVoucherMutationKey = () => ['deleteGgsVoucher'] as const;
+
+export const getDeleteGgsVoucherMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGgsVoucher>>, TError,DeleteGgsVoucherMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGgsVoucher>>, TError,DeleteGgsVoucherMutationVariables, TContext> => {
+
+const mutationKey = getDeleteGgsVoucherMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGgsVoucher>>, DeleteGgsVoucherMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteGgsVoucher(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGgsVoucherMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGgsVoucher>>>
+
+    export type DeleteGgsVoucherMutationError = ErrorType<void>
+    export type DeleteGgsVoucherMutationVariables = {id: number}
+
+    /**
+ * @summary Delete a GGS voucher
+ */
+export const useDeleteGgsVoucher = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGgsVoucher>>, TError,DeleteGgsVoucherMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGgsVoucher>>,
+        TError,
+        DeleteGgsVoucherMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteGgsVoucherMutationOptions(options));
     }
 
 export const getGetGgsAdminAppointmentsUrl = () => {

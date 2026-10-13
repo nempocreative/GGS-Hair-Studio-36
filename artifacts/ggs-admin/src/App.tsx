@@ -5,22 +5,28 @@ import { shadcn } from '@clerk/themes';
 import {
   getGetGgsAdminAppointmentsQueryKey,
   getGetGgsAdminProductsQueryKey,
+  getGetGgsAdminVouchersQueryKey,
   getGetGgsPublicProductsQueryKey,
+  getGetGgsPublicVouchersQueryKey,
   getGetGgsAdminServicesQueryKey,
   getGetGgsAdminSummaryQueryKey,
   getGetGgsSiteQueryKey,
   useCreateGgsService,
   useCreateGgsProduct,
+  useCreateGgsVoucher,
   useDeleteGgsService,
   useDeleteGgsProduct,
+  useDeleteGgsVoucher,
   useGetGgsAdminAppointments,
   useGetGgsAdminProducts,
   useGetGgsAdminServices,
+  useGetGgsAdminVouchers,
   useGetGgsAdminSummary,
   useGetGgsSite,
   useUpdateGgsAppointment,
   useUpdateGgsService,
   useUpdateGgsProduct,
+  useUpdateGgsVoucher,
   useUpdateGgsSite,
   type GgsAppointment,
   type GgsAppointmentStatus,
@@ -28,6 +34,8 @@ import {
   type GgsServiceInput,
   type GgsProduct,
   type GgsProductInput,
+  type GgsVoucher,
+  type GgsVoucherInput,
   type GgsSiteContent,
 } from '@workspace/api-client-react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -36,6 +44,7 @@ import {
   ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown,
   Clock3, ExternalLink, Instagram, LayoutDashboard, LogOut, Menu, Pencil,
   Plus, Scissors, Settings2, ShieldAlert, Sparkles, Trash2, X, ShoppingBag,
+  Ticket,
 } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
@@ -110,6 +119,7 @@ const navItems: NavItem[] = [
   { label: 'Layanan', href: '/services', icon: Scissors, kicker: '03' },
   { label: 'Konten situs', href: '/site', icon: Settings2, kicker: '04' },
   { label: 'Produk', href: '/products', icon: ShoppingBag, kicker: '05' },
+  { label: 'Voucher', href: '/vouchers', icon: Ticket, kicker: '06' },
 ];
 
 function AuthPage({ mode }: { mode: 'in' | 'up' }) {
@@ -179,6 +189,7 @@ function ClerkProviderWithRoutes() {
         <Route path="/site" component={ProtectedSite} />
         <Route path="/services" component={ProtectedServices} />
         <Route path="/products" component={ProtectedProducts} />
+        <Route path="/vouchers" component={ProtectedVouchers} />
         <Route path="/appointments" component={ProtectedAppointments} />
         <Route path="/dashboard" component={() => <Redirect to="/" />} />
         <Route component={NotFound} />
@@ -200,6 +211,7 @@ function Protected({ children }: { children: ReactNode }) {
 function ProtectedSite() { return <Protected><SitePage /></Protected>; }
 function ProtectedServices() { return <Protected><ServicesPage /></Protected>; }
 function ProtectedProducts() { return <Protected><ProductsPage /></Protected>; }
+function ProtectedVouchers() { return <Protected><VouchersPage /></Protected>; }
 function ProtectedAppointments() { return <Protected><AppointmentsPage /></Protected>; }
 
 function AdminShell({ children }: { children: ReactNode }) {
@@ -502,6 +514,178 @@ function ProductDialog({ product, saving, onClose, onSave }: { product: GgsProdu
         <Field label="URL foto produk" id="product-image" hint="Opsional"><input id="product-image" data-testid="input-product-image" type="url" value={form.imageUrl || ''} onChange={(e) => set('imageUrl', e.target.value || null)} placeholder="https://…" /></Field>
         <label className="toggle-row"><span><b>Tampilkan di katalog publik</b><small>Pelanggan dapat melihat produk aktif di situs.</small></span><input type="checkbox" data-testid="input-product-active" checked={form.active} onChange={(e) => set('active', e.target.checked)} /><span className="toggle-ui" /></label>
         <div className="dialog-actions"><button type="button" className="button button-outline" onClick={onClose}>Batal</button><button type="submit" className="button button-gold" disabled={saving}>{saving ? 'Menyimpan…' : product ? 'Simpan perubahan' : 'Tambah produk'} <ArrowRight size={15} /></button></div>
+      </form>
+    </section>
+  </div>;
+}
+
+const emptyVoucher: GgsVoucherInput = {
+  name: '',
+  value: '',
+  code: null,
+  startsAt: null,
+  expiresAt: null,
+  active: false,
+};
+
+function jakartaToday() {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
+}
+
+function voucherStatus(voucher: GgsVoucher) {
+  if (!voucher.active) return { label: 'Nonaktif', active: false };
+  if (!voucher.code?.trim()) return { label: 'Kode belum diisi', active: false };
+  const today = jakartaToday();
+  if (voucher.startsAt && voucher.startsAt > today) return { label: 'Terjadwal', active: false };
+  if (voucher.expiresAt && voucher.expiresAt < today) return { label: 'Kedaluwarsa', active: false };
+  return { label: 'Aktif', active: true };
+}
+
+function voucherDate(date: string) {
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Jakarta',
+  }).format(new Date(`${date}T12:00:00+07:00`));
+}
+
+function voucherPeriod(voucher: GgsVoucher) {
+  if (voucher.startsAt && voucher.expiresAt) {
+    return `${voucherDate(voucher.startsAt)} – ${voucherDate(voucher.expiresAt)}`;
+  }
+  if (voucher.startsAt) return `Mulai ${voucherDate(voucher.startsAt)}`;
+  if (voucher.expiresAt) return `Sampai ${voucherDate(voucher.expiresAt)}`;
+  return 'Tanpa batas tanggal';
+}
+
+function VouchersPage() {
+  const query = useGetGgsAdminVouchers({
+    query: { queryKey: getGetGgsAdminVouchersQueryKey(), refetchOnMount: 'always', staleTime: 0 },
+  });
+  const [editing, setEditing] = useState<GgsVoucher | null | 'new'>(null);
+  const [search, setSearch] = useState('');
+  const create = useCreateGgsVoucher();
+  const update = useUpdateGgsVoucher();
+  const remove = useDeleteGgsVoucher();
+  const client = useQueryClient();
+  const { toast } = useToast();
+  const saving = create.isPending || update.isPending;
+
+  function saved() {
+    void client.invalidateQueries({ queryKey: getGetGgsAdminVouchersQueryKey() });
+    void client.invalidateQueries({ queryKey: getGetGgsPublicVouchersQueryKey() });
+  }
+
+  const records = query.data?.filter((voucher) =>
+    `${voucher.name} ${voucher.value} ${voucher.code || ''}`.toLowerCase().includes(search.toLowerCase()),
+  ) || [];
+
+  return <div className="services-page">
+    <PageHeading
+      eyebrow="PROMO & VOUCHER"
+      title={<>Penawaran<br /><em>untuk tamu GGS.</em></>}
+      detail="Atur penawaran, kode, dan masa berlaku. Hanya voucher siap pakai yang tampil di situs."
+      action={<button className="button button-gold" onClick={() => setEditing('new')} data-testid="button-add-voucher"><Plus size={16} /> Tambah voucher</button>}
+    />
+    <div className="table-tools">
+      <div className="table-count"><span className="eyebrow">DAFTAR VOUCHER</span><b>{query.data?.length ?? '—'} <small>voucher</small></b></div>
+      <label className="search-box"><span className="sr-only">Cari voucher</span><input data-testid="input-voucher-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari voucher atau kode…" /><span>/</span></label>
+    </div>
+    {query.isLoading ? <div className="panel table-panel"><Skeleton rows={5} /></div> :
+      query.isError ? <QueryFailure error={query.error} retry={() => void query.refetch()} /> :
+        records.length ? <div className="panel table-panel"><table className="data-table service-table product-table voucher-table">
+          <thead><tr><th>PENAWARAN</th><th>KODE</th><th>MASA BERLAKU</th><th>STATUS</th><th><span className="sr-only">Aksi</span></th></tr></thead>
+          <tbody>{records.map((voucher) => {
+            const status = voucherStatus(voucher);
+            return <tr key={voucher.id} data-testid={`row-voucher-${voucher.id}`}>
+              <td><div className="service-name-cell"><span className="service-thumb"><Ticket size={15} /></span><span><b>{voucher.name}</b><small>{voucher.value}</small></span></div></td>
+              <td className="voucher-code-cell">{voucher.code || 'Belum diisi'}</td>
+              <td>{voucherPeriod(voucher)}</td>
+              <td><span className={`availability ${status.active ? 'available' : 'unavailable'}`}><i />{status.label}</span></td>
+              <td><div className="table-actions">
+                <button className="icon-button" onClick={() => setEditing(voucher)} aria-label={`Ubah voucher ${voucher.name}`} data-testid={`button-edit-voucher-${voucher.id}`}><Pencil size={15} /></button>
+                <button className="icon-button danger-icon" onClick={() => { if (window.confirm(`Hapus voucher “${voucher.name}” secara permanen?`)) remove.mutate({ id: voucher.id }, { onSuccess: () => { saved(); toast({ title: 'Voucher dihapus', description: `${voucher.name} tidak lagi tersedia di CMS maupun situs.` }); }, onError: (error) => toast({ title: isForbidden(error) ? 'Akses pemilik diperlukan' : 'Voucher belum terhapus', description: 'Silakan coba lagi.', variant: 'destructive' }) }); }} disabled={remove.isPending} aria-label={`Hapus voucher ${voucher.name}`} data-testid={`button-delete-voucher-${voucher.id}`}><Trash2 size={15} /></button>
+              </div></td>
+            </tr>;
+          })}</tbody>
+        </table></div> :
+          <EmptyState icon={<Ticket size={20} />} title={search ? 'Voucher tidak ditemukan.' : 'Belum ada voucher.'} body={search ? 'Coba nama atau kode lain.' : 'Tambahkan penawaran dan kode yang benar agar pelanggan dapat menyalinnya dari situs.'} action={!search && <button className="button button-gold" onClick={() => setEditing('new')}><Plus size={15} /> Tambahkan voucher</button>} />}
+    <div className="services-footnote"><span className="eyebrow">TAMPIL DI SITUS</span><span>Kode wajib diisi; tanggal berlaku dicek otomatis memakai waktu Jakarta.</span></div>
+    {editing && <VoucherDialog voucher={editing === 'new' ? null : editing} saving={saving} onClose={() => setEditing(null)} onSave={(input) => {
+      const onSuccess = () => {
+        saved();
+        setEditing(null);
+        toast({ title: editing === 'new' ? 'Voucher ditambahkan' : 'Voucher diperbarui', description: 'Penawaran GGS telah diperbarui.' });
+      };
+      const onError = (error: unknown) => toast({
+        title: isForbidden(error) ? 'Akses pemilik diperlukan' : 'Voucher belum tersimpan',
+        description: 'Periksa kode yang sama, isi penawaran, dan rentang tanggalnya.',
+        variant: 'destructive',
+      });
+      if (editing === 'new') create.mutate({ data: input }, { onSuccess, onError });
+      else update.mutate({ id: editing.id, data: input }, { onSuccess, onError });
+    }} />}
+  </div>;
+}
+
+function VoucherDialog({
+  voucher,
+  saving,
+  onClose,
+  onSave,
+}: {
+  voucher: GgsVoucher | null;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (input: GgsVoucherInput) => void;
+}) {
+  const [form, setForm] = useState<GgsVoucherInput>(() => voucher ? {
+    name: voucher.name,
+    value: voucher.value,
+    code: voucher.code,
+    startsAt: voucher.startsAt,
+    expiresAt: voucher.expiresAt,
+    active: voucher.active,
+  } : { ...emptyVoucher });
+  const [formError, setFormError] = useState('');
+  const set = <K extends keyof GgsVoucherInput>(key: K, value: GgsVoucherInput[K]) =>
+    setForm((old) => ({ ...old, [key]: value }));
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    setFormError('');
+    const normalized = {
+      ...form,
+      name: form.name.trim(),
+      value: form.value.trim(),
+      code: form.code?.trim().replace(/\s+/g, '').toUpperCase() || null,
+    };
+    if (normalized.active && !normalized.code) {
+      setFormError('Isi kode sebelum menampilkan voucher di situs.');
+      return;
+    }
+    if (normalized.startsAt && normalized.expiresAt && normalized.startsAt > normalized.expiresAt) {
+      setFormError('Tanggal akhir harus sama atau setelah tanggal mulai.');
+      return;
+    }
+    onSave(normalized);
+  }
+
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="service-dialog voucher-dialog" role="dialog" aria-modal="true" aria-labelledby="voucher-dialog-title">
+      <div className="dialog-head"><div><span className="eyebrow">{voucher ? 'UBAH VOUCHER' : 'VOUCHER BARU'}</span><h2 className="font-display" id="voucher-dialog-title">{voucher ? 'Perbarui penawaran.' : 'Buat penawaran.'}</h2></div><button className="icon-button" onClick={onClose} aria-label="Tutup dialog"><X size={18} /></button></div>
+      <form onSubmit={submit} className="dialog-form">
+        <Field label="Nama voucher" id="voucher-name"><input id="voucher-name" data-testid="input-voucher-name" required maxLength={80} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Contoh: Kenalan di GGS" /></Field>
+        <Field label="Penawaran" id="voucher-value"><input id="voucher-value" data-testid="input-voucher-value" required maxLength={80} value={form.value} onChange={(e) => set('value', e.target.value)} placeholder="Contoh: Diskon 10%" /></Field>
+        <Field label="Kode voucher" id="voucher-code" hint="Wajib jika status aktif"><input id="voucher-code" data-testid="input-voucher-code" maxLength={40} value={form.code || ''} onChange={(e) => set('code', e.target.value.toUpperCase().replace(/\s+/g, '') || null)} placeholder="Masukkan kode yang berlaku" autoComplete="off" /></Field>
+        <div className="form-two">
+          <Field label="Mulai berlaku" id="voucher-start"><input id="voucher-start" data-testid="input-voucher-start" type="date" value={form.startsAt || ''} onChange={(e) => set('startsAt', e.target.value || null)} /></Field>
+          <Field label="Berakhir" id="voucher-expiry"><input id="voucher-expiry" data-testid="input-voucher-expiry" type="date" value={form.expiresAt || ''} onChange={(e) => set('expiresAt', e.target.value || null)} /></Field>
+        </div>
+        <label className="toggle-row"><span><b>Tampilkan di situs publik</b><small>Hanya tampil selama masa berlaku dan kode tersedia.</small></span><input type="checkbox" data-testid="input-voucher-active" checked={form.active} onChange={(e) => set('active', e.target.checked)} /><span className="toggle-ui" /></label>
+        {formError && <p className="voucher-form-error" role="alert">{formError}</p>}
+        <div className="dialog-actions"><button type="button" className="button button-outline" onClick={onClose}>Batal</button><button type="submit" className="button button-gold" disabled={saving}>{saving ? 'Menyimpan…' : voucher ? 'Simpan perubahan' : 'Tambah voucher'} <ArrowRight size={15} /></button></div>
       </form>
     </section>
   </div>;

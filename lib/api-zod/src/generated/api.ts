@@ -65,6 +65,19 @@ export const GetGgsPublicProductsResponse = zod.array(GetGgsPublicProductsRespon
 
 
 /**
+ * @summary List currently valid GGS vouchers
+ */
+export const GetGgsPublicVouchersResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "value": zod.string(),
+  "code": zod.string(),
+  "expiresAt": zod.coerce.date().nullable()
+})
+export const GetGgsPublicVouchersResponse = zod.array(GetGgsPublicVouchersResponseItem)
+
+
+/**
  * @summary Request an appointment
  */
 export const createGgsAppointmentBodyCustomerNameMin = 2;
@@ -367,6 +380,97 @@ export const DeleteGgsProductParams = zod.object({
 })
 
 export const DeleteGgsProductResponse = zod.void()
+
+
+/**
+ * @summary List all vouchers in GGS CMS
+ */
+export const GetGgsAdminVouchersResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "value": zod.string(),
+  "code": zod.string().nullable(),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean()
+})
+export const GetGgsAdminVouchersResponse = zod.array(GetGgsAdminVouchersResponseItem)
+
+
+/**
+ * @summary Create a GGS voucher
+ */
+export const createGgsVoucherBodyNameMax = 80;
+
+export const createGgsVoucherBodyValueMax = 80;
+
+export const createGgsVoucherBodyCodeMax = 40;
+
+
+
+export const CreateGgsVoucherBody = zod.object({
+  "name": zod.string().min(1).max(createGgsVoucherBodyNameMax),
+  "value": zod.string().min(1).max(createGgsVoucherBodyValueMax),
+  "code": zod.string().max(createGgsVoucherBodyCodeMax).nullable(),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean()
+})
+
+export const CreateGgsVoucherResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "value": zod.string(),
+  "code": zod.string().nullable(),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean()
+})
+
+
+/**
+ * @summary Update a GGS voucher
+ */
+export const UpdateGgsVoucherParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateGgsVoucherBodyNameMax = 80;
+
+export const updateGgsVoucherBodyValueMax = 80;
+
+export const updateGgsVoucherBodyCodeMax = 40;
+
+
+
+export const UpdateGgsVoucherBody = zod.object({
+  "name": zod.string().min(1).max(updateGgsVoucherBodyNameMax),
+  "value": zod.string().min(1).max(updateGgsVoucherBodyValueMax),
+  "code": zod.string().max(updateGgsVoucherBodyCodeMax).nullable(),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean()
+})
+
+export const UpdateGgsVoucherResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "value": zod.string(),
+  "code": zod.string().nullable(),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean()
+})
+
+
+/**
+ * @summary Delete a GGS voucher
+ */
+export const DeleteGgsVoucherParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteGgsVoucherResponse = zod.void()
 
 
 /**

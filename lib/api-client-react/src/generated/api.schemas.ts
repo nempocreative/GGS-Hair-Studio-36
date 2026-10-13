@@ -111,6 +111,51 @@ export interface GgsProductInput {
   imageUrl: string | null;
 }
 
+export interface GgsPublicVoucher {
+  id: number;
+  name: string;
+  value: string;
+  code: string;
+  /** @nullable */
+  expiresAt: string | null;
+}
+
+export interface GgsVoucher {
+  id: number;
+  name: string;
+  value: string;
+  /** @nullable */
+  code: string | null;
+  /** @nullable */
+  startsAt: string | null;
+  /** @nullable */
+  expiresAt: string | null;
+  active: boolean;
+}
+
+export interface GgsVoucherInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  value: string;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  code: string | null;
+  /** @nullable */
+  startsAt: string | null;
+  /** @nullable */
+  expiresAt: string | null;
+  active: boolean;
+}
+
 export interface GgsAppointmentInput {
   /**
      * @minLength 2

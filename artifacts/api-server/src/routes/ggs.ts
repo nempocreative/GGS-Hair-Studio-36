@@ -1,5 +1,17 @@
 import { clerkClient, getAuth } from "@clerk/express";
-import { and, asc, count, eq, gte, lt, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  lte,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm";
 import { Router, type IRouter, type RequestHandler } from "express";
 import {
   CreateGgsAppointmentBody,
@@ -8,14 +20,19 @@ import {
   CreateGgsProductResponse,
   CreateGgsServiceBody,
   CreateGgsServiceResponse,
+  CreateGgsVoucherBody,
+  CreateGgsVoucherResponse,
   DeleteGgsServiceParams,
   DeleteGgsProductParams,
+  DeleteGgsVoucherParams,
   GetGgsAdminProductsResponse,
   GetGgsAdminAppointmentsResponse,
   GetGgsAdminServicesResponse,
+  GetGgsAdminVouchersResponse,
   GetGgsAdminSummaryResponse,
   GetGgsPublicServicesResponse,
   GetGgsPublicProductsResponse,
+  GetGgsPublicVouchersResponse,
   GetGgsSiteResponse,
   UpdateGgsAppointmentBody,
   UpdateGgsAppointmentParams,
@@ -28,6 +45,9 @@ import {
   UpdateGgsProductResponse,
   UpdateGgsSiteBody,
   UpdateGgsSiteResponse,
+  UpdateGgsVoucherBody,
+  UpdateGgsVoucherParams,
+  UpdateGgsVoucherResponse,
 } from "@workspace/api-zod";
 import {
   db,
@@ -35,6 +55,7 @@ import {
   ggsProductsTable,
   ggsServicesTable,
   ggsSiteContentTable,
+  ggsVouchersTable,
 } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -371,6 +392,7 @@ async function ensureInitialContent(): Promise<void> {
           if (!product) {
             await tx.insert(ggsProductsTable).values(defaultProducts);
           }
+
         }
       });
     })().catch((error: unknown) => {
@@ -418,6 +440,59 @@ function serializeProduct(product: typeof ggsProductsTable.$inferSelect) {
     active: product.active,
     imageUrl: product.imageUrl,
   };
+}
+
+function serializeVoucher(voucher: typeof ggsVouchersTable.$inferSelect) {
+  return {
+    id: voucher.id,
+    name: voucher.name,
+    value: voucher.value,
+    code: voucher.code,
+    startsAt: voucher.startsAt,
+    expiresAt: voucher.expiresAt,
+    active: voucher.active,
+  };
+}
+
+function todayInJakarta(): string {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Jakarta",
+  }).format(new Date());
+}
+
+function normalizeVoucherInput(input: {
+  name: string;
+  value: string;
+  code: string | null;
+  startsAt: string | Date | null;
+  expiresAt: string | Date | null;
+  active: boolean;
+}) {
+  const calendarDate = (value: string | Date | null) =>
+    value instanceof Date ? value.toISOString().slice(0, 10) : value;
+  const normalized = {
+    ...input,
+    name: input.name.trim(),
+    value: input.value.trim(),
+    code: input.code?.trim().replace(/\s+/g, "").toUpperCase() || null,
+    startsAt: calendarDate(input.startsAt),
+    expiresAt: calendarDate(input.expiresAt),
+  };
+
+  if (!normalized.name || !normalized.value) {
+    return { error: "Nama voucher dan nilai penawaran harus diisi." } as const;
+  }
+  if (normalized.active && !normalized.code) {
+    return { error: "Isi kode sebelum mengaktifkan voucher." } as const;
+  }
+  if (
+    normalized.startsAt &&
+    normalized.expiresAt &&
+    normalized.startsAt > normalized.expiresAt
+  ) {
+    return { error: "Tanggal akhir harus sama atau setelah tanggal mulai." } as const;
+  }
+  return { data: normalized } as const;
 }
 
 function serializeAppointment(
@@ -498,6 +573,46 @@ router.get("/ggs/products", async (_req, res): Promise<void> => {
     .where(eq(ggsProductsTable.active, true))
     .orderBy(asc(ggsProductsTable.sortOrder), asc(ggsProductsTable.name));
   res.json(GetGgsPublicProductsResponse.parse(products.map(serializeProduct)));
+});
+
+router.get("/ggs/vouchers", async (_req, res): Promise<void> => {
+  await ensureInitialContent();
+  const today = todayInJakarta();
+  const vouchers = await db
+    .select()
+    .from(ggsVouchersTable)
+    .where(
+      and(
+        eq(ggsVouchersTable.active, true),
+        isNotNull(ggsVouchersTable.code),
+        sql`btrim(${ggsVouchersTable.code}) <> ''`,
+        or(
+          isNull(ggsVouchersTable.startsAt),
+          lte(ggsVouchersTable.startsAt, today),
+        ),
+        or(
+          isNull(ggsVouchersTable.expiresAt),
+          gte(ggsVouchersTable.expiresAt, today),
+        ),
+      ),
+    )
+    .orderBy(asc(ggsVouchersTable.sortOrder), asc(ggsVouchersTable.name));
+
+  const parsedVouchers = GetGgsPublicVouchersResponse.parse(
+    vouchers.map((voucher) => ({
+      id: voucher.id,
+      name: voucher.name,
+      value: voucher.value,
+      code: voucher.code ?? "",
+      expiresAt: voucher.expiresAt,
+    })),
+  );
+  res.json(
+    parsedVouchers.map((voucher, index) => ({
+      ...voucher,
+      expiresAt: vouchers[index].expiresAt,
+    })),
+  );
 });
 
 router.post("/ggs/appointments", async (req, res): Promise<void> => {
@@ -756,6 +871,122 @@ router.delete("/ggs/admin/products/:id", async (req, res): Promise<void> => {
     .returning({ id: ggsProductsTable.id });
   if (!product) {
     res.status(404).json({ error: "Produk tidak ditemukan." });
+    return;
+  }
+  res.sendStatus(204);
+});
+
+router.get("/ggs/admin/vouchers", async (_req, res): Promise<void> => {
+  await ensureInitialContent();
+  const vouchers = await db
+    .select()
+    .from(ggsVouchersTable)
+    .orderBy(asc(ggsVouchersTable.sortOrder), asc(ggsVouchersTable.name));
+  const parsedVouchers = GetGgsAdminVouchersResponse.parse(
+    vouchers.map(serializeVoucher),
+  );
+  res.json(
+    parsedVouchers.map((voucher, index) => ({
+      ...voucher,
+      startsAt: vouchers[index].startsAt,
+      expiresAt: vouchers[index].expiresAt,
+    })),
+  );
+});
+
+router.post("/ggs/admin/vouchers", async (req, res): Promise<void> => {
+  const parsed = CreateGgsVoucherBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const normalized = normalizeVoucherInput(parsed.data);
+  if (!normalized.data) {
+    res.status(400).json({ error: normalized.error });
+    return;
+  }
+  if (normalized.data.code) {
+    const [duplicate] = await db
+      .select({ id: ggsVouchersTable.id })
+      .from(ggsVouchersTable)
+      .where(eq(ggsVouchersTable.code, normalized.data.code))
+      .limit(1);
+    if (duplicate) {
+      res.status(409).json({ error: "Kode voucher sudah digunakan." });
+      return;
+    }
+  }
+
+  await ensureInitialContent();
+  const [voucher] = await db
+    .insert(ggsVouchersTable)
+    .values({ ...normalized.data, sortOrder: 99 })
+    .returning();
+  const response = CreateGgsVoucherResponse.parse(serializeVoucher(voucher));
+  res.status(201).json({
+    ...response,
+    startsAt: voucher.startsAt,
+    expiresAt: voucher.expiresAt,
+  });
+});
+
+router.patch("/ggs/admin/vouchers/:id", async (req, res): Promise<void> => {
+  const params = UpdateGgsVoucherParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const parsed = UpdateGgsVoucherBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const normalized = normalizeVoucherInput(parsed.data);
+  if (!normalized.data) {
+    res.status(400).json({ error: normalized.error });
+    return;
+  }
+  if (normalized.data.code) {
+    const [duplicate] = await db
+      .select({ id: ggsVouchersTable.id })
+      .from(ggsVouchersTable)
+      .where(eq(ggsVouchersTable.code, normalized.data.code))
+      .limit(1);
+    if (duplicate && duplicate.id !== params.data.id) {
+      res.status(409).json({ error: "Kode voucher sudah digunakan." });
+      return;
+    }
+  }
+
+  const [voucher] = await db
+    .update(ggsVouchersTable)
+    .set(normalized.data)
+    .where(eq(ggsVouchersTable.id, params.data.id))
+    .returning();
+  if (!voucher) {
+    res.status(404).json({ error: "Voucher tidak ditemukan." });
+    return;
+  }
+  const response = UpdateGgsVoucherResponse.parse(serializeVoucher(voucher));
+  res.json({
+    ...response,
+    startsAt: voucher.startsAt,
+    expiresAt: voucher.expiresAt,
+  });
+});
+
+router.delete("/ggs/admin/vouchers/:id", async (req, res): Promise<void> => {
+  const params = DeleteGgsVoucherParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [voucher] = await db
+    .delete(ggsVouchersTable)
+    .where(eq(ggsVouchersTable.id, params.data.id))
+    .returning({ id: ggsVouchersTable.id });
+  if (!voucher) {
+    res.status(404).json({ error: "Voucher tidak ditemukan." });
     return;
   }
   res.sendStatus(204);
