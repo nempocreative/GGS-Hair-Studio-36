@@ -14,3 +14,9 @@ Use illustrated people for every homepage shortcut, with varied hairstyles rathe
 **Why:** The user clarified that every homepage menu item should use a person illustration, replacing the earlier distinction between portrait and symbol shortcuts.
 
 **How to apply:** Vary the illustrated hairstyles across shortcuts; preserve each tile's color, the four-column/eight-per-slide layout, dot navigation, and background-free shortcut links.
+
+Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it.
+
+**Why:** The user specifically clarified that the person icon's body should visually connect to its tile.
+
+**How to apply:** Size and clip the portrait to the rounded-square tile, and extend the torso to its lower edge.

@@ -515,8 +515,8 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
       aria-hidden="true"
     >
       <path
-        d="M5 48c1-5.4 5.2-8.3 12-9.5l7-1.3 7 1.3c6.8 1.2 11 4.1 12 9.5Z"
-        fill="#f0d7c7"
+        d="M0 48c1.3-6.5 6.1-10.5 13.7-12.1l5.8-1.2c1.1 2.5 2.6 3.8 4.5 3.8s3.4-1.3 4.5-3.8l5.8 1.2C41.9 37.5 46.7 41.5 48 48Z"
+        fill="var(--quick-icon-edge, #382a27)"
       />
       <path d={style.back} fill="#382a27" />
       <path d="M20 34.5v5.2c2 2 6 2 8 0v-5.2Z" fill="#e6b593" />
