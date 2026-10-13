@@ -580,7 +580,7 @@
 .home-programs-layout {
   display: block;
 }
-.home-sample-voucher-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.home-sample-voucher-grid { display: flex; gap: 14px; touch-action: pan-y pinch-zoom; }
 .home-voucher-preview { min-width: 0; }
 .home-programs-heading > a,
 .program-crosslink {
@@ -599,7 +599,7 @@
 .home-programs-heading > a:hover svg,
 .program-crosslink:hover svg { transform: translateX(3px); }
 .sample-voucher-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.home-sample-voucher-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.home-sample-voucher-grid { display: flex; gap: 14px; touch-action: pan-y pinch-zoom; }
 .home-sample-voucher-grid { --ticket-surround: #e7dfd2; }
 .sample-voucher-card {
   display: grid;
@@ -678,6 +678,8 @@
 }
 .voucher-carousel-slide { flex: 0 0 calc((100% - 28px) / 3); min-width: 0; }
 .voucher-carousel-slide > .voucher-ticket-card { height: 100%; }
+.home-voucher-carousel-slide { flex: 0 0 calc((100% - 28px) / 3); min-width: 0; }
+.home-voucher-carousel-slide > .voucher-ticket-card { height: 100%; }
 .voucher-full-grid .sample-voucher-card { min-height: 132px; }
 .voucher-carousel-controls {
   display: flex;
@@ -1854,7 +1856,7 @@
   .ggs-products-cart-summary > div { width: 100%; justify-content: space-between; }
 }
 @media (max-width: 900px) {
-  .home-sample-voucher-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-voucher-carousel-slide { flex-basis: calc((100% - 14px) / 2); }
   .voucher-carousel-slide { flex-basis: calc((100% - 14px) / 2); }
 }
 @media (max-width: 680px) {
@@ -1871,12 +1873,12 @@
   .sample-voucher-card h4 { font-size: 20px; }
   .sample-voucher-ticket-copy > strong { font-size: 12px; }
   .voucher-full-grid .sample-voucher-card { min-height: 120px; }
+  .home-voucher-carousel-slide { flex-basis: 100%; }
   .voucher-carousel-slide { flex-basis: 100%; }
 }
 @media (max-width: 390px) {
   .home-programs { padding-right: 18px; padding-left: 18px; }
   .home-programs-heading h2 { font-size: 38px; }
-  .home-sample-voucher-grid { grid-template-columns: 1fr; }
   .sample-voucher-ticket-copy { padding-right: 14px; padding-left: 14px; }
 }
 

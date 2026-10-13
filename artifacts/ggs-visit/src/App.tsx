@@ -578,6 +578,14 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
   const [productCartNotice, setProductCartNotice] = useState('');
   const [productSlideIndex, setProductSlideIndex] = useState(0);
   const [productSnapCount, setProductSnapCount] = useState(0);
+  const [homeVoucherSlideIndex, setHomeVoucherSlideIndex] = useState(0);
+  const [homeVoucherSnapCount, setHomeVoucherSnapCount] = useState(0);
+  const [homeVouchersViewportRef, homeVouchersApi] = useEmblaCarousel({
+    align: 'start',
+    containScroll: 'trimSnaps',
+    loop: false,
+    slidesToScroll: 1,
+  });
   const [productsViewportRef, productsApi] = useEmblaCarousel({
     align: 'start',
     containScroll: 'trimSnaps',
@@ -752,6 +760,21 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
   }, [womenServicesApi]);
 
   useEffect(() => {
+    if (!homeVouchersApi) return;
+    const updateHomeVoucherCarousel = () => {
+      setHomeVoucherSlideIndex(homeVouchersApi.selectedScrollSnap());
+      setHomeVoucherSnapCount(homeVouchersApi.scrollSnapList().length);
+    };
+    updateHomeVoucherCarousel();
+    homeVouchersApi.on('select', updateHomeVoucherCarousel);
+    homeVouchersApi.on('reInit', updateHomeVoucherCarousel);
+    return () => {
+      homeVouchersApi.off('select', updateHomeVoucherCarousel);
+      homeVouchersApi.off('reInit', updateHomeVoucherCarousel);
+    };
+  }, [homeVouchersApi, vouchers.length]);
+
+  useEffect(() => {
     if (!productsApi) return;
     const updateProductCarousel = () => {
       setProductSlideIndex(productsApi.selectedScrollSnap());
@@ -884,15 +907,53 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
       {vouchers.length > 0 && (
         <section className="home-programs home-programs-direct" aria-label="Voucher GGS" data-testid="section-home-programs">
           <div className="home-voucher-preview">
-            <div className="sample-voucher-grid home-sample-voucher-grid">
-              {vouchers.slice(0, 4).map((voucher) => (
-                <VoucherTicketCard
-                  key={voucher.id}
-                  voucher={voucher}
-                  heading="h4"
-                  testId={`card-home-voucher-${voucher.id}`}
-                />
-              ))}
+            <div className="voucher-carousel" data-testid="home-voucher-carousel">
+              <div className="voucher-carousel-viewport" ref={homeVouchersViewportRef}>
+                <div className="sample-voucher-grid home-sample-voucher-grid">
+                  {vouchers.map((voucher, index) => (
+                    <div
+                      className="home-voucher-carousel-slide"
+                      key={voucher.id}
+                      role="group"
+                      aria-roledescription="slide"
+                      aria-label={`${index + 1} dari ${vouchers.length}: ${voucher.name}`}
+                    >
+                      <VoucherTicketCard
+                        voucher={voucher}
+                        heading="h4"
+                        testId={`card-home-voucher-${voucher.id}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {homeVoucherSnapCount > 1 && (
+                <div className="voucher-carousel-controls">
+                  <span className="voucher-carousel-status" aria-live="polite">
+                    Tampilan {homeVoucherSlideIndex + 1} dari {homeVoucherSnapCount}
+                  </span>
+                  <div>
+                    <button
+                      type="button"
+                      aria-label="Voucher sebelumnya"
+                      disabled={!homeVouchersApi?.canScrollPrev()}
+                      onClick={() => homeVouchersApi?.scrollPrev()}
+                      data-testid="button-home-voucher-previous"
+                    >
+                      <ArrowLeft size={18} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Voucher berikutnya"
+                      disabled={!homeVouchersApi?.canScrollNext()}
+                      onClick={() => homeVouchersApi?.scrollNext()}
+                      data-testid="button-home-voucher-next"
+                    >
+                      <ArrowRight size={18} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
