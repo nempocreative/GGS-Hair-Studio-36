@@ -15,8 +15,8 @@ Use illustrated people for every homepage shortcut, with varied hairstyles rathe
 
 **How to apply:** Vary the illustrated hairstyles across shortcuts; preserve each tile's color, the four-column/eight-per-slide layout, dot navigation, and background-free shortcut links.
 
-Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it.
+Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
 **Why:** The user specifically clarified that the person icon's body should visually connect to its tile.
 
-**How to apply:** Size and clip the portrait to the rounded-square tile, and extend the torso to its lower edge.
+**How to apply:** Clip the portrait to the rounded-square tile, keep visible space above the hair, and extend the torso to the tile's lower edge.

@@ -1740,6 +1740,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: scale(.9);
+  transform-origin: center bottom;
 }
 .ggs-quick-menu-item:hover .ggs-quick-menu-icon,
 .ggs-quick-menu-item:focus-visible .ggs-quick-menu-icon {
