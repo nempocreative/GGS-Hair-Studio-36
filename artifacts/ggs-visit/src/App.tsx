@@ -14,7 +14,6 @@ import {
   Compass,
   Copy,
   Droplets,
-  Flower2,
   Gift,
   GraduationCap,
   House,
@@ -435,10 +434,62 @@ type SharedProps = {
   removeCartItem: (productId: number) => void;
 };
 
+type QuickMenuFaceIconProps = {
+  size?: number | string;
+  strokeWidth?: number;
+  className?: string;
+};
+
+function MaleGroomingMenuIcon({ size = 27, strokeWidth = 1.8, className }: QuickMenuFaceIconProps) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M8 13V11a8 8 0 0 1 16 0v2" />
+      <path d="M8.3 12.5c3.2-.2 5.7-1.4 7.7-3.7 1.9 1.9 4.1 3.2 7.7 3.7" />
+      <path d="M8 12.6v4.1a8 8 0 0 0 16 0v-4.1" />
+      <path d="M8 14.2H6.9a1.5 1.5 0 0 0 0 3H8m16-3h1.1a1.5 1.5 0 0 1 0 3H24" />
+      <path d="M11.5 15.5h.01m9 0h.01M16 15.8v2.1m-2 2.1c1.2.7 2.8.7 4 0m-6.2 1.3c1 1.1 2.4 1.7 4.2 1.7s3.2-.6 4.2-1.7" />
+    </svg>
+  );
+}
+
+function FemaleHairMenuIcon({ size = 27, strokeWidth = 1.8, className }: QuickMenuFaceIconProps) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M8.8 13V11a7.2 7.2 0 0 1 14.4 0v2" />
+      <path d="M9.1 12.8c.6-4.2 2.9-6.4 6.9-6.4s6.3 2.2 6.9 6.4" />
+      <path d="M9.3 12.7v4a6.7 6.7 0 0 0 13.4 0v-4" />
+      <path d="M9.2 13c-1.1 1.5-2.3 3.6-2.3 7v4.7m16-11.7c1.1 1.5 2.3 3.6 2.3 7v4.7" />
+      <path d="M11.8 15.5h.01m8.4 0h.01M16 15.7v2m-1.8 2.1c1.1.7 2.5.7 3.6 0" />
+    </svg>
+  );
+}
+
 const homeShortcuts = [
   { label: 'Beranda', href: '/', icon: House, tone: 'quick-tone-blue' },
-  { label: "Men's Grooming", href: '/mens-grooming', icon: Scissors, tone: 'quick-tone-rose' },
-  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', icon: Flower2, tone: 'quick-tone-violet' },
+  { label: "Men's Grooming", href: '/mens-grooming', icon: MaleGroomingMenuIcon, tone: 'quick-tone-rose' },
+  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', icon: FemaleHairMenuIcon, tone: 'quick-tone-violet' },
   { label: 'Hair & Self Care', href: '/hair-self-care', icon: Droplets, tone: 'quick-tone-sage' },
   { label: 'Galeri Gaya', href: '/style-gallery', icon: Image, tone: 'quick-tone-violet' },
   { label: 'Produk', href: '/products', icon: ShoppingBag, tone: 'quick-tone-plum' },
@@ -911,7 +962,13 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                 key={item.href}
                 data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
               >
-                <span className={`ggs-quick-menu-icon ${item.tone}`}><item.icon className="ggs-quick-menu-glyph" size={27} strokeWidth={2} /></span>
+                <span className={`ggs-quick-menu-icon ${item.tone}`}>
+                  <item.icon
+                    className={`ggs-quick-menu-glyph${item.href === '/mens-grooming' || item.href === '/womens-hair-beauty' ? ' ggs-quick-menu-face-glyph' : ''}`}
+                    size={item.href === '/mens-grooming' || item.href === '/womens-hair-beauty' ? 36 : 27}
+                    strokeWidth={item.href === '/mens-grooming' || item.href === '/womens-hair-beauty' ? 1.4 : 2}
+                  />
+                </span>
                 <span>{item.label}</span>
               </Link>
             ))}
