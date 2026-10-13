@@ -437,14 +437,14 @@ const homeShortcuts = [
 
 const homeMenuPageSize = 8;
 const sampleVouchers = [
-  { name: 'Kenalan di GGS', value: '10%', code: 'KENALANGGS' },
-  { name: 'Potong & Segar', value: 'Rp15.000', code: 'POTONG15' },
-  { name: 'Ritual Perawatan', value: '15%', code: 'CARE15' },
-  { name: 'Cuci & Styling', value: '10%', code: 'STYLING10' },
-  { name: 'Ajak Teman', value: 'Rp25.000', code: 'TEMANGGS' },
-  { name: 'Waktu Santai', value: 'Rp20.000', code: 'WEEKDAY20' },
-  { name: 'Warna Favorit', value: '10%', code: 'COLOR10' },
-  { name: 'Hari Spesial', value: '15%', code: 'HARI15' },
+  { name: 'Kenalan di GGS', value: '10%' },
+  { name: 'Potong & Segar', value: 'Rp15.000' },
+  { name: 'Ritual Perawatan', value: '15%' },
+  { name: 'Cuci & Styling', value: '10%' },
+  { name: 'Ajak Teman', value: 'Rp25.000' },
+  { name: 'Waktu Santai', value: 'Rp20.000' },
+  { name: 'Warna Favorit', value: '10%' },
+  { name: 'Hari Spesial', value: '15%' },
 ];
 const homeWomenServiceNames = new Set([
   'signature cut',
@@ -799,12 +799,10 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
         <div className="home-voucher-preview">
           <div className="sample-voucher-grid home-sample-voucher-grid">
             {sampleVouchers.slice(0, 4).map((voucher, index) => (
-              <article className="sample-voucher-card" key={voucher.code} data-testid={`card-home-sample-voucher-${index + 1}`}>
-                <span className="sample-voucher-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <article className="sample-voucher-card" key={voucher.name} data-testid={`card-home-sample-voucher-${index + 1}`}>
                 <div className="sample-voucher-ticket-copy">
                   <h4>{voucher.name}</h4>
                   <strong>{voucher.value}</strong>
-                  <code><span className="sr-only">Kode contoh: </span>{voucher.code}</code>
                 </div>
               </article>
             ))}
@@ -901,7 +899,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                 </div>
               </div>
               <div className="home-products-controls">
-                <p><span>{String(Math.min(productSlideIndex + 1, featuredProducts.length)).padStart(2, '0')}</span> / {String(featuredProducts.length).padStart(2, '0')} pilihan</p>
                 <div>
                   <button type="button" aria-label="Produk sebelumnya" disabled={!productsApi?.canScrollPrev()} onClick={() => productsApi?.scrollPrev()} data-testid="button-home-products-previous"><ArrowLeft size={18} /></button>
                   <button type="button" aria-label="Produk berikutnya" disabled={!productsApi?.canScrollNext()} onClick={() => productsApi?.scrollNext()} data-testid="button-home-products-next"><ArrowRight size={18} /></button>
@@ -1253,7 +1250,7 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
           aria-label="Pilihan referensi model rambut pria"
           data-testid="list-home-style-models"
         >
-          {hairStyleChoices.map((style, index) => (
+          {hairStyleChoices.map((style) => (
             <article className="home-style-model-card" role="listitem" key={style.id} data-testid={`card-home-style-model-${style.id}`}>
               <div className="home-style-model-image">
                 <img
@@ -1263,7 +1260,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                   data-testid={`img-home-style-model-${style.id}`}
                 />
                 <span className="home-style-model-ai-tag">ILUSTRASI AI</span>
-                <span className="home-style-model-number">{String(index + 1).padStart(2, '0')}</span>
               </div>
               <div className="home-style-model-copy">
                 <h3>{style.label}</h3>
@@ -1301,7 +1297,7 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
           aria-label="Inspirasi gaya rambut wanita"
           data-testid="list-home-womens-style-models"
         >
-          {womenHairStyleChoices.map((style, index) => (
+          {womenHairStyleChoices.map((style) => (
             <article className="home-style-model-card" role="listitem" key={style.id} data-testid={`card-home-womens-style-${style.id}`}>
               <div className="home-style-model-image">
                 <img
@@ -1311,7 +1307,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                   data-testid={`img-home-womens-style-${style.id}`}
                 />
                 <span className="home-style-model-ai-tag">ILUSTRASI AI</span>
-                <span className="home-style-model-number">{String(index + 1).padStart(2, '0')}</span>
               </div>
               <div className="home-style-model-copy">
                 <h3>{style.label}</h3>
@@ -1415,9 +1410,7 @@ function HomeTestimonials() {
         >
           <div className="home-testimonials-quote-mark" aria-hidden="true">“</div>
           <div className="home-testimonials-slide" aria-live={paused ? 'polite' : 'off'}>
-            <p className="home-testimonials-slide-index">
-              CONTOH ULASAN <span>{String(active + 1).padStart(2, '0')} / {String(homeTestimonials.length).padStart(2, '0')}</span>
-            </p>
+            <p className="home-testimonials-slide-index">CONTOH ULASAN</p>
             <blockquote key={active} data-testid="quote-home-testimonial">
               {homeTestimonials[active]}
             </blockquote>
@@ -1886,9 +1879,8 @@ function ServiceList({ services, servicesQuery, openBooking, compact = false }: 
   if (!services.length) return <div className="clearer-service-state" data-testid="status-services-empty"><p>Belum ada layanan aktif yang ditampilkan.</p></div>;
   return (
     <div className={`clearer-service-list ${compact ? 'service-list-compact' : ''}`}>
-      {services.slice(0, compact ? 3 : undefined).map((service, index) => (
+      {services.slice(0, compact ? 3 : undefined).map((service) => (
         <article className="clearer-service-row" key={service.id} data-testid={`card-service-${service.id}`}>
-          <span className="clearer-service-index">{String(index + 1).padStart(2, '0')}</span>
           <div className="clearer-service-main">
             <span className="service-category">{service.category}</span>
             <h3>{service.name}</h3><p>{service.description}</p>
@@ -2090,22 +2082,20 @@ function VoucherPage() {
     <PageFrame
       kicker="GGS / VOUCHER"
       title={<>Voucher<br /><em>GGS.</em></>}
-      intro="Delapan contoh voucher untuk memberi gambaran jenis penawaran yang mungkin ditampilkan."
+      intro="Beberapa contoh voucher untuk memberi gambaran jenis penawaran yang mungkin ditampilkan."
       testId="page-voucher"
     >
       <section className="voucher-page-content" aria-labelledby="voucher-examples-title" data-testid="section-voucher-examples">
         <div className="program-page-heading">
-          <div><span className="panel-index">KOLEKSI / 08 CONTOH</span><h2 id="voucher-examples-title">Voucher sebagai<br /><em>contoh saja.</em></h2></div>
+          <div><span className="panel-index">KOLEKSI VOUCHER</span><h2 id="voucher-examples-title">Voucher sebagai<br /><em>contoh saja.</em></h2></div>
           <p>Contoh berikut bukan penawaran aktif. Kode dan nilai seluruhnya hanya ilustrasi dan saat ini tidak dapat ditukarkan.</p>
         </div>
         <div className="sample-voucher-grid voucher-full-grid">
           {sampleVouchers.map((voucher, index) => (
-            <article className="sample-voucher-card" key={voucher.code} data-testid={`card-sample-voucher-${index + 1}`}>
-              <span className="sample-voucher-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+            <article className="sample-voucher-card" key={voucher.name} data-testid={`card-sample-voucher-${index + 1}`}>
               <div className="sample-voucher-ticket-copy">
                 <h3>{voucher.name}</h3>
                 <strong>{voucher.value}</strong>
-                <code><span className="sr-only">Kode ilustrasi: </span>{voucher.code}</code>
               </div>
             </article>
           ))}
