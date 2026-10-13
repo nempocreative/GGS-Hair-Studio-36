@@ -2105,3 +2105,131 @@
 @media (prefers-reduced-motion: reduce) {
   .voucher-ticket-card { transition: none; }
 }
+
+/* Homepage sections alternate white and light gray to keep each block distinct. */
+.clearer-page:has(.ggs-carousel) {
+  --clearer-paper: #fff;
+  --clearer-paper-deep: #f1f1f1;
+  --clearer-line: #d7d7d7;
+  background: #fff;
+}
+.clearer-page:has(.ggs-carousel) .clearer-header { background: #fff; }
+.clearer-page:has(.ggs-carousel) .clearer-footer {
+  border-top-color: #d7d7d7;
+  background: #f1f1f1;
+}
+.ggs-carousel { background: #fff; }
+.clearer-home-menu.ggs-quick-menu {
+  max-width: none;
+  margin: 0;
+  background: #f1f1f1;
+}
+.home-programs.home-programs-direct {
+  background: #fff;
+  --ticket-surround: #fff;
+}
+.clearer-promise { background: #f1f1f1; }
+.ggs-team-showcase.ggs-team-showcase-home { background: #fff; }
+.home-mens-grooming:not(.home-womens-grooming) { background: #f1f1f1; }
+.home-womens-grooming {
+  border-top: 0;
+  background: #fff;
+}
+.home-service-promo {
+  border-top: 0;
+  background: #f1f1f1;
+}
+.home-style-models {
+  border-top: 0;
+  background: #fff;
+}
+.home-style-models + .home-style-models { background: #f1f1f1; }
+
+.home-products {
+  background: #fff;
+  color: #262520;
+}
+.home-products::before,
+.home-products::after { border-color: rgb(146 61 54 / 9%); }
+.home-products-title-block .clearer-kicker { color: #923d36; }
+.home-products-heading h2 em { color: #923d36; }
+.home-products-intro p,
+.home-products-footnote { color: #5c5a52; }
+.home-products-all-link {
+  border-bottom-color: #b69a93;
+  color: #923d36;
+}
+.home-product-copy {
+  border-color: #d7d7d7;
+  background: #fff;
+}
+.home-product-stock {
+  border-color: #d7d7d7;
+  color: #923d36;
+}
+.home-product-copy > p { color: #5c5a52; }
+.home-product-bottom { border-top-color: #e2e2e2; }
+.home-product-price { color: #262520; }
+.home-product-add {
+  border-color: #923d36;
+  color: #923d36;
+}
+.home-product-add:hover:not(:disabled) { border-color: #923d36; background: #923d36; color: #fff; }
+.home-product-add:disabled { border-color: #d7d7d7; color: #8a8a8a; }
+.home-products-controls { border-bottom-color: #d7d7d7; }
+.home-products-controls button {
+  border-color: #c9c9c9;
+  color: #262520;
+}
+.home-products-controls button:hover:not(:disabled) { border-color: #923d36; background: #923d36; color: #fff; }
+.home-products-footnote > span:first-child { color: #262520; }
+.home-product-skeleton { background: linear-gradient(110deg, #ededed 8%, #f8f8f8 18%, #ededed 33%); }
+.home-products-message { border-color: #d7d7d7; }
+.home-products-message strong { color: #262520; }
+.home-products-message p { color: #5c5a52; }
+.home-products-message button,
+.home-products-message a { border-color: #923d36; color: #923d36; }
+
+.home-testimonials {
+  border-top: 0;
+  background: #f1f1f1;
+  color: #262520;
+}
+.home-testimonials::before { border-color: rgb(146 61 54 / 9%); }
+.home-testimonials-heading .clearer-kicker,
+.home-testimonials-heading h2 em,
+.home-testimonials-slide-index { color: #923d36; }
+.home-testimonials-heading h2,
+.home-testimonials-slide blockquote { color: #262520; }
+.home-testimonials-heading > p:not(.clearer-kicker),
+.home-testimonials-attribution { color: #5c5a52; }
+.home-testimonials-disclaimer {
+  border-left-color: #923d36;
+  background: rgb(146 61 54 / 6%);
+  color: #923d36;
+}
+.home-testimonials-carousel {
+  border-color: #d7d7d7;
+  background: #fff;
+  box-shadow: 0 16px 36px rgb(38 37 32 / 7%);
+}
+.home-testimonials-quote-mark { color: rgb(146 61 54 / 9%); }
+.home-testimonials-controls { border-top-color: #d7d7d7; }
+.home-testimonials-arrow,
+.home-testimonials-toggle {
+  border-color: #c9c9c9;
+  color: #262520;
+}
+.home-testimonials-arrow:hover,
+.home-testimonials-toggle:hover {
+  border-color: #923d36;
+  background: rgb(146 61 54 / 7%);
+  color: #923d36;
+}
+.home-testimonials-arrow:focus-visible,
+.home-testimonials-toggle:focus-visible,
+.home-testimonials-dot:focus-visible { outline-color: #923d36; }
+.home-testimonials-dot { background: #bdbdbd; }
+.home-testimonials-dot.is-active { background: #923d36; }
+.home-testimonials-toggle { color: #5c5a52; }
+.home-last-cta { background: #fff; }
