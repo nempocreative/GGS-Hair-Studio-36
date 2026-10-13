@@ -570,23 +570,42 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
 }
 
 const homeShortcuts = [
-  { label: 'Beranda', href: '/', hairstyle: 'crop', tone: 'quick-tone-blue' },
-  { label: "Men's Grooming", href: '/mens-grooming', hairstyle: 'fade', tone: 'quick-tone-rose' },
-  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', hairstyle: 'curls', tone: 'quick-tone-violet' },
-  { label: 'Hair & Self Care', href: '/hair-self-care', hairstyle: 'sidePart', tone: 'quick-tone-sage' },
-  { label: 'Galeri Gaya', href: '/style-gallery', hairstyle: 'bob', tone: 'quick-tone-violet' },
-  { label: 'Produk', href: '/products', hairstyle: 'waves', tone: 'quick-tone-plum' },
-  { label: 'Booking', href: '/book', hairstyle: 'longLayers', tone: 'quick-tone-gold' },
-  { label: 'Voucher', href: '/voucher', hairstyle: 'ponytail', tone: 'quick-tone-sage' },
-  { label: 'Membership', href: '/membership', hairstyle: 'bun', tone: 'quick-tone-plum' },
-  { label: 'Cabang', href: '/branches', hairstyle: 'pixie', tone: 'quick-tone-blue' },
-  { label: 'Kelas', href: '/kelas', hairstyle: 'shag', tone: 'quick-tone-gold' },
-  { label: 'Hair Journal', href: '/hair-journal', hairstyle: 'braids', tone: 'quick-tone-violet' },
-  { label: 'Events & Community', href: '/events-community', hairstyle: 'locs', tone: 'quick-tone-sage' },
-  { label: 'Our Team', href: '/our-team', hairstyle: 'pompadour', tone: 'quick-tone-plum' },
-  { label: 'Karir', href: '/karir', hairstyle: 'undercut', tone: 'quick-tone-gold' },
-  { label: 'Home Service', href: '/home-service', hairstyle: 'curtain', tone: 'quick-tone-sage' },
+  { label: 'Beranda', href: '/', icon: 'home', tone: 'quick-tone-blue' },
+  { label: "Men's Grooming", href: '/mens-grooming', icon: 'grooming', tone: 'quick-tone-rose' },
+  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', icon: 'beauty', tone: 'quick-tone-violet' },
+  { label: 'Hair & Self Care', href: '/hair-self-care', icon: 'care', tone: 'quick-tone-sage' },
+  { label: 'Galeri Gaya', href: '/style-gallery', icon: 'gallery', tone: 'quick-tone-violet' },
+  { label: 'Produk', href: '/products', icon: 'products', tone: 'quick-tone-plum' },
+  { label: 'Booking', href: '/book', icon: 'booking', tone: 'quick-tone-gold' },
+  { label: 'Voucher', href: '/voucher', icon: 'voucher', tone: 'quick-tone-sage' },
+  { label: 'Membership', href: '/membership', icon: 'membership', tone: 'quick-tone-plum' },
+  { label: 'Cabang', href: '/branches', icon: 'branches', tone: 'quick-tone-blue' },
+  { label: 'Kelas', href: '/kelas', icon: 'classes', tone: 'quick-tone-gold' },
+  { label: 'Hair Journal', href: '/hair-journal', icon: 'journal', tone: 'quick-tone-violet' },
+  { label: 'Events & Community', href: '/events-community', icon: 'community', tone: 'quick-tone-sage' },
+  { label: 'Our Team', href: '/our-team', icon: 'team', tone: 'quick-tone-plum' },
+  { label: 'Karir', href: '/karir', icon: 'careers', tone: 'quick-tone-gold' },
+  { label: 'Home Service', href: '/home-service', icon: 'homeService', tone: 'quick-tone-sage' },
 ];
+
+const homeMenuIcons = {
+  home: House,
+  grooming: Scissors,
+  beauty: Sparkles,
+  care: Droplets,
+  gallery: Image,
+  products: ShoppingBag,
+  booking: CalendarDays,
+  voucher: Ticket,
+  membership: Gift,
+  branches: MapPin,
+  classes: GraduationCap,
+  journal: BookOpen,
+  community: Compass,
+  team: UsersRound,
+  careers: Briefcase,
+  homeService: Phone,
+} as const;
 
 const homeMenuPageSize = 8;
 
@@ -1038,22 +1057,30 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
             data-count={visibleHomeShortcuts.length}
             key={menuPage}
           >
-            {visibleHomeShortcuts.map((item) => (
-              <Link
-                className={`ggs-quick-menu-item${item.href === '/mens-grooming' ? ' ggs-menu-mens' : ''}${item.href === '/womens-hair-beauty' ? ' ggs-menu-womens' : ''}${item.href === '/hair-self-care' ? ' ggs-menu-self-care' : ''}`}
-                href={item.href}
-                key={item.href}
-                data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
-              >
-                <span className={`ggs-quick-menu-icon ${item.tone}`}>
-                  <HairModelMenuIcon
-                    className="ggs-quick-menu-avatar"
-                    hairstyle={item.hairstyle}
-                  />
-                </span>
-                <span>{item.label}</span>
-              </Link>
-            ))}
+            {visibleHomeShortcuts.map((item) => {
+              const MenuIcon = homeMenuIcons[item.icon as keyof typeof homeMenuIcons];
+              const portraitHairstyle =
+                item.href === '/mens-grooming' ? 'fade' :
+                item.href === '/womens-hair-beauty' ? 'curls' :
+                null;
+              return (
+                <Link
+                  className={`ggs-quick-menu-item${item.href === '/mens-grooming' ? ' ggs-menu-mens' : ''}${item.href === '/womens-hair-beauty' ? ' ggs-menu-womens' : ''}${item.href === '/hair-self-care' ? ' ggs-menu-self-care' : ''}`}
+                  href={item.href}
+                  key={item.href}
+                  data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
+                >
+                  <span className={`ggs-quick-menu-icon ${item.tone}`}>
+                    {portraitHairstyle ? (
+                      <HairModelMenuIcon className="ggs-quick-menu-avatar" hairstyle={portraitHairstyle} />
+                    ) : (
+                      <MenuIcon className="ggs-quick-menu-symbol" aria-hidden="true" strokeWidth={1.9} />
+                    )}
+                  </span>
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
           {menuPageCount > 1 && (
             <div className="ggs-quick-menu-pagination" aria-label="Kontrol halaman menu">
