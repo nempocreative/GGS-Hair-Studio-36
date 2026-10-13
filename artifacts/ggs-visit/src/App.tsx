@@ -301,7 +301,7 @@ function App() {
 
       <Switch>
         <Route path="/">
-          <HomePage {...common} />
+          <HomePage {...common} chooseHairStyle={chooseHairStyle} />
         </Route>
         <Route path="/products">
           <ProductsPage {...common} />
@@ -461,7 +461,9 @@ const homeWomenServicePhotos: Record<string, string> = {
   'smoothing sleek': 'ggs-editorial.jpg',
 };
 
-function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
+function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle }: SharedProps & {
+  chooseHairStyle: (style: string) => void;
+}) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [whyActive, setWhyActive] = useState(0);
@@ -1061,10 +1063,76 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
         </div>
       </section>
 
-      <section className="home-editorial-band">
-        <div className="home-editorial-index">GGS / CATATAN 01</div>
-        <p>Pilih model rambut sebagai referensi booking.<br /><em>Temukan inspirasi potongan dan penataan yang sesuai dengan gayamu.</em></p>
-        <Link href="/style-gallery" data-testid="link-home-inspiration">Buka Style Gallery <ArrowUpRight size={17} /></Link>
+      <section className="home-style-models" aria-labelledby="home-style-models-title" data-testid="section-home-style-models">
+        <div className="home-style-models-heading">
+          <div>
+            <p className="clearer-kicker">GGS / REFERENSI GAYA</p>
+            <h2 id="home-style-models-title">Model rambut<br /><em>pria.</em></h2>
+          </div>
+          <div className="home-style-models-intro">
+            <p>Lihat referensi model dari layanan pria aktif GGS. Pilih salah satu untuk mencantumkannya saat mengajukan booking.</p>
+            <Link href="/style-gallery" className="home-style-gallery-link" data-testid="link-home-style-gallery">
+              Lihat Style Gallery <ArrowUpRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+        {servicesQuery.isLoading ? (
+          <div className="home-style-model-grid" role="status" aria-label="Memuat model rambut pria" aria-busy="true" data-testid="status-home-style-models-loading">
+            {[1, 2, 3].map((item) => <div className="home-style-model-skeleton" key={item} aria-hidden="true" />)}
+          </div>
+        ) : servicesQuery.isError ? (
+          <div className="home-style-model-state" role="alert" data-testid="status-home-style-models-error">
+            <span className="panel-index">LAYANAN BELUM TERMUAT</span>
+            <p>Model rambut belum bisa ditampilkan saat ini.</p>
+            <button type="button" onClick={() => { void servicesQuery.refetch(); }} data-testid="button-home-style-models-retry">
+              Coba muat kembali
+            </button>
+          </div>
+        ) : !mensServices.length ? (
+          <div className="home-style-model-state" role="status" data-testid="status-home-style-models-empty">
+            <span className="panel-index">REFERENSI GAYA</span>
+            <p>Belum ada model rambut pria yang dapat ditampilkan.</p>
+          </div>
+        ) : (
+          <div
+            className="home-style-model-grid"
+            role="list"
+            aria-label="Pilihan referensi model rambut pria"
+            data-testid="list-home-style-models"
+          >
+            {mensServices.slice(0, 3).map((service, index) => (
+              <article className="home-style-model-card" role="listitem" key={service.id} data-testid={`card-home-style-model-${service.id}`}>
+                <div className="home-style-model-image">
+                  {service.imageUrl ? (
+                    <img
+                      src={service.imageUrl}
+                      alt={`Referensi model rambut: ${service.name}`}
+                      loading="lazy"
+                      data-testid={`img-home-style-model-${service.id}`}
+                    />
+                  ) : (
+                    <div className="home-style-model-no-image" aria-label={`Gambar ${service.name} belum tersedia`}>
+                      <span>GGS</span>
+                    </div>
+                  )}
+                  <span className="home-style-model-number">{String(index + 1).padStart(2, '0')}</span>
+                </div>
+                <div className="home-style-model-copy">
+                  <h3>{service.name}</h3>
+                  <p>{service.description}</p>
+                  <Link
+                    href="/book"
+                    className="home-style-model-choice"
+                    onClick={() => chooseHairStyle(service.name)}
+                    data-testid={`link-home-style-model-${service.id}`}
+                  >
+                    Pilih referensi ini <ArrowRight size={15} aria-hidden="true" />
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
       <section className="home-last-cta">
         <div><p className="clearer-kicker">BOOK APPOINTMENT</p><h2>Ceritakan<br /><em>yang kamu inginkan.</em></h2></div>
