@@ -1041,55 +1041,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle 
         )}
       </section>
 
-      <section
-        className="home-style-models"
-        aria-labelledby="home-womens-style-models-title"
-        data-testid="section-home-womens-style-models"
-      >
-        <div className="home-style-models-heading">
-          <div>
-            <p className="clearer-kicker">GGS / INSPIRASI WANITA</p>
-            <h2 id="home-womens-style-models-title">Gaya rambut<br /><em>wanita.</em></h2>
-          </div>
-          <div className="home-style-models-intro">
-            <p>Temukan inspirasi gaya rambut wanita. Foto AI ini sebagai referensi awal untuk dibicarakan saat booking.</p>
-          </div>
-        </div>
-        <div
-          className="home-style-model-grid"
-          role="list"
-          aria-label="Inspirasi gaya rambut wanita"
-          data-testid="list-home-womens-style-models"
-        >
-          {womenHairStyleChoices.map((style, index) => (
-            <article className="home-style-model-card" role="listitem" key={style.id} data-testid={`card-home-womens-style-${style.id}`}>
-              <div className="home-style-model-image">
-                <img
-                  src={style.image}
-                  alt={`Ilustrasi AI inspirasi gaya rambut ${style.label}`}
-                  loading="eager"
-                  data-testid={`img-home-womens-style-${style.id}`}
-                />
-                <span className="home-style-model-ai-tag">ILUSTRASI AI</span>
-                <span className="home-style-model-number">{String(index + 1).padStart(2, '0')}</span>
-              </div>
-              <div className="home-style-model-copy">
-                <h3>{style.label}</h3>
-                <p>{style.description}</p>
-                <Link
-                  href="/book"
-                  className="home-style-model-choice"
-                  onClick={() => chooseHairStyle(style.label)}
-                  data-testid={`link-home-womens-style-${style.id}`}
-                >
-                  Pilih referensi ini <ArrowRight size={15} aria-hidden="true" />
-                </Link>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="home-service-promo" aria-labelledby="home-service-promo-title" data-testid="section-home-service">
         <div className="home-service-promo-heading">
           <p className="clearer-kicker">GGS / HOME SERVICE</p>
@@ -1151,6 +1102,54 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle 
                   className="home-style-model-choice"
                   onClick={() => chooseHairStyle(style.label)}
                   data-testid={`link-home-style-model-${style.id}`}
+                >
+                  Pilih referensi ini <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section
+        className="home-style-models"
+        aria-labelledby="home-womens-style-models-title"
+        data-testid="section-home-womens-style-models"
+      >
+        <div className="home-style-models-heading">
+          <div>
+            <p className="clearer-kicker">GGS / INSPIRASI WANITA</p>
+            <h2 id="home-womens-style-models-title">Gaya rambut<br /><em>wanita.</em></h2>
+          </div>
+          <div className="home-style-models-intro">
+            <p>Temukan inspirasi gaya rambut wanita. Foto AI ini sebagai referensi awal untuk dibicarakan saat booking.</p>
+          </div>
+        </div>
+        <div
+          className="home-style-model-grid"
+          role="list"
+          aria-label="Inspirasi gaya rambut wanita"
+          data-testid="list-home-womens-style-models"
+        >
+          {womenHairStyleChoices.map((style, index) => (
+            <article className="home-style-model-card" role="listitem" key={style.id} data-testid={`card-home-womens-style-${style.id}`}>
+              <div className="home-style-model-image">
+                <img
+                  src={style.image}
+                  alt={`Ilustrasi AI inspirasi gaya rambut ${style.label}`}
+                  loading="eager"
+                  data-testid={`img-home-womens-style-${style.id}`}
+                />
+                <span className="home-style-model-ai-tag">ILUSTRASI AI</span>
+                <span className="home-style-model-number">{String(index + 1).padStart(2, '0')}</span>
+              </div>
+              <div className="home-style-model-copy">
+                <h3>{style.label}</h3>
+                <p>{style.description}</p>
+                <Link
+                  href="/book"
+                  className="home-style-model-choice"
+                  onClick={() => chooseHairStyle(style.label)}
+                  data-testid={`link-home-womens-style-${style.id}`}
                 >
                   Pilih referensi ini <ArrowRight size={15} aria-hidden="true" />
                 </Link>
