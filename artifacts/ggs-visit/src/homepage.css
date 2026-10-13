@@ -669,9 +669,42 @@
   font-size: 15px;
   line-height: 1.75;
 }
-.voucher-full-grid { --ticket-surround: var(--clearer-paper); grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.voucher-carousel-viewport { overflow: hidden; }
+.voucher-full-grid {
+  --ticket-surround: var(--clearer-paper);
+  display: flex;
+  gap: 14px;
+  touch-action: pan-y pinch-zoom;
+}
+.voucher-carousel-slide { flex: 0 0 calc((100% - 28px) / 3); min-width: 0; }
+.voucher-carousel-slide > .voucher-ticket-card { height: 100%; }
 .voucher-full-grid .sample-voucher-card { min-height: 132px; }
-.voucher-full-grid > .voucher-ticket-card:last-child:nth-child(3n + 1) { grid-column: 2; }
+.voucher-carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+}
+.voucher-carousel-controls > div { display: flex; gap: 8px; }
+.voucher-carousel-controls button {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid #bcae99;
+  background: transparent;
+  color: var(--clearer-ink);
+  cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.voucher-carousel-controls button:hover:not(:disabled) {
+  border-color: var(--clearer-accent);
+  background: var(--clearer-accent);
+  color: #fffaf2;
+}
+.voucher-carousel-controls button:disabled { cursor: default; opacity: .4; }
+.voucher-carousel-status { color: var(--clearer-muted); font-size: 12px; }
 .voucher-disclaimer {
   margin-top: 25px;
   border: 1px solid #c9bdae;
@@ -1822,8 +1855,7 @@
 }
 @media (max-width: 900px) {
   .home-sample-voucher-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .voucher-full-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .voucher-full-grid > .voucher-ticket-card:last-child:nth-child(3n + 1) { grid-column: auto; }
+  .voucher-carousel-slide { flex-basis: calc((100% - 14px) / 2); }
 }
 @media (max-width: 680px) {
   .home-programs { padding: 54px 22px; }
@@ -1839,13 +1871,13 @@
   .sample-voucher-card h4 { font-size: 20px; }
   .sample-voucher-ticket-copy > strong { font-size: 12px; }
   .voucher-full-grid .sample-voucher-card { min-height: 120px; }
+  .voucher-carousel-slide { flex-basis: 100%; }
 }
 @media (max-width: 390px) {
   .home-programs { padding-right: 18px; padding-left: 18px; }
   .home-programs-heading h2 { font-size: 38px; }
   .home-sample-voucher-grid { grid-template-columns: 1fr; }
   .sample-voucher-ticket-copy { padding-right: 14px; padding-left: 14px; }
-  .voucher-full-grid { grid-template-columns: 1fr; }
 }
 
 /* Place the voucher tickets immediately after the homepage quick menu. */

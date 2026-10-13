@@ -2171,6 +2171,30 @@ function VoucherPage({
   vouchers: GgsPublicVoucher[];
   vouchersQuery: ReturnType<typeof useGetGgsPublicVouchers>;
 }) {
+  const [voucherSlideIndex, setVoucherSlideIndex] = useState(0);
+  const [voucherSnapCount, setVoucherSnapCount] = useState(0);
+  const [voucherViewportRef, voucherCarouselApi] = useEmblaCarousel({
+    align: 'start',
+    containScroll: 'trimSnaps',
+    loop: false,
+    slidesToScroll: 1,
+  });
+
+  useEffect(() => {
+    if (!voucherCarouselApi) return;
+    const updateVoucherCarousel = () => {
+      setVoucherSlideIndex(voucherCarouselApi.selectedScrollSnap());
+      setVoucherSnapCount(voucherCarouselApi.scrollSnapList().length);
+    };
+    updateVoucherCarousel();
+    voucherCarouselApi.on('select', updateVoucherCarousel);
+    voucherCarouselApi.on('reInit', updateVoucherCarousel);
+    return () => {
+      voucherCarouselApi.off('select', updateVoucherCarousel);
+      voucherCarouselApi.off('reInit', updateVoucherCarousel);
+    };
+  }, [voucherCarouselApi, vouchers.length]);
+
   return (
     <PageFrame
       kicker="GGS / VOUCHER"
@@ -2184,14 +2208,52 @@ function VoucherPage({
         ) : vouchersQuery.isError ? (
           <p className="voucher-list-state" role="alert">Voucher belum bisa dimuat. Silakan coba lagi nanti.</p>
         ) : vouchers.length ? (
-          <div className="sample-voucher-grid voucher-full-grid">
-            {vouchers.map((voucher) => (
-              <VoucherTicketCard
-                key={voucher.id}
-                voucher={voucher}
-                testId={`card-voucher-${voucher.id}`}
-              />
-            ))}
+          <div className="voucher-carousel" data-testid="voucher-carousel">
+            <div className="voucher-carousel-viewport" ref={voucherViewportRef}>
+              <div className="sample-voucher-grid voucher-full-grid">
+                {vouchers.map((voucher, index) => (
+                  <div
+                    className="voucher-carousel-slide"
+                    key={voucher.id}
+                    role="group"
+                    aria-roledescription="slide"
+                    aria-label={`${index + 1} dari ${vouchers.length}: ${voucher.name}`}
+                  >
+                    <VoucherTicketCard
+                      voucher={voucher}
+                      testId={`card-voucher-${voucher.id}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {voucherSnapCount > 1 && (
+              <div className="voucher-carousel-controls">
+                <span className="voucher-carousel-status" aria-live="polite">
+                  Tampilan {voucherSlideIndex + 1} dari {voucherSnapCount}
+                </span>
+                <div>
+                  <button
+                    type="button"
+                    aria-label="Voucher sebelumnya"
+                    disabled={!voucherCarouselApi?.canScrollPrev()}
+                    onClick={() => voucherCarouselApi?.scrollPrev()}
+                    data-testid="button-voucher-previous"
+                  >
+                    <ArrowLeft size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Voucher berikutnya"
+                    disabled={!voucherCarouselApi?.canScrollNext()}
+                    onClick={() => voucherCarouselApi?.scrollNext()}
+                    data-testid="button-voucher-next"
+                  >
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <p className="voucher-list-state" role="status">Belum ada voucher aktif saat ini.</p>
