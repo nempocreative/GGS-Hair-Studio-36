@@ -448,7 +448,7 @@ const menuHairstyles: Record<string, { back: string; fringe: string; strands: st
   },
   fade: {
     back: 'M12 27C9 20 9 12 14 7c3-3 6-5 11-5 8 0 13 6 13 14 0 5-1 9-3 13l-4-8c-5 2-11 2-16 0Z',
-    fringe: 'M13 17c3-2 6-5 8-10 4 4 8 6 15 7l2 6c-5 0-10-2-14-5-2 3-6 5-11 6Z',
+    fringe: 'M13 19C11 9 16 2 24 2s13 7 11 17c-5-1-8-4-11-8-3 4-6 7-11 8Z',
     strands: 'M16 10c2-3 4-5 7-6m5 1c3 1 5 3 6 5',
   },
   curls: {
@@ -551,9 +551,6 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
       />
       <path d="M14.7 22c-2.1-1.2-3.6.2-2.7 2.6.6 1.6 1.7 2.3 3.3 2m17.4-4.6c2.1-1.2 3.6.2 2.7 2.6-.6 1.6-1.7 2.3-3.3 2" fill="#e9b994" />
       <path d={style.fringe} fill="#382a27" />
-      {hairstyle !== 'fade' && (
-        <path d={style.strands} fill="none" stroke="#9a7058" strokeWidth="1.05" strokeLinecap="round" opacity=".9" />
-      )}
       <path
         d="M17.2 24.8c1.3-.9 3-.9 4.3 0m6.8 0c1.3-.9 3-.9 4.3 0"
         fill="none"
