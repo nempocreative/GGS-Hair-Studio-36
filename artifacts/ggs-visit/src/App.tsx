@@ -19,7 +19,9 @@ import {
   Instagram,
   MapPin,
   Minus,
+  Pause,
   Phone,
+  Play,
   Plus,
   ShoppingBag,
   Scissors,
@@ -1158,11 +1160,147 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle 
           ))}
         </div>
       </section>
+      <HomeTestimonials />
       <section className="home-last-cta">
         <div><p className="clearer-kicker">BOOK APPOINTMENT</p><h2>Ceritakan<br /><em>yang kamu inginkan.</em></h2></div>
         <Link href="/book" className="clearer-primary-button" data-testid="link-home-booking">Buat janji <ArrowRight size={17} /></Link>
       </section>
     </>
+  );
+}
+
+const homeTestimonials = [
+  'Rambut saya dibentuk sesuai yang saya mau, dan saya juga dapat saran yang cocok.',
+  'Sebelum mulai, gaya yang saya inginkan dibahas dulu. Rasanya lebih personal.',
+  'Senang bisa konsultasi dulu soal potongan yang pas untuk rambut saya.',
+  'Suasananya nyaman, jadi bisa santai cerita tentang gaya yang saya inginkan.',
+  'Perubahan kecil di potongannya bikin tampilan terasa lebih segar.',
+  'Saya suka hasil styling-nya—rapi, tapi tetap terasa seperti diri sendiri.',
+  'Dari konsultasi sampai selesai, prosesnya terasa jelas dan menyenangkan.',
+  'Akhirnya menemukan referensi gaya yang cocok untuk rutinitas sehari-hari.',
+];
+
+function HomeTestimonials() {
+  const [active, setActive] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
+  const paused = isPaused || isHovered || isFocused;
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => setReducedMotion(motionPreference.matches);
+    const updatePageVisibility = () => setPageVisible(document.visibilityState === 'visible');
+    updateMotionPreference();
+    updatePageVisibility();
+    motionPreference.addEventListener('change', updateMotionPreference);
+    document.addEventListener('visibilitychange', updatePageVisibility);
+    return () => {
+      motionPreference.removeEventListener('change', updateMotionPreference);
+      document.removeEventListener('visibilitychange', updatePageVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (paused || reducedMotion || !pageVisible) return;
+    const timer = window.setInterval(
+      () => setActive((index) => (index + 1) % homeTestimonials.length),
+      5000,
+    );
+    return () => window.clearInterval(timer);
+  }, [active, paused, reducedMotion, pageVisible]);
+
+  const moveTo = (index: number) => {
+    setActive((index + homeTestimonials.length) % homeTestimonials.length);
+  };
+
+  return (
+    <section
+      className="home-testimonials"
+      aria-labelledby="home-testimonials-title"
+      data-testid="section-home-testimonials"
+    >
+      <div className="home-testimonials-layout">
+        <div className="home-testimonials-heading">
+          <p className="clearer-kicker">GGS / KATA MEREKA</p>
+          <h2 id="home-testimonials-title">Cerita yang<br /><em>berkesan.</em></h2>
+          <p>Inspirasi dari pengalaman di salon, dari konsultasi sampai selesai.</p>
+          <span className="home-testimonials-disclaimer" role="note">
+            TEKS CONTOH · BELUM MERUPAKAN ULASAN PELANGGAN
+          </span>
+        </div>
+        <div
+          className="home-testimonials-carousel"
+          role="region"
+          aria-label="Slider contoh ulasan pelanggan"
+          aria-roledescription="karusel"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onFocusCapture={() => setIsFocused(true)}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsFocused(false);
+          }}
+          data-testid="carousel-home-testimonials"
+        >
+          <div className="home-testimonials-quote-mark" aria-hidden="true">“</div>
+          <div className="home-testimonials-slide" aria-live={paused ? 'polite' : 'off'}>
+            <p className="home-testimonials-slide-index">
+              CONTOH ULASAN <span>{String(active + 1).padStart(2, '0')} / {String(homeTestimonials.length).padStart(2, '0')}</span>
+            </p>
+            <blockquote key={active} data-testid="quote-home-testimonial">
+              {homeTestimonials[active]}
+            </blockquote>
+            <p className="home-testimonials-attribution">Teks contoh untuk diganti dengan ulasan pelanggan GGS.</p>
+          </div>
+          <div className="home-testimonials-controls">
+            <button
+              type="button"
+              className="home-testimonials-arrow"
+              aria-label="Testimoni sebelumnya"
+              onClick={() => moveTo(active - 1)}
+              data-testid="button-home-testimonial-previous"
+            >
+              <ArrowLeft size={17} aria-hidden="true" />
+            </button>
+            <div className="home-testimonials-dots" role="group" aria-label="Pilih contoh ulasan">
+              {homeTestimonials.map((_, index) => (
+                <button
+                  type="button"
+                  key={index}
+                  className={`home-testimonials-dot${active === index ? ' is-active' : ''}`}
+                  aria-label={`Tampilkan contoh ulasan ${index + 1}`}
+                  aria-current={active === index ? 'true' : undefined}
+                  onClick={() => moveTo(index)}
+                  data-testid={`button-home-testimonial-dot-${index + 1}`}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              className="home-testimonials-arrow"
+              aria-label="Testimoni berikutnya"
+              onClick={() => moveTo(active + 1)}
+              data-testid="button-home-testimonial-next"
+            >
+              <ArrowRight size={17} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="home-testimonials-toggle"
+              aria-label={isPaused ? 'Lanjutkan slider otomatis' : 'Jeda slider otomatis'}
+              aria-pressed={isPaused}
+              onClick={() => setIsPaused((value) => !value)}
+              data-testid="button-home-testimonial-toggle"
+            >
+              {isPaused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}
+              <span>{isPaused ? 'Putar' : 'Jeda'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
