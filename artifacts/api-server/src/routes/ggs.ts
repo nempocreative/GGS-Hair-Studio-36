@@ -255,6 +255,89 @@ const defaultServices = [
   },
 ];
 
+const defaultProducts = [
+  {
+    name: "GGS Daily Balance Shampoo",
+    category: "Contoh · Perawatan rambut",
+    description: "Contoh katalog awal untuk rutinitas keramas harian.",
+    price: 129000,
+    stock: 18,
+    active: true,
+    imageUrl: "/ai-product-shampoo.jpg",
+    sortOrder: 1,
+  },
+  {
+    name: "GGS Soft Balance Conditioner",
+    category: "Contoh · Perawatan rambut",
+    description: "Contoh katalog awal untuk melengkapi rutinitas perawatan rambut.",
+    price: 145000,
+    stock: 15,
+    active: true,
+    imageUrl: "/ai-product-conditioner.jpg",
+    sortOrder: 2,
+  },
+  {
+    name: "GGS Deep Care Hair Mask",
+    category: "Contoh · Hair treatment",
+    description: "Contoh produk perawatan intensif untuk katalog GGS.",
+    price: 189000,
+    stock: 12,
+    active: true,
+    imageUrl: "/ai-product-hair-mask.jpg",
+    sortOrder: 3,
+  },
+  {
+    name: "GGS Nourish Hair Oil",
+    category: "Contoh · Hair oil",
+    description: "Contoh produk minyak rambut untuk melengkapi katalog.",
+    price: 165000,
+    stock: 14,
+    active: true,
+    imageUrl: "/ai-product-hair-oil.jpg",
+    sortOrder: 4,
+  },
+  {
+    name: "GGS Scalp Balance Tonic",
+    category: "Contoh · Perawatan kulit kepala",
+    description: "Contoh produk perawatan kulit kepala untuk katalog GGS.",
+    price: 155000,
+    stock: 10,
+    active: true,
+    imageUrl: "/ai-product-scalp-tonic.jpg",
+    sortOrder: 5,
+  },
+  {
+    name: "GGS Shine Repair Serum",
+    category: "Contoh · Hair serum",
+    description: "Contoh serum rambut sebagai pilihan perawatan di rumah.",
+    price: 179000,
+    stock: 11,
+    active: true,
+    imageUrl: "/ai-product-serum.jpg",
+    sortOrder: 6,
+  },
+  {
+    name: "GGS Daily Leave-In Cream",
+    category: "Contoh · Leave-in care",
+    description: "Contoh leave-in care untuk melengkapi pilihan produk GGS.",
+    price: 149000,
+    stock: 16,
+    active: true,
+    imageUrl: "/ai-product-leave-in.jpg",
+    sortOrder: 7,
+  },
+  {
+    name: "GGS Texture Styling Cream",
+    category: "Contoh · Styling",
+    description: "Contoh krim styling sebagai bagian dari katalog produk GGS.",
+    price: 139000,
+    stock: 13,
+    active: true,
+    imageUrl: "/ai-product-styling-cream.jpg",
+    sortOrder: 8,
+  },
+];
+
 let seedPromise: Promise<void> | undefined;
 
 async function ensureInitialContent(): Promise<void> {
@@ -279,6 +362,14 @@ async function ensureInitialContent(): Promise<void> {
             .limit(1);
           if (!service) {
             await tx.insert(ggsServicesTable).values(defaultServices);
+          }
+
+          const [product] = await tx
+            .select({ id: ggsProductsTable.id })
+            .from(ggsProductsTable)
+            .limit(1);
+          if (!product) {
+            await tx.insert(ggsProductsTable).values(defaultProducts);
           }
         }
       });
