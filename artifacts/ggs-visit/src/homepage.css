@@ -1860,3 +1860,129 @@
     padding-bottom: 42px;
   }
 }
+
+/* Printed-paper finish for the same voucher cards shown on home and voucher pages. */
+.voucher-full-grid { --ticket-surround: var(--clearer-paper); }
+.voucher-ticket-card {
+  isolation: isolate;
+  overflow: visible;
+  min-height: 166px;
+  grid-template-columns: minmax(0, 1fr) 60px;
+  border: 1px solid #bcae99;
+  border-radius: 3px;
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 66%), transparent 42%),
+    repeating-linear-gradient(0deg, rgb(106 83 55 / 2%) 0 1px, transparent 1px 5px),
+    #f7f1e6;
+  box-shadow:
+    0 1px 0 #c7b89f,
+    0 4px 0 -1px #dfd3c1,
+    0 8px 0 -2px #b8a88f,
+    0 14px 24px rgb(55 43 31 / 17%);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+.voucher-ticket-card:hover {
+  transform: translateY(-4px) rotate(-.35deg);
+  box-shadow:
+    0 1px 0 #c7b89f,
+    0 5px 0 -1px #dfd3c1,
+    0 10px 0 -2px #b8a88f,
+    0 20px 28px rgb(55 43 31 / 20%);
+}
+.voucher-ticket-card::before,
+.voucher-ticket-card::after {
+  z-index: 2;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgb(188 174 153 / 55%);
+  background: var(--ticket-surround, #e7dfd2);
+}
+.voucher-ticket-card::before { left: -9px; }
+.voucher-ticket-card::after { right: -9px; }
+.voucher-ticket-card .sample-voucher-ticket-copy {
+  position: relative;
+  justify-content: center;
+  gap: 8px;
+  padding: 19px 20px 18px 24px;
+}
+.voucher-ticket-kicker {
+  color: #766b5e;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+.voucher-ticket-card h3,
+.voucher-ticket-card h4 {
+  max-width: 220px;
+  color: #302923;
+  font-size: clamp(22px, 2vw, 27px);
+  line-height: .98;
+}
+.voucher-ticket-card .sample-voucher-ticket-copy > strong {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  border: 1px solid rgb(146 61 54 / 42%);
+  border-radius: 2px;
+  background: rgb(146 61 54 / 5%);
+  padding: 2px 8px;
+  color: #873a34;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.voucher-ticket-stub {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-left: 1px dashed #b9a991;
+  background: rgb(230 220 204 / 64%);
+}
+.voucher-ticket-stub::before,
+.voucher-ticket-stub::after {
+  position: absolute;
+  left: -5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ticket-surround, #e7dfd2);
+  content: '';
+}
+.voucher-ticket-stub::before { top: 15px; }
+.voucher-ticket-stub::after { bottom: 15px; }
+.voucher-ticket-seal {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  border: 1px solid #9a554d;
+  border-radius: 50%;
+  color: #8c463e;
+  font: 500 17px 'Cormorant Garamond', serif;
+}
+.voucher-ticket-studio {
+  color: #72685d;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  line-height: 1.4;
+  text-align: center;
+}
+@media (max-width: 680px) {
+  .voucher-ticket-card {
+    min-height: 148px;
+    grid-template-columns: minmax(0, 1fr) 52px;
+  }
+  .voucher-ticket-card .sample-voucher-ticket-copy {
+    padding: 16px 13px 15px 17px;
+  }
+}
+@media (max-width: 390px) {
+  .voucher-ticket-card { min-height: 135px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voucher-ticket-card { transition: none; }
+}

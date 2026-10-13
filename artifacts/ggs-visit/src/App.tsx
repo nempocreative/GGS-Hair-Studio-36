@@ -799,11 +799,16 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
         <div className="home-voucher-preview">
           <div className="sample-voucher-grid home-sample-voucher-grid">
             {sampleVouchers.slice(0, 4).map((voucher, index) => (
-              <article className="sample-voucher-card" key={voucher.name} data-testid={`card-home-sample-voucher-${index + 1}`}>
+              <article className="sample-voucher-card voucher-ticket-card" key={voucher.name} data-testid={`card-home-sample-voucher-${index + 1}`}>
                 <div className="sample-voucher-ticket-copy">
+                  <span className="voucher-ticket-kicker">GGS HAIR STUDIO</span>
                   <h4>{voucher.name}</h4>
                   <strong>{voucher.value}</strong>
                 </div>
+                <span className="voucher-ticket-stub" aria-hidden="true">
+                  <span className="voucher-ticket-seal">G</span>
+                  <span className="voucher-ticket-studio">SALON<br />GGS</span>
+                </span>
               </article>
             ))}
           </div>
@@ -2092,11 +2097,16 @@ function VoucherPage() {
         </div>
         <div className="sample-voucher-grid voucher-full-grid">
           {sampleVouchers.map((voucher, index) => (
-            <article className="sample-voucher-card" key={voucher.name} data-testid={`card-sample-voucher-${index + 1}`}>
+            <article className="sample-voucher-card voucher-ticket-card" key={voucher.name} data-testid={`card-sample-voucher-${index + 1}`}>
               <div className="sample-voucher-ticket-copy">
+                <span className="voucher-ticket-kicker">GGS HAIR STUDIO</span>
                 <h3>{voucher.name}</h3>
                 <strong>{voucher.value}</strong>
               </div>
+              <span className="voucher-ticket-stub" aria-hidden="true">
+                <span className="voucher-ticket-seal">G</span>
+                <span className="voucher-ticket-studio">SALON<br />GGS</span>
+              </span>
             </article>
           ))}
         </div>

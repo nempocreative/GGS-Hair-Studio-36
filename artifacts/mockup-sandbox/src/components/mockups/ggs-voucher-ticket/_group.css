@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --voucher-paper: #f2eee5;
+  --voucher-surround: #e7dfd2;
+  --voucher-ticket: #f5f0e7;
+  --voucher-ink: #292723;
+  --voucher-muted: #625e55;
+  --voucher-accent: #923d36;
+  --voucher-line: #c9bdae;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  background: var(--voucher-paper);
+  color: var(--voucher-ink);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.voucher-demo {
+  min-height: 100vh;
+  padding: 36px;
+}
+
+.voucher-demo--current {
+  background: var(--voucher-paper);
+}
+
+.voucher-preview-section {
+  background: var(--voucher-surround);
+  padding: 28px;
+}
+
+.voucher-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.sample-voucher-card {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 132px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  border: 1px solid var(--voucher-line);
+  background: var(--voucher-ticket);
+}
+
+.sample-voucher-card::before,
+.sample-voucher-card::after {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--voucher-surround);
+  content: '';
+}
+
+.sample-voucher-card::before {
+  left: -7px;
+}
+
+.sample-voucher-card::after {
+  right: -7px;
+}
+
+.sample-voucher-ticket-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 7px;
+  padding: 15px 16px;
+}
+
+.sample-voucher-card h3,
+.sample-voucher-card h4 {
+  margin: 0;
+  font: 600 24px/1.05 'Cormorant Garamond', serif;
+}
+
+.sample-voucher-card h4 {
+  font-size: 23px;
+}
+
+.sample-voucher-ticket-copy > strong {
+  color: var(--voucher-accent);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+@media (max-width: 760px) {
+  .voucher-demo {
+    padding: 20px;
+  }
+
+  .voucher-preview-section {
+    padding: 20px;
+  }
+
+  .voucher-preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 390px) {
+  .voucher-preview-grid {
+    grid-template-columns: 1fr;
+  }
+}
