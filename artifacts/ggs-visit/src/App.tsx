@@ -1033,6 +1033,19 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
         )}
       </section>
 
+      <section className="home-service-promo" aria-labelledby="home-service-promo-title" data-testid="section-home-service">
+        <div className="home-service-promo-heading">
+          <p className="clearer-kicker">GGS / HOME SERVICE</p>
+          <h2 id="home-service-promo-title">Home<br /><em>Service.</em></h2>
+        </div>
+        <div className="home-service-promo-details">
+          <p>Detail layanan, wilayah, dan cara pemesanan Home Service belum tersedia.</p>
+          <Link href="/home-service" className="clearer-text-link" data-testid="link-home-service-details">
+            Lihat Home Service <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+      </section>
+
       <section className="home-editorial-band">
         <div className="home-editorial-index">GGS / CATATAN 01</div>
         <p>Pilih model rambut sebagai referensi booking.<br /><em>Temukan inspirasi potongan dan penataan yang sesuai dengan gayamu.</em></p>
