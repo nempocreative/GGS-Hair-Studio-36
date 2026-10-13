@@ -1553,14 +1553,29 @@ function BookingPage({ services, servicesQuery, fields, updateField, handleSubmi
 }
 
 const hairStyleChoices = [
-  { id: 'skin-fade', label: 'Skin fade' },
-  { id: 'taper', label: 'Taper' },
-  { id: 'gaya-lain', label: 'Gaya lain' },
+  {
+    id: 'skin-fade',
+    label: 'Skin fade',
+    image: '/ai-style-skin-fade.jpg',
+    description: 'Sisi rambut tipis bersih dengan transisi fade yang tegas.',
+  },
+  {
+    id: 'taper',
+    label: 'Taper',
+    image: '/ai-style-taper.jpg',
+    description: 'Potongan rapi dengan gradasi halus di pelipis dan tengkuk.',
+  },
+  {
+    id: 'gaya-lain',
+    label: 'Gaya lain',
+    image: '/ai-style-textured-crop.jpg',
+    description: 'Tekstur pendek modern untuk inspirasi gaya yang berbeda.',
+  },
 ];
 
 function GalleryPage({ onChooseStyle }: { onChooseStyle: (style: string) => void }) {
   return (
-    <PageFrame kicker="GGS / STYLE GALLERY" title={<>Pilih inspirasi,<br /><em>sebelum booking.</em></>} intro="Pilih model rambut pria sebagai referensi permintaan booking. Katalog hasil styling dan warna rambut akan ditampilkan setelah foto GGS tersedia dan terverifikasi." testId="page-gallery">
+    <PageFrame kicker="GGS / STYLE GALLERY" title={<>Pilih inspirasi,<br /><em>sebelum booking.</em></>} intro="Pilih model rambut pria sebagai referensi permintaan booking. Ilustrasi AI membantu memberi gambaran awal; hasil styling dan warna rambut GGS akan ditambahkan setelah foto aktual tersedia." testId="page-gallery">
       <section className="gallery-style-picker" aria-labelledby="gallery-men-heading" data-testid="section-mens-style-picker">
         <div className="gallery-section-heading">
           <p className="clearer-kicker">MEN'S GROOMING</p>
@@ -1576,14 +1591,21 @@ function GalleryPage({ onChooseStyle }: { onChooseStyle: (style: string) => void
               onClick={() => onChooseStyle(style.label)}
               data-testid={`link-style-choice-${style.id}`}
             >
-              <span>0{index + 1} / REFERENSI</span>
-              <strong>{style.label}</strong>
-              <small>Pilih sebagai catatan untuk booking</small>
-              <ArrowRight size={17} aria-hidden="true" />
+              <span className="gallery-style-choice-image">
+                <img src={style.image} alt={`Ilustrasi AI inspirasi gaya rambut ${style.label}`} loading="lazy" />
+                <span className="gallery-style-ai-tag">ILUSTRASI AI</span>
+                <span className="gallery-style-number">0{index + 1}</span>
+              </span>
+              <span className="gallery-style-choice-copy">
+                <span>0{index + 1} / REFERENSI</span>
+                <strong>{style.label}</strong>
+                <small>{style.description}</small>
+                <span className="gallery-style-action">Pilih sebagai catatan booking <ArrowRight size={15} aria-hidden="true" /></span>
+              </span>
             </Link>
           ))}
         </div>
-        <p className="gallery-editorial-note">Pilihan ini menjadi referensi konsultasi, bukan jaminan hasil. Foto hasil rambut pria GGS belum tersedia.</p>
+        <p className="gallery-editorial-note">Foto di atas adalah ilustrasi AI untuk inspirasi, bukan hasil styling GGS. Pilihan menjadi referensi konsultasi; hasil akhir dibahas bersama tim sebelum layanan.</p>
       </section>
       <section className="gallery-women-catalog" aria-labelledby="gallery-women-heading" data-testid="section-womens-style-catalog">
         <div className="gallery-section-heading">
