@@ -11,8 +11,10 @@ import {
   Clock3,
   Compass,
   Copy,
+  HeartHandshake,
   House,
   Instagram,
+  MessageCircle,
   MapPin,
   Minus,
   Pause,
@@ -672,7 +674,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [whyActive, setWhyActive] = useState(0);
-  const [whyPaused, setWhyPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [menuPage, setMenuPage] = useState(0);
@@ -766,14 +767,17 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
     {
       title: 'Keahlian mencukur dari Garut',
       description: 'GGS berangkat dari reputasi Garut dalam keahlian mencukur.',
+      Icon: Scissors,
     },
     {
       title: 'Konsultasi sebelum janji',
       description: 'Sampaikan gaya yang diinginkan. Tim GGS akan membahas pilihan dan detail sebelum janji dikonfirmasi.',
+      Icon: MessageCircle,
     },
     {
       title: 'Pelayanan dan kenyamanan',
       description: 'GGS mengutamakan pelayanan yang baik dan kenyamanan pelanggan selama kunjungan.',
+      Icon: HeartHandshake,
     },
   ];
 
@@ -812,15 +816,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
     const timer = window.setInterval(() => setActive((index) => (index + 1) % slides.length), 6000);
     return () => window.clearInterval(timer);
   }, [paused, reducedMotion, pageVisible, slides.length]);
-
-  useEffect(() => {
-    if (whyPaused || reducedMotion || !pageVisible) return;
-    const timer = window.setInterval(
-      () => setWhyActive((index) => (index + 1) % whyReasons.length),
-      5000,
-    );
-    return () => window.clearInterval(timer);
-  }, [whyPaused, reducedMotion, pageVisible, whyReasons.length]);
 
   useEffect(() => {
     if (!mensServicesApi || reducedMotion || !pageVisible || mensServiceSnapCount < 2) return;
@@ -1093,38 +1088,24 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
             </Link>
           </div>
         </div>
-        <div
-          className="clearer-why-carousel"
-          aria-label="Alasan memilih GGS"
-          aria-roledescription="carousel"
-          onMouseEnter={() => setWhyPaused(true)}
-          onMouseLeave={() => setWhyPaused(false)}
-          onFocusCapture={() => setWhyPaused(true)}
-          onBlurCapture={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setWhyPaused(false);
-          }}
-          data-testid="carousel-why-ggs"
-        >
-          <article
-            className="clearer-why-slide"
-            key={whyReasons[whyActive].title}
-            aria-roledescription="slide"
-            aria-label={whyReasons[whyActive].title}
-          >
-            <h3>{whyReasons[whyActive].title}</h3>
-            <p className="clearer-why-description">{whyReasons[whyActive].description}</p>
-          </article>
-          <div className="clearer-why-pagination" aria-label="Pilih alasan GGS">
-            {whyReasons.map((reason, index) => (
-              <button
-                type="button"
-                key={reason.title}
-                aria-label={`Tampilkan: ${reason.title}`}
-                aria-current={whyActive === index ? 'true' : undefined}
-                onClick={() => setWhyActive(index)}
-              />
-            ))}
-          </div>
+        <div className="clearer-why-reasons" role="group" aria-label="Alasan memilih GGS" data-testid="why-ggs-reasons">
+          {whyReasons.map(({ title, description, Icon }, index) => (
+            <button
+              className="clearer-why-reason"
+              type="button"
+              key={title}
+              aria-pressed={whyActive === index}
+              onClick={() => setWhyActive(index)}
+            >
+              <span className="clearer-why-icon" aria-hidden="true">
+                <Icon size={19} strokeWidth={1.6} />
+              </span>
+              <span className="clearer-why-reason-copy">
+                <span className="clearer-why-reason-title">{title}</span>
+                <span className="clearer-why-reason-description">{description}</span>
+              </span>
+            </button>
+          ))}
         </div>
       </section>
 

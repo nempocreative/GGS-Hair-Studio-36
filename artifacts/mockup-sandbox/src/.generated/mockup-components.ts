@@ -4,5 +4,7 @@ export const modules: ModuleMap = {
   "./components/mockups/ggs-homepage/Clearer.tsx": () => import("../components/mockups/ggs-homepage/Clearer.tsx"),
   "./components/mockups/ggs-homepage/Current.tsx": () => import("../components/mockups/ggs-homepage/Current.tsx"),
   "./components/mockups/ggs-voucher-ticket/Current.tsx": () => import("../components/mockups/ggs-voucher-ticket/Current.tsx"),
-  "./components/mockups/ggs-voucher-ticket/PrintedTicket.tsx": () => import("../components/mockups/ggs-voucher-ticket/PrintedTicket.tsx")
+  "./components/mockups/ggs-voucher-ticket/PrintedTicket.tsx": () => import("../components/mockups/ggs-voucher-ticket/PrintedTicket.tsx"),
+  "./components/mockups/ggs-why/Current.tsx": () => import("../components/mockups/ggs-why/Current.tsx"),
+  "./components/mockups/ggs-why/Refined.tsx": () => import("../components/mockups/ggs-why/Refined.tsx")
 };
