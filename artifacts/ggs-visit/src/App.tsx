@@ -1075,30 +1075,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                   ))}
                 </div>
               </div>
-              {homeVoucherSnapCount > 1 && (
-                <div className="voucher-carousel-controls">
-                  <div>
-                    <button
-                      type="button"
-                      aria-label="Voucher sebelumnya"
-                      disabled={!homeVouchersApi?.canScrollPrev()}
-                      onClick={() => homeVouchersApi?.scrollPrev()}
-                      data-testid="button-home-voucher-previous"
-                    >
-                      <ArrowLeft size={18} />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Voucher berikutnya"
-                      disabled={!homeVouchersApi?.canScrollNext()}
-                      onClick={() => homeVouchersApi?.scrollNext()}
-                      data-testid="button-home-voucher-next"
-                    >
-                      <ArrowRight size={18} />
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </section>
@@ -2479,30 +2455,6 @@ function VoucherPage({
                 ))}
               </div>
             </div>
-            {voucherSnapCount > 1 && (
-              <div className="voucher-carousel-controls">
-                <div>
-                  <button
-                    type="button"
-                    aria-label="Voucher sebelumnya"
-                    disabled={!voucherCarouselApi?.canScrollPrev()}
-                    onClick={() => voucherCarouselApi?.scrollPrev()}
-                    data-testid="button-voucher-previous"
-                  >
-                    <ArrowLeft size={18} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Voucher berikutnya"
-                    disabled={!voucherCarouselApi?.canScrollNext()}
-                    onClick={() => voucherCarouselApi?.scrollNext()}
-                    data-testid="button-voucher-next"
-                  >
-                    <ArrowRight size={18} />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <p className="voucher-list-state" role="status">Belum ada voucher aktif saat ini.</p>
