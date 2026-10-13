@@ -53,6 +53,7 @@ type HeaderPanel = 'notifications' | 'cart' | null;
 type CartLine = { productId: number; quantity: number };
 
 const cartStorageKey = 'ggs-product-cart';
+const homeServiceBookingNote = 'Permintaan Home Service. Alamat kunjungan:';
 
 function readStoredCart(): CartLine[] {
   try {
@@ -169,8 +170,13 @@ function App() {
     );
   };
 
-  const openBooking = (serviceId?: number) => {
+  const openBooking = (serviceId?: number, notePrefix?: string) => {
     if (serviceId) updateField('serviceId', String(serviceId));
+    if (notePrefix) {
+      setFields((current) => current.notes.includes(notePrefix)
+        ? current
+        : { ...current, notes: [notePrefix, current.notes.trim()].filter(Boolean).join('\n') });
+    }
   };
 
   const chooseHairStyle = (style: string) => {
@@ -319,7 +325,7 @@ function App() {
           <CareerPage />
         </Route>
         <Route path="/home-service">
-          <HomeServicePage />
+          <HomeServicePage openBooking={openBooking} />
         </Route>
         <Route path="/mens-grooming">
           <AudienceServicesPage {...common} audience="men" />
@@ -398,7 +404,7 @@ type SharedProps = {
   servicesQuery: ReturnType<typeof useGetGgsPublicServices>;
   siteQuery: ReturnType<typeof useGetGgsSite>;
   site: GgsSiteContent | undefined;
-  openBooking: (serviceId?: number) => void;
+  openBooking: (serviceId?: number, notePrefix?: string) => void;
   products: GgsProduct[];
   productsQuery: ReturnType<typeof useGetGgsPublicProducts>;
   cartItems: CartLine[];
@@ -1039,9 +1045,14 @@ function HomePage({ services, servicesQuery, site, openBooking }: SharedProps) {
           <h2 id="home-service-promo-title">Home<br /><em>Service.</em></h2>
         </div>
         <div className="home-service-promo-details">
-          <p>Detail layanan, wilayah, dan cara pemesanan Home Service belum tersedia.</p>
-          <Link href="/home-service" className="clearer-text-link" data-testid="link-home-service-details">
-            Lihat Home Service <ArrowRight size={16} aria-hidden="true" />
+          <p>Home Service adalah permintaan layanan GGS untuk kunjungan ke rumah. Pilih layanan dan waktu, lalu tuliskan alamat di catatan. Tim GGS akan mengonfirmasi wilayah serta ketersediaan.</p>
+          <Link
+            href="/book"
+            className="clearer-text-link"
+            onClick={() => openBooking(undefined, homeServiceBookingNote)}
+            data-testid="link-home-service-details"
+          >
+            Booking Home Service <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
       </section>
@@ -1207,20 +1218,25 @@ function CareerPage() {
   );
 }
 
-function HomeServicePage() {
+function HomeServicePage({ openBooking }: { openBooking: SharedProps['openBooking'] }) {
   return (
     <PageFrame
       kicker="GGS / HOME SERVICE"
       title={<>Home<br /><em>Service.</em></>}
-      intro="Informasi layanan Home Service GGS belum tersedia."
+      intro="Home Service adalah permintaan layanan GGS untuk kunjungan ke rumah. Tim GGS akan mengonfirmasi wilayah dan ketersediaan sebelum kunjungan disepakati."
       testId="page-home-service"
     >
-      <div className="unavailable-panel" data-testid="home-service-empty-state">
-        <span className="panel-index">HOME SERVICE</span>
-        <h2>Informasi layanan belum tersedia.</h2>
-        <p>Detail layanan, wilayah, dan cara pemesanan belum dicantumkan.</p>
-        <Link href="/" className="clearer-text-link" data-testid="link-home-service-home">
-          Kembali ke beranda <ArrowRight size={16} />
+      <div className="home-service-detail-panel" data-testid="home-service-detail-panel">
+        <span className="panel-index">CARA MENGAJUKAN</span>
+        <h2>Pilih layanan dan waktu.</h2>
+        <p>Pilih layanan yang diinginkan, masukkan tanggal dan waktu, lalu cantumkan alamat kunjungan di catatan untuk tim GGS.</p>
+        <Link
+          href="/book"
+          className="clearer-primary-button"
+          onClick={() => openBooking(undefined, homeServiceBookingNote)}
+          data-testid="link-home-service-booking"
+        >
+          Booking Home Service <ArrowRight size={17} aria-hidden="true" />
         </Link>
       </div>
     </PageFrame>
@@ -1435,7 +1451,7 @@ function BookingPage({ services, servicesQuery, fields, updateField, handleSubmi
                 <label>Tanggal yang diinginkan<input type="date" min={today} required value={fields.appointmentDate} onChange={(event) => updateField('appointmentDate', event.target.value)} data-testid="input-appointment-date" /></label>
                 <label>Waktu yang diinginkan<input type="time" required value={fields.appointmentTime} onChange={(event) => updateField('appointmentTime', event.target.value)} data-testid="input-appointment-time" /></label>
                 {selectedHairStyle && <p className="booking-style-note" data-testid="text-selected-hair-style"><Sparkles size={16} /> Model rambut pilihan: <strong>{selectedHairStyle}</strong>. Pilihan ini akan disertakan pada permintaanmu.</p>}
-                <label className="clearer-form-wide">Catatan untuk tim <span>(opsional)</span><textarea maxLength={selectedHairStyle ? 560 : 600} value={fields.notes} onChange={(event) => updateField('notes', event.target.value)} placeholder="Ceritakan hal yang perlu diketahui tentang rambut atau permintaanmu." data-testid="input-appointment-notes" /></label>
+                <label className="clearer-form-wide">Catatan untuk tim <span>(opsional)</span><textarea maxLength={selectedHairStyle ? 560 : 600} value={fields.notes} onChange={(event) => updateField('notes', event.target.value)} placeholder="Untuk Home Service, tuliskan alamat kunjungan dan detail permintaan." data-testid="input-appointment-notes" /></label>
                 {notesError && <p role="alert" className="clearer-error clearer-form-wide" data-testid="status-booking-notes-error">{notesError}</p>}
                 {appointment.isError && <p role="alert" className="clearer-error" data-testid="status-booking-error">Permintaan belum terkirim. Coba lagi; detail yang kamu isi tetap tersimpan.</p>}
               </div>
