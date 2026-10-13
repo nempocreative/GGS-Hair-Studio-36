@@ -578,8 +578,9 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
   const [productCartNotice, setProductCartNotice] = useState('');
   const [productSlideIndex, setProductSlideIndex] = useState(0);
   const [productSnapCount, setProductSnapCount] = useState(0);
-  const [homeVoucherSlideIndex, setHomeVoucherSlideIndex] = useState(0);
   const [homeVoucherSnapCount, setHomeVoucherSnapCount] = useState(0);
+  const [homeVoucherHovered, setHomeVoucherHovered] = useState(false);
+  const [homeVoucherFocused, setHomeVoucherFocused] = useState(false);
   const [homeVouchersViewportRef, homeVouchersApi] = useEmblaCarousel({
     align: 'start',
     containScroll: 'trimSnaps',
@@ -762,7 +763,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
   useEffect(() => {
     if (!homeVouchersApi) return;
     const updateHomeVoucherCarousel = () => {
-      setHomeVoucherSlideIndex(homeVouchersApi.selectedScrollSnap());
       setHomeVoucherSnapCount(homeVouchersApi.scrollSnapList().length);
     };
     updateHomeVoucherCarousel();
@@ -773,6 +773,32 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
       homeVouchersApi.off('reInit', updateHomeVoucherCarousel);
     };
   }, [homeVouchersApi, vouchers.length]);
+
+  useEffect(() => {
+    if (
+      !homeVouchersApi ||
+      homeVoucherHovered ||
+      homeVoucherFocused ||
+      reducedMotion ||
+      !pageVisible ||
+      homeVoucherSnapCount < 2
+    ) return;
+    const timer = window.setInterval(() => {
+      if (homeVouchersApi.canScrollNext()) {
+        homeVouchersApi.scrollNext();
+      } else {
+        homeVouchersApi.scrollTo(0);
+      }
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [
+    homeVouchersApi,
+    homeVoucherSnapCount,
+    homeVoucherHovered,
+    homeVoucherFocused,
+    reducedMotion,
+    pageVisible,
+  ]);
 
   useEffect(() => {
     if (!productsApi) return;
@@ -907,7 +933,18 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
       {vouchers.length > 0 && (
         <section className="home-programs home-programs-direct" aria-label="Voucher GGS" data-testid="section-home-programs">
           <div className="home-voucher-preview">
-            <div className="voucher-carousel" data-testid="home-voucher-carousel">
+            <div
+              className="voucher-carousel"
+              data-testid="home-voucher-carousel"
+              onMouseEnter={() => setHomeVoucherHovered(true)}
+              onMouseLeave={() => setHomeVoucherHovered(false)}
+              onFocusCapture={() => setHomeVoucherFocused(true)}
+              onBlurCapture={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                  setHomeVoucherFocused(false);
+                }
+              }}
+            >
               <div className="voucher-carousel-viewport" ref={homeVouchersViewportRef}>
                 <div className="sample-voucher-grid home-sample-voucher-grid">
                   {vouchers.map((voucher, index) => (
@@ -929,9 +966,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
               </div>
               {homeVoucherSnapCount > 1 && (
                 <div className="voucher-carousel-controls">
-                  <span className="voucher-carousel-status" aria-live="polite">
-                    Tampilan {homeVoucherSlideIndex + 1} dari {homeVoucherSnapCount}
-                  </span>
                   <div>
                     <button
                       type="button"
@@ -2232,8 +2266,11 @@ function VoucherPage({
   vouchers: GgsPublicVoucher[];
   vouchersQuery: ReturnType<typeof useGetGgsPublicVouchers>;
 }) {
-  const [voucherSlideIndex, setVoucherSlideIndex] = useState(0);
   const [voucherSnapCount, setVoucherSnapCount] = useState(0);
+  const [voucherHovered, setVoucherHovered] = useState(false);
+  const [voucherFocused, setVoucherFocused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
   const [voucherViewportRef, voucherCarouselApi] = useEmblaCarousel({
     align: 'start',
     containScroll: 'trimSnaps',
@@ -2242,9 +2279,22 @@ function VoucherPage({
   });
 
   useEffect(() => {
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => setReducedMotion(motionPreference.matches);
+    const updatePageVisibility = () => setPageVisible(document.visibilityState === 'visible');
+    updateMotionPreference();
+    updatePageVisibility();
+    motionPreference.addEventListener('change', updateMotionPreference);
+    document.addEventListener('visibilitychange', updatePageVisibility);
+    return () => {
+      motionPreference.removeEventListener('change', updateMotionPreference);
+      document.removeEventListener('visibilitychange', updatePageVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!voucherCarouselApi) return;
     const updateVoucherCarousel = () => {
-      setVoucherSlideIndex(voucherCarouselApi.selectedScrollSnap());
       setVoucherSnapCount(voucherCarouselApi.scrollSnapList().length);
     };
     updateVoucherCarousel();
@@ -2255,6 +2305,25 @@ function VoucherPage({
       voucherCarouselApi.off('reInit', updateVoucherCarousel);
     };
   }, [voucherCarouselApi, vouchers.length]);
+
+  useEffect(() => {
+    if (
+      !voucherCarouselApi ||
+      voucherHovered ||
+      voucherFocused ||
+      reducedMotion ||
+      !pageVisible ||
+      voucherSnapCount < 2
+    ) return;
+    const timer = window.setInterval(() => {
+      if (voucherCarouselApi.canScrollNext()) {
+        voucherCarouselApi.scrollNext();
+      } else {
+        voucherCarouselApi.scrollTo(0);
+      }
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [voucherCarouselApi, voucherSnapCount, voucherHovered, voucherFocused, reducedMotion, pageVisible]);
 
   return (
     <PageFrame
@@ -2269,7 +2338,18 @@ function VoucherPage({
         ) : vouchersQuery.isError ? (
           <p className="voucher-list-state" role="alert">Voucher belum bisa dimuat. Silakan coba lagi nanti.</p>
         ) : vouchers.length ? (
-          <div className="voucher-carousel" data-testid="voucher-carousel">
+          <div
+            className="voucher-carousel"
+            data-testid="voucher-carousel"
+            onMouseEnter={() => setVoucherHovered(true)}
+            onMouseLeave={() => setVoucherHovered(false)}
+            onFocusCapture={() => setVoucherFocused(true)}
+            onBlurCapture={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setVoucherFocused(false);
+              }
+            }}
+          >
             <div className="voucher-carousel-viewport" ref={voucherViewportRef}>
               <div className="sample-voucher-grid voucher-full-grid">
                 {vouchers.map((voucher, index) => (
@@ -2290,9 +2370,6 @@ function VoucherPage({
             </div>
             {voucherSnapCount > 1 && (
               <div className="voucher-carousel-controls">
-                <span className="voucher-carousel-status" aria-live="polite">
-                  Tampilan {voucherSlideIndex + 1} dari {voucherSnapCount}
-                </span>
                 <div>
                   <button
                     type="button"
