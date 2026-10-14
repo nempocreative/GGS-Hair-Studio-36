@@ -11,10 +11,8 @@ import {
   ArrowUpRight,
   Bell,
   BriefcaseBusiness,
-  CalendarClock,
   CalendarDays,
   Check,
-  ClipboardList,
   Clock3,
   Compass,
   Copy,
@@ -31,7 +29,6 @@ import {
   ShoppingBag,
   Scissors,
   Sparkles,
-  TicketPercent,
   UserRound,
 } from 'lucide-react';
 import {
@@ -2663,12 +2660,6 @@ function MyGgsPage() {
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const [profileType, setProfileType] = useState<'consumer' | 'employee'>('consumer');
-  const consumerRecords = [
-    { label: 'Booking mendatang', value: 'Belum tertaut', note: 'Janji dari formulir belum dikaitkan ke akun', Icon: CalendarClock },
-    { label: 'Riwayat kunjungan', value: 'Belum tersedia', note: 'Catatan kunjungan belum terhubung', Icon: ClipboardList },
-    { label: 'Voucher pribadi', value: 'Belum tersedia', note: 'Voucher belum tersimpan di akun', Icon: TicketPercent },
-    { label: 'Preferensi gaya', value: 'Belum diatur', note: 'Preferensi rambut belum disimpan', Icon: UserRound },
-  ];
 
   const handleProfileTabKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
@@ -2691,16 +2682,8 @@ function MyGgsPage() {
       <div className="ggs-professional__page">
         <header className="ggs-professional__hero">
           <div className="ggs-professional__hero-copy">
-            <p className="ggs-professional__eyebrow">GGS <span>/</span> MY GGS</p>
-            <h1>My GGS,<br /><em>ruang personal.</em></h1>
-          </div>
-          <div className="ggs-professional__intro">
-            <span className="ggs-professional__intro-mark" aria-hidden="true"><UserRound size={19} /></span>
-            <p>Kelola informasi akunmu dan temukan layanan GGS yang sesuai. Pilih ruang pengguna atau karyawan.</p>
-          </div>
-          <div className="ggs-professional__studio-note">
-            <span>RUANG PERSONAL</span>
-            <strong>GGS Hair Studio</strong>
+            <p className="ggs-professional__eyebrow">MY GGS</p>
+            <h1>My GGS</h1>
           </div>
         </header>
 
@@ -2724,8 +2707,7 @@ function MyGgsPage() {
               data-testid="button-my-ggs-profile-consumer"
             >
               <span className="ggs-professional__tab-icon" aria-hidden="true"><UserRound size={18} /></span>
-              <span className="ggs-professional__tab-label"><strong>Pengguna</strong><small>Konsumen</small></span>
-              <span className="ggs-professional__tab-state" aria-hidden="true">{profileType === 'consumer' ? 'TERPILIH' : ''}</span>
+              <span className="ggs-professional__tab-label"><strong>Pengguna</strong></span>
             </button>
             <button
               type="button"
@@ -2739,8 +2721,7 @@ function MyGgsPage() {
               data-testid="button-my-ggs-profile-employee"
             >
               <span className="ggs-professional__tab-icon" aria-hidden="true"><BriefcaseBusiness size={18} /></span>
-              <span className="ggs-professional__tab-label"><strong>Karyawan</strong><small>Tim GGS</small></span>
-              <span className="ggs-professional__tab-state" aria-hidden="true">{profileType === 'employee' ? 'TERPILIH' : ''}</span>
+              <span className="ggs-professional__tab-label"><strong>Karyawan</strong></span>
             </button>
           </div>
 
@@ -2754,60 +2735,45 @@ function MyGgsPage() {
             data-testid="panel-my-ggs-profile-consumer"
           >
             <section className="ggs-professional__consumer-intro" data-testid="status-my-ggs-unavailable">
-              <div className="ggs-professional__section-label">
-                <span className="ggs-professional__label-rule" />
-                <span>PROFIL PENGGUNA</span>
-              </div>
-              <div className="ggs-professional__availability" role="status">
-                <span className="ggs-professional__availability-dot" aria-hidden="true" />
-                <span>{!isLoaded ? 'Memuat akun' : isSignedIn ? 'Akun aktif' : 'Belum masuk'}</span>
-              </div>
-              <h2>
+              <h2 role={!isLoaded ? 'status' : undefined}>
                 {!isLoaded
-                  ? <>Memuat akun<br />GGS-mu.</>
+                  ? 'Memuat akun…'
                   : isSignedIn
-                    ? <>Halo, {user?.firstName || 'sahabat GGS'}.</>
-                    : <>Masuk untuk membuka<br />profilmu.</>}
+                    ? user?.firstName ? `Halo, ${user.firstName}.` : 'Profil akun'
+                    : 'Masuk ke My GGS'}
               </h2>
-              <p>
-                {!isLoaded
-                  ? 'Sebentar, kami sedang memeriksa status akunmu.'
-                  : isSignedIn
-                    ? 'Informasi akunmu dikelola dengan aman. Ubah nama, email, atau pengaturan akun kapan saja.'
-                    : 'Masuk atau buat akun untuk melihat dan mengelola informasi profil GGS-mu.'}
-              </p>
-              {!isLoaded ? (
-                <span className="ggs-professional__account-loading" role="status">Memuat informasi akun…</span>
-              ) : isSignedIn ? (
+              {isLoaded && isSignedIn ? (
                 <button
                   type="button"
                   className="ggs-professional__booking-link"
                   onClick={() => void signOut({ redirectUrl: basePath || '/' })}
                   data-testid="button-my-ggs-sign-out"
                 >
-                  <span>Keluar dari akun</span><ArrowRight size={17} aria-hidden="true" />
+                  <span>Keluar</span><ArrowRight size={17} aria-hidden="true" />
                 </button>
-              ) : (
+              ) : isLoaded ? (
                 <div className="ggs-professional__account-actions">
                   <Link href="/sign-in" className="ggs-professional__booking-link" data-testid="link-my-ggs-sign-in">
                     <span>Masuk</span><ArrowRight size={17} aria-hidden="true" />
                   </Link>
                   <Link href="/sign-up" className="ggs-professional__signup-link" data-testid="link-my-ggs-sign-up">
-                    Buat akun baru
+                    Daftar
                   </Link>
                 </div>
+              ) : null}
+              {isLoaded && !isSignedIn && (
+                <Link href="/book" className="ggs-professional__book-secondary" data-testid="link-my-ggs-book">
+                  Booking tanpa akun <ArrowRight size={15} aria-hidden="true" />
+                </Link>
               )}
-              <Link href="/book" className="ggs-professional__book-secondary" data-testid="link-my-ggs-book">
-                Ajukan janji tanpa akun <ArrowRight size={15} aria-hidden="true" />
-              </Link>
             </section>
 
             <section className="ggs-professional__records" aria-label="Profil dan informasi akun">
               {isLoaded && isSignedIn ? (
                 <>
                   <div className="ggs-professional__records-heading">
-                    <h3>Kelola akun</h3>
-                    <p>Perbarui informasi masuk dan data profilmu.</p>
+                    <h3>Profil akun</h3>
+                    <p>Riwayat janji belum tertaut.</p>
                   </div>
                   <div className="ggs-professional__user-profile" data-testid="my-ggs-account-settings">
                     <UserProfile routing="hash" />
@@ -2816,21 +2782,11 @@ function MyGgsPage() {
               ) : (
                 <>
                   <div className="ggs-professional__records-heading">
-                    <h3>Informasi akun</h3>
-                    <p>Detail booking belum terhubung ke akun.</p>
+                    <h3>Riwayat janji</h3>
                   </div>
-                  <div className="ggs-professional__record-list">
-                    {consumerRecords.map(({ label, value, note, Icon }, index) => (
-                      <article className="ggs-professional__record" key={label} data-testid={`card-my-ggs-${index}`}>
-                        <span className="ggs-professional__record-icon" aria-hidden="true"><Icon size={17} /></span>
-                        <div className="ggs-professional__record-copy">
-                          <span className="ggs-professional__record-label">{label}</span>
-                          <strong>{value}</strong>
-                          <p>{note}</p>
-                        </div>
-                        <span className="ggs-professional__record-marker" aria-hidden="true" />
-                      </article>
-                    ))}
+                  <div className="ggs-professional__record-status" role="note">
+                    <CalendarDays size={18} aria-hidden="true" />
+                    <span>Belum tertaut</span>
                   </div>
                 </>
               )}
@@ -2849,29 +2805,12 @@ function MyGgsPage() {
             <section className="ggs-professional__employee-intro" data-testid="status-my-ggs-employee-unavailable">
               <div className="ggs-professional__employee-symbol" aria-hidden="true"><BriefcaseBusiness size={21} /></div>
               <div className="ggs-professional__employee-copy">
-                <div className="ggs-professional__section-label">
-                  <span className="ggs-professional__label-rule" />
-                  <span>PROFIL KARYAWAN</span>
-                </div>
-                <div className="ggs-professional__availability">
-                  <span className="ggs-professional__availability-dot" aria-hidden="true" />
-                  <span>Belum terhubung</span>
-                </div>
-                <h2>Ruang karyawan<br />belum tersedia.</h2>
-                <p>Profil dan informasi internal karyawan tidak ditampilkan melalui website pengunjung.</p>
+                <h2>Akses karyawan belum tersedia.</h2>
+                <p>Hubungi pengelola GGS untuk akses.</p>
               </div>
-              <aside className="ggs-professional__employee-note">
-                <span>WEBSITE PENGUNJUNG</span>
-                <p>Untuk informasi akses karyawan, silakan hubungi pengelola GGS.</p>
-              </aside>
             </section>
           </div>
         </section>
-
-        <footer className="ggs-professional__footer">
-          <span>GGS HAIR STUDIO</span>
-          <p>Profil akun dikelola melalui My GGS. Riwayat booking belum tertaut ke akun.</p>
-        </footer>
       </div>
     </div>
   );
