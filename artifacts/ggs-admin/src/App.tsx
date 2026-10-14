@@ -45,9 +45,11 @@ import {
   Clock3, ExternalLink, Instagram, LayoutDashboard, LogOut, Menu, Pencil,
   Plus, Scissors, Settings2, ShieldAlert, Sparkles, Trash2, X, ShoppingBag,
   Ticket,
+  UsersRound,
 } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
+import EmployeesPage from '@/pages/EmployeesPage';
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -120,6 +122,7 @@ const navItems: NavItem[] = [
   { label: 'Konten situs', href: '/site', icon: Settings2, kicker: '04' },
   { label: 'Produk', href: '/products', icon: ShoppingBag, kicker: '05' },
   { label: 'Voucher', href: '/vouchers', icon: Ticket, kicker: '06' },
+  { label: 'Karyawan', href: '/employees', icon: UsersRound, kicker: '07' },
 ];
 
 function AuthPage({ mode }: { mode: 'in' | 'up' }) {
@@ -191,6 +194,7 @@ function ClerkProviderWithRoutes() {
         <Route path="/products" component={ProtectedProducts} />
         <Route path="/vouchers" component={ProtectedVouchers} />
         <Route path="/appointments" component={ProtectedAppointments} />
+        <Route path="/employees" component={ProtectedEmployees} />
         <Route path="/dashboard" component={() => <Redirect to="/" />} />
         <Route component={NotFound} />
       </Switch>
@@ -213,6 +217,7 @@ function ProtectedServices() { return <Protected><ServicesPage /></Protected>; }
 function ProtectedProducts() { return <Protected><ProductsPage /></Protected>; }
 function ProtectedVouchers() { return <Protected><VouchersPage /></Protected>; }
 function ProtectedAppointments() { return <Protected><AppointmentsPage /></Protected>; }
+function ProtectedEmployees() { return <Protected><EmployeesPage /></Protected>; }
 
 function AdminShell({ children }: { children: ReactNode }) {
   const [location] = useLocation();

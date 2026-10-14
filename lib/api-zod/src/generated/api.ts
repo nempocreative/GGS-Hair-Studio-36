@@ -196,6 +196,145 @@ export const LogoutGgsAccountResponse = zod.void()
 
 
 /**
+ * @summary Sign in to an employee account
+ */
+export const loginGgsEmployeeBodyEmployeeIdMin = 2;
+export const loginGgsEmployeeBodyEmployeeIdMax = 32;
+
+export const loginGgsEmployeeBodyPasswordMin = 8;
+export const loginGgsEmployeeBodyPasswordMax = 128;
+
+
+
+export const LoginGgsEmployeeBody = zod.object({
+  "employeeId": zod.string().min(loginGgsEmployeeBodyEmployeeIdMin).max(loginGgsEmployeeBodyEmployeeIdMax),
+  "password": zod.string().min(loginGgsEmployeeBodyPasswordMin).max(loginGgsEmployeeBodyPasswordMax)
+})
+
+export const LoginGgsEmployeeResponse = zod.object({
+  "id": zod.string().uuid(),
+  "employeeId": zod.string(),
+  "name": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get the currently signed-in employee account
+ */
+export const GetGgsEmployeeSessionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "employeeId": zod.string(),
+  "name": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Sign out of the current employee account
+ */
+export const LogoutGgsEmployeeResponse = zod.void()
+
+
+/**
+ * @summary List bookings visible to a signed-in employee
+ */
+export const GetGgsEmployeeBookingsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "customerName": zod.string(),
+  "phone": zod.string(),
+  "serviceName": zod.string(),
+  "appointmentDate": zod.coerce.date(),
+  "appointmentTime": zod.string(),
+  "notes": zod.string(),
+  "status": zod.enum(['pending', 'confirmed', 'completed', 'cancelled'])
+})
+export const GetGgsEmployeeBookingsResponse = zod.array(GetGgsEmployeeBookingsResponseItem)
+
+
+/**
+ * @summary List GGS employee accounts
+ */
+export const GetGgsAdminEmployeesResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "employeeId": zod.string(),
+  "name": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+export const GetGgsAdminEmployeesResponse = zod.array(GetGgsAdminEmployeesResponseItem)
+
+
+/**
+ * @summary Create an employee account
+ */
+export const createGgsAdminEmployeeBodyEmployeeIdMin = 2;
+export const createGgsAdminEmployeeBodyEmployeeIdMax = 32;
+
+
+export const createGgsAdminEmployeeBodyEmployeeIdRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$');
+export const createGgsAdminEmployeeBodyNameMin = 2;
+export const createGgsAdminEmployeeBodyNameMax = 120;
+
+export const createGgsAdminEmployeeBodyPasswordMin = 8;
+export const createGgsAdminEmployeeBodyPasswordMax = 128;
+
+
+
+export const CreateGgsAdminEmployeeBody = zod.object({
+  "employeeId": zod.string().min(createGgsAdminEmployeeBodyEmployeeIdMin).max(createGgsAdminEmployeeBodyEmployeeIdMax).regex(createGgsAdminEmployeeBodyEmployeeIdRegExp),
+  "name": zod.string().min(createGgsAdminEmployeeBodyNameMin).max(createGgsAdminEmployeeBodyNameMax),
+  "password": zod.string().min(createGgsAdminEmployeeBodyPasswordMin).max(createGgsAdminEmployeeBodyPasswordMax)
+})
+
+export const CreateGgsAdminEmployeeResponse = zod.object({
+  "id": zod.string().uuid(),
+  "employeeId": zod.string(),
+  "name": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update or deactivate an employee account
+ */
+export const UpdateGgsAdminEmployeeParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateGgsAdminEmployeeBodyEmployeeIdMin = 2;
+export const updateGgsAdminEmployeeBodyEmployeeIdMax = 32;
+
+
+export const updateGgsAdminEmployeeBodyEmployeeIdRegExp = new RegExp('^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$');
+export const updateGgsAdminEmployeeBodyNameMin = 2;
+export const updateGgsAdminEmployeeBodyNameMax = 120;
+
+export const updateGgsAdminEmployeeBodyPasswordMin = 8;
+export const updateGgsAdminEmployeeBodyPasswordMax = 128;
+
+
+
+export const UpdateGgsAdminEmployeeBody = zod.object({
+  "employeeId": zod.string().min(updateGgsAdminEmployeeBodyEmployeeIdMin).max(updateGgsAdminEmployeeBodyEmployeeIdMax).regex(updateGgsAdminEmployeeBodyEmployeeIdRegExp).optional(),
+  "name": zod.string().min(updateGgsAdminEmployeeBodyNameMin).max(updateGgsAdminEmployeeBodyNameMax).optional(),
+  "active": zod.boolean().optional(),
+  "password": zod.string().min(updateGgsAdminEmployeeBodyPasswordMin).max(updateGgsAdminEmployeeBodyPasswordMax).optional()
+})
+
+export const UpdateGgsAdminEmployeeResponse = zod.object({
+  "id": zod.string().uuid(),
+  "employeeId": zod.string(),
+  "name": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Get GGS CMS dashboard metrics
  */
 export const GetGgsAdminSummaryResponse = zod.object({

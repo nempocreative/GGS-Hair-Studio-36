@@ -1,11 +1,14 @@
 import {
   createHash,
   randomBytes,
-  scrypt as scryptCallback,
-  timingSafeEqual,
 } from "node:crypto";
 import { and, eq, gt } from "drizzle-orm";
 import { Router, type IRouter, type Response } from "express";
+import {
+  hashPassword,
+  hashSessionToken,
+  verifyPassword,
+} from "../lib/account-security";
 import {
   GetGgsAccountSessionResponse,
   LoginGgsAccountBody,
@@ -22,7 +25,6 @@ const router: IRouter = Router();
 const sessionCookieName = "ggs_customer_session";
 const sessionCookiePath = "/api/ggs/account";
 const sessionMaxAgeMs = 1000 * 60 * 60 * 24 * 30;
-const passwordKeyLength = 64;
 const accountAttemptLimit = 12;
 const attemptWindowMs = 15 * 60 * 1000;
 
@@ -37,52 +39,6 @@ const attemptBuckets = new Map<
   string,
   { count: number; resetAt: number }
 >();
-
-function scryptKey(password: string, salt: Buffer): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    scryptCallback(
-      password,
-      salt,
-      passwordKeyLength,
-      { N: 1 << 14, r: 8, p: 1, maxmem: 32 * 1024 * 1024 },
-      (error, key) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve(key);
-      },
-    );
-  });
-}
-
-async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16);
-  const key = await scryptKey(password, salt);
-  return `scrypt$${salt.toString("base64url")}$${key.toString("base64url")}`;
-}
-
-async function verifyPassword(
-  password: string,
-  encoded: string,
-): Promise<boolean> {
-  const [algorithm, saltPart, keyPart] = encoded.split("$");
-  if (algorithm !== "scrypt" || !saltPart || !keyPart) return false;
-
-  try {
-    const salt = Buffer.from(saltPart, "base64url");
-    const expected = Buffer.from(keyPart, "base64url");
-    if (salt.length !== 16 || expected.length !== passwordKeyLength) return false;
-    const actual = await scryptKey(password, salt);
-    return timingSafeEqual(actual, expected);
-  } catch {
-    return false;
-  }
-}
-
-function hashSessionToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
-}
 
 function normalizeIdentifier(
   type: GgsAccountIdentifierType,

@@ -45,6 +45,7 @@ import {
   useRegisterGgsAccount,
 } from '@workspace/api-client-react';
 import type { GgsAccount, GgsProduct, GgsPublicVoucher, GgsService, GgsSiteContent } from '@workspace/api-client-react';
+import { EmployeeSchedulePage, EmployeeSignInPage } from './EmployeeWorkspace';
 import './homepage.css';
 import './my-ggs.css';
 
@@ -109,9 +110,16 @@ function accountMutationError(error: unknown): string {
 function App() {
   return (
     <WouterRouter base={basePath}>
-      <VisitorWebsite />
+      <VisitorRouteSwitch />
     </WouterRouter>
   );
+}
+
+function VisitorRouteSwitch() {
+  const [location] = useLocation();
+  if (location === '/employee/sign-in') return <EmployeeSignInPage />;
+  if (location === '/employee/schedule') return <EmployeeSchedulePage />;
+  return <VisitorWebsite />;
 }
 
 function AccountAuthPage({ mode }: { mode: 'in' | 'up' }) {
@@ -216,6 +224,11 @@ function AccountAuthPage({ mode }: { mode: 'in' | 'up' }) {
               {isRegister ? 'Sudah punya akun?' : 'Belum punya akun?'}{' '}
               <Link href={isRegister ? '/sign-in' : '/sign-up'}>{isRegister ? 'Masuk' : 'Daftar'}</Link>
             </p>
+            {!isRegister && (
+              <p className="ggs-auth-form__footnote ggs-auth-form__employee-link">
+                Bagian dari tim GGS? <Link href="/employee/sign-in" data-testid="link-customer-sign-in-employee">Masuk karyawan</Link>
+              </p>
+            )}
           </form>
         </div>
       </div>
@@ -1519,13 +1532,11 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
 
       <section className="home-service-promo" aria-labelledby="home-service-promo-title" data-testid="section-home-service">
         <div className="home-service-promo-heading">
-          <p className="clearer-kicker">GGS / HOME SERVICE</p>
           <h2 id="home-service-promo-title">Home<br /><em>Service.</em></h2>
           <span className="home-service-promo-caption">Perawatan rambut, lebih dekat dengan rumah.</span>
         </div>
         <div className="home-service-promo-details">
           <div className="home-service-promo-copy">
-            <span className="home-service-promo-index">LAYANAN KUNJUNGAN</span>
             <p>Home Service adalah permintaan layanan GGS untuk kunjungan ke rumah. Pilih layanan dan waktu, lalu tuliskan alamat di catatan. Tim GGS akan mengonfirmasi wilayah serta ketersediaan.</p>
           </div>
           <Link
@@ -1542,11 +1553,10 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
       <section className="home-style-models" aria-labelledby="home-style-models-title" data-testid="section-home-style-models">
         <div className="home-style-models-heading">
           <div>
-            <p className="clearer-kicker">GGS / REFERENSI GAYA</p>
             <h2 id="home-style-models-title">Model rambut<br /><em>pria.</em></h2>
           </div>
           <div className="home-style-models-intro">
-            <p>Lihat inspirasi potongan rambut pria. Foto AI ini membantu memberi gambaran awal; pilih salah satu untuk mencantumkannya saat mengajukan booking.</p>
+            <p>Lihat inspirasi potongan rambut pria. Pilih salah satu untuk mencantumkannya saat mengajukan booking.</p>
             <Link href="/style-gallery" className="home-style-gallery-link" data-testid="link-home-style-gallery">
               Lihat Style Gallery <ArrowUpRight size={15} aria-hidden="true" />
             </Link>
@@ -1563,11 +1573,10 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
               <div className="home-style-model-image">
                 <img
                   src={style.image}
-                  alt={`Ilustrasi AI inspirasi gaya rambut ${style.label}`}
+                  alt={`Inspirasi gaya rambut ${style.label}`}
                   loading="eager"
                   data-testid={`img-home-style-model-${style.id}`}
                 />
-                <span className="home-style-model-ai-tag">ILUSTRASI AI</span>
               </div>
               <div className="home-style-model-copy">
                 <h3>{style.label}</h3>
@@ -1592,11 +1601,10 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
       >
         <div className="home-style-models-heading">
           <div>
-            <p className="clearer-kicker">GGS / INSPIRASI WANITA</p>
             <h2 id="home-womens-style-models-title">Gaya rambut<br /><em>wanita.</em></h2>
           </div>
           <div className="home-style-models-intro">
-            <p>Temukan inspirasi gaya rambut wanita. Foto AI ini sebagai referensi awal untuk dibicarakan saat booking.</p>
+            <p>Temukan inspirasi gaya rambut wanita untuk dibicarakan saat booking.</p>
           </div>
         </div>
         <div
@@ -1610,11 +1618,10 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
               <div className="home-style-model-image">
                 <img
                   src={style.image}
-                  alt={`Ilustrasi AI inspirasi gaya rambut ${style.label}`}
+                  alt={`Inspirasi gaya rambut ${style.label}`}
                   loading="eager"
                   data-testid={`img-home-womens-style-${style.id}`}
                 />
-                <span className="home-style-model-ai-tag">ILUSTRASI AI</span>
               </div>
               <div className="home-style-model-copy">
                 <h3>{style.label}</h3>
@@ -1639,7 +1646,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
       >
         <div className="home-products-heading">
           <div className="home-products-title-block">
-            <p className="clearer-kicker">RAWATAN RAMBUT, PILIHAN GGS</p>
             <h2 id="home-products-title">Bawa pulang<br /><em>ritual yang cocok.</em></h2>
           </div>
           <div className="home-products-intro">
@@ -1736,145 +1742,11 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
           </>
         )}
       </section>
-      <HomeTestimonials />
       <section className="home-last-cta">
         <div><p className="clearer-kicker">BOOK APPOINTMENT</p><h2>Ceritakan<br /><em>yang kamu inginkan.</em></h2></div>
         <Link href="/book" className="clearer-primary-button" data-testid="link-home-booking">Buat janji <ArrowRight size={17} /></Link>
       </section>
     </>
-  );
-}
-
-const homeTestimonials = [
-  'Rambut saya dibentuk sesuai yang saya mau, dan saya juga dapat saran yang cocok.',
-  'Sebelum mulai, gaya yang saya inginkan dibahas dulu. Rasanya lebih personal.',
-  'Senang bisa konsultasi dulu soal potongan yang pas untuk rambut saya.',
-  'Suasananya nyaman, jadi bisa santai cerita tentang gaya yang saya inginkan.',
-  'Perubahan kecil di potongannya bikin tampilan terasa lebih segar.',
-  'Saya suka hasil styling-nya—rapi, tapi tetap terasa seperti diri sendiri.',
-  'Dari konsultasi sampai selesai, prosesnya terasa jelas dan menyenangkan.',
-  'Akhirnya menemukan referensi gaya yang cocok untuk rutinitas sehari-hari.',
-];
-
-function HomeTestimonials() {
-  const [active, setActive] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [pageVisible, setPageVisible] = useState(true);
-  const paused = isPaused || isHovered || isFocused;
-
-  useEffect(() => {
-    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const updateMotionPreference = () => setReducedMotion(motionPreference.matches);
-    const updatePageVisibility = () => setPageVisible(document.visibilityState === 'visible');
-    updateMotionPreference();
-    updatePageVisibility();
-    motionPreference.addEventListener('change', updateMotionPreference);
-    document.addEventListener('visibilitychange', updatePageVisibility);
-    return () => {
-      motionPreference.removeEventListener('change', updateMotionPreference);
-      document.removeEventListener('visibilitychange', updatePageVisibility);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (paused || reducedMotion || !pageVisible) return;
-    const timer = window.setInterval(
-      () => setActive((index) => (index + 1) % homeTestimonials.length),
-      5000,
-    );
-    return () => window.clearInterval(timer);
-  }, [active, paused, reducedMotion, pageVisible]);
-
-  const moveTo = (index: number) => {
-    setActive((index + homeTestimonials.length) % homeTestimonials.length);
-  };
-
-  return (
-    <section
-      className="home-testimonials"
-      aria-labelledby="home-testimonials-title"
-      data-testid="section-home-testimonials"
-    >
-      <div className="home-testimonials-layout">
-        <div className="home-testimonials-heading">
-          <p className="clearer-kicker">GGS / KATA MEREKA</p>
-          <h2 id="home-testimonials-title">Cerita yang<br /><em>berkesan.</em></h2>
-          <p>Inspirasi dari pengalaman di salon, dari konsultasi sampai selesai.</p>
-          <span className="home-testimonials-disclaimer" role="note">
-            TEKS CONTOH · BELUM MERUPAKAN ULASAN PELANGGAN
-          </span>
-        </div>
-        <div
-          className="home-testimonials-carousel"
-          role="region"
-          aria-label="Slider contoh ulasan pelanggan"
-          aria-roledescription="karusel"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          onFocusCapture={() => setIsFocused(true)}
-          onBlurCapture={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsFocused(false);
-          }}
-          data-testid="carousel-home-testimonials"
-        >
-          <div className="home-testimonials-quote-mark" aria-hidden="true">“</div>
-          <div className="home-testimonials-slide" aria-live={paused ? 'polite' : 'off'}>
-            <p className="home-testimonials-slide-index">CONTOH ULASAN</p>
-            <blockquote key={active} data-testid="quote-home-testimonial">
-              {homeTestimonials[active]}
-            </blockquote>
-            <p className="home-testimonials-attribution">Teks contoh untuk diganti dengan ulasan pelanggan GGS.</p>
-          </div>
-          <div className="home-testimonials-controls">
-            <button
-              type="button"
-              className="home-testimonials-arrow"
-              aria-label="Testimoni sebelumnya"
-              onClick={() => moveTo(active - 1)}
-              data-testid="button-home-testimonial-previous"
-            >
-              <ArrowLeft size={17} aria-hidden="true" />
-            </button>
-            <div className="home-testimonials-dots" role="group" aria-label="Pilih contoh ulasan">
-              {homeTestimonials.map((_, index) => (
-                <button
-                  type="button"
-                  key={index}
-                  className={`home-testimonials-dot${active === index ? ' is-active' : ''}`}
-                  aria-label={`Tampilkan contoh ulasan ${index + 1}`}
-                  aria-current={active === index ? 'true' : undefined}
-                  onClick={() => moveTo(index)}
-                  data-testid={`button-home-testimonial-dot-${index + 1}`}
-                />
-              ))}
-            </div>
-            <button
-              type="button"
-              className="home-testimonials-arrow"
-              aria-label="Testimoni berikutnya"
-              onClick={() => moveTo(active + 1)}
-              data-testid="button-home-testimonial-next"
-            >
-              <ArrowRight size={17} aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="home-testimonials-toggle"
-              aria-label={isPaused ? 'Lanjutkan slider otomatis' : 'Jeda slider otomatis'}
-              aria-pressed={isPaused}
-              onClick={() => setIsPaused((value) => !value)}
-              data-testid="button-home-testimonial-toggle"
-            >
-              {isPaused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}
-              <span>{isPaused ? 'Putar' : 'Jeda'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -2088,7 +1960,6 @@ function OurTeamShowcase({ variant }: { variant: 'home' | 'page' }) {
     >
       <div className="ggs-team-heading">
         <div className="ggs-team-heading-copy">
-          <p className="clearer-kicker">GGS / ORANG-ORANG DI BALIK KURSI</p>
           <h2 id={isHome ? 'home-team-title' : 'our-team-title'}>
             {isHome ? <>Temui orang<br /><em>di balik gaya.</em></> : <>Kenali<br /><em>tim kami.</em></>}
           </h2>
@@ -2206,7 +2077,6 @@ function CareerPage() {
 function HomeServicePage({ openBooking }: { openBooking: SharedProps['openBooking'] }) {
   return (
     <PageFrame
-      kicker="GGS / HOME SERVICE"
       title={<>Home<br /><em>Service.</em></>}
       intro="Home Service adalah permintaan layanan GGS untuk kunjungan ke rumah. Tim GGS akan mengonfirmasi wilayah dan ketersediaan sebelum kunjungan disepakati."
       testId="page-home-service"
@@ -2508,7 +2378,7 @@ const hairStyleChoices = [
 
 function GalleryPage({ onChooseStyle }: { onChooseStyle: (style: string) => void }) {
   return (
-    <PageFrame kicker="GGS / STYLE GALLERY" title={<>Pilih inspirasi,<br /><em>sebelum booking.</em></>} intro="Pilih model rambut pria sebagai referensi permintaan booking. Ilustrasi AI membantu memberi gambaran awal; hasil styling dan warna rambut GGS akan ditambahkan setelah foto aktual tersedia." testId="page-gallery">
+    <PageFrame kicker="GGS / STYLE GALLERY" title={<>Pilih inspirasi,<br /><em>sebelum booking.</em></>} intro="Pilih model rambut pria sebagai referensi permintaan booking. Tim GGS akan membahas detail gaya dan ketersediaan sebelum mengonfirmasi." testId="page-gallery">
       <section className="gallery-style-picker" aria-labelledby="gallery-men-heading" data-testid="section-mens-style-picker">
         <div className="gallery-section-heading">
           <p className="clearer-kicker">MEN'S GROOMING</p>
@@ -2525,8 +2395,7 @@ function GalleryPage({ onChooseStyle }: { onChooseStyle: (style: string) => void
               data-testid={`link-style-choice-${style.id}`}
             >
               <span className="gallery-style-choice-image">
-                <img src={style.image} alt={`Ilustrasi AI inspirasi gaya rambut ${style.label}`} loading="lazy" />
-                <span className="gallery-style-ai-tag">ILUSTRASI AI</span>
+                <img src={style.image} alt={`Inspirasi gaya rambut ${style.label}`} loading="lazy" />
                 <span className="gallery-style-number">0{index + 1}</span>
               </span>
               <span className="gallery-style-choice-copy">
@@ -2538,7 +2407,6 @@ function GalleryPage({ onChooseStyle }: { onChooseStyle: (style: string) => void
             </Link>
           ))}
         </div>
-        <p className="gallery-editorial-note">Foto di atas adalah ilustrasi AI untuk inspirasi, bukan hasil styling GGS. Pilihan menjadi referensi konsultasi; hasil akhir dibahas bersama tim sebelum layanan.</p>
       </section>
       <section className="gallery-women-catalog" aria-labelledby="gallery-women-heading" data-testid="section-womens-style-catalog">
         <div className="gallery-section-heading">
@@ -2798,6 +2666,7 @@ function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductTo
               <div className="ggs-account-signed-out__actions">
                 <Link href="/sign-in" className="ggs-professional__booking-link" data-testid="link-my-ggs-sign-in">Masuk <ArrowRight size={15} /></Link>
                 <Link href="/sign-up" className="ggs-account-text-button" data-testid="link-my-ggs-sign-up">Buat akun</Link>
+                <Link href="/employee/sign-in" className="ggs-account-text-button" data-testid="link-my-ggs-employee-sign-in">Masuk karyawan</Link>
               </div>
             </section>
           ) : account ? (

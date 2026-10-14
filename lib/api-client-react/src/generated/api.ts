@@ -27,6 +27,11 @@ import type {
   GgsAppointment,
   GgsAppointmentInput,
   GgsAppointmentStatusUpdate,
+  GgsEmployeeAccount,
+  GgsEmployeeAccountInput,
+  GgsEmployeeAccountUpdate,
+  GgsEmployeeBooking,
+  GgsEmployeeLoginInput,
   GgsProduct,
   GgsProductInput,
   GgsPublicVoucher,
@@ -865,6 +870,576 @@ export const useLogoutGgsAccount = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getLogoutGgsAccountMutationOptions(options));
+    }
+
+export const getLoginGgsEmployeeUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/login`
+}
+
+/**
+ * @summary Sign in to an employee account
+ */
+export const loginGgsEmployee = async (ggsEmployeeLoginInput: GgsEmployeeLoginInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAccount> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsEmployeeAccount>(getLoginGgsEmployeeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsEmployeeLoginInput)
+  }
+);}
+
+
+
+
+
+export const getLoginGgsEmployeeMutationKey = () => ['loginGgsEmployee'] as const;
+
+export const getLoginGgsEmployeeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginGgsEmployee>>, TError,LoginGgsEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof loginGgsEmployee>>, TError,LoginGgsEmployeeMutationVariables, TContext> => {
+
+const mutationKey = getLoginGgsEmployeeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginGgsEmployee>>, LoginGgsEmployeeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  loginGgsEmployee(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoginGgsEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof loginGgsEmployee>>>
+    export type LoginGgsEmployeeMutationBody = BodyType<GgsEmployeeLoginInput>
+    export type LoginGgsEmployeeMutationError = ErrorType<void>
+    export type LoginGgsEmployeeMutationVariables = {data: BodyType<GgsEmployeeLoginInput>}
+
+    /**
+ * @summary Sign in to an employee account
+ */
+export const useLoginGgsEmployee = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginGgsEmployee>>, TError,LoginGgsEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof loginGgsEmployee>>,
+        TError,
+        LoginGgsEmployeeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLoginGgsEmployeeMutationOptions(options));
+    }
+
+export const getGetGgsEmployeeSessionUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/session`
+}
+
+/**
+ * @summary Get the currently signed-in employee account
+ */
+export const getGgsEmployeeSession = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAccount> => {
+
+  return customFetch<GgsEmployeeAccount>(getGetGgsEmployeeSessionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeSessionQueryKey = () => {
+    return [
+    `/api/ggs/employee/session`
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeSessionQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeSession>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeSession>>> = ({ signal }) => getGgsEmployeeSession({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeSession>>>
+export type GetGgsEmployeeSessionQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the currently signed-in employee account
+ */
+
+export function useGetGgsEmployeeSession<TData = Awaited<ReturnType<typeof getGgsEmployeeSession>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getLogoutGgsEmployeeUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/logout`
+}
+
+/**
+ * @summary Sign out of the current employee account
+ */
+export const logoutGgsEmployee = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getLogoutGgsEmployeeUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getLogoutGgsEmployeeMutationKey = () => ['logoutGgsEmployee'] as const;
+
+export const getLogoutGgsEmployeeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutGgsEmployee>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logoutGgsEmployee>>, TError,void, TContext> => {
+
+const mutationKey = getLogoutGgsEmployeeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutGgsEmployee>>, void> = () => {
+
+
+          return  logoutGgsEmployee(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutGgsEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof logoutGgsEmployee>>>
+
+    export type LogoutGgsEmployeeMutationError = ErrorType<unknown>
+
+
+    /**
+ * @summary Sign out of the current employee account
+ */
+export const useLogoutGgsEmployee = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutGgsEmployee>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof logoutGgsEmployee>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutGgsEmployeeMutationOptions(options));
+    }
+
+export const getGetGgsEmployeeBookingsUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/bookings`
+}
+
+/**
+ * @summary List bookings visible to a signed-in employee
+ */
+export const getGgsEmployeeBookings = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeBooking[]> => {
+
+  return customFetch<GgsEmployeeBooking[]>(getGetGgsEmployeeBookingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeBookingsQueryKey = () => {
+    return [
+    `/api/ggs/employee/bookings`
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeBookingsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeBookings>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeBookingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeBookings>>> = ({ signal }) => getGgsEmployeeBookings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeBookings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeBookingsQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeBookings>>>
+export type GetGgsEmployeeBookingsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List bookings visible to a signed-in employee
+ */
+
+export function useGetGgsEmployeeBookings<TData = Awaited<ReturnType<typeof getGgsEmployeeBookings>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeBookingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGgsAdminEmployeesUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/employees`
+}
+
+/**
+ * @summary List GGS employee accounts
+ */
+export const getGgsAdminEmployees = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAccount[]> => {
+
+  return customFetch<GgsEmployeeAccount[]>(getGetGgsAdminEmployeesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsAdminEmployeesQueryKey = () => {
+    return [
+    `/api/ggs/admin/employees`
+    ] as const;
+    }
+
+
+export const getGetGgsAdminEmployeesQueryOptions = <TData = Awaited<ReturnType<typeof getGgsAdminEmployees>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminEmployees>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsAdminEmployeesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsAdminEmployees>>> = ({ signal }) => getGgsAdminEmployees({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminEmployees>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsAdminEmployeesQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsAdminEmployees>>>
+export type GetGgsAdminEmployeesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List GGS employee accounts
+ */
+
+export function useGetGgsAdminEmployees<TData = Awaited<ReturnType<typeof getGgsAdminEmployees>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminEmployees>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsAdminEmployeesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateGgsAdminEmployeeUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/employees`
+}
+
+/**
+ * @summary Create an employee account
+ */
+export const createGgsAdminEmployee = async (ggsEmployeeAccountInput: GgsEmployeeAccountInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAccount> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsEmployeeAccount>(getCreateGgsAdminEmployeeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsEmployeeAccountInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGgsAdminEmployeeMutationKey = () => ['createGgsAdminEmployee'] as const;
+
+export const getCreateGgsAdminEmployeeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminEmployee>>, TError,CreateGgsAdminEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminEmployee>>, TError,CreateGgsAdminEmployeeMutationVariables, TContext> => {
+
+const mutationKey = getCreateGgsAdminEmployeeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGgsAdminEmployee>>, CreateGgsAdminEmployeeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGgsAdminEmployee(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGgsAdminEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof createGgsAdminEmployee>>>
+    export type CreateGgsAdminEmployeeMutationBody = BodyType<GgsEmployeeAccountInput>
+    export type CreateGgsAdminEmployeeMutationError = ErrorType<void>
+    export type CreateGgsAdminEmployeeMutationVariables = {data: BodyType<GgsEmployeeAccountInput>}
+
+    /**
+ * @summary Create an employee account
+ */
+export const useCreateGgsAdminEmployee = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminEmployee>>, TError,CreateGgsAdminEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGgsAdminEmployee>>,
+        TError,
+        CreateGgsAdminEmployeeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGgsAdminEmployeeMutationOptions(options));
+    }
+
+export const getUpdateGgsAdminEmployeeUrl = (id: string,) => {
+
+
+
+
+  return `/api/ggs/admin/employees/${id}`
+}
+
+/**
+ * @summary Update or deactivate an employee account
+ */
+export const updateGgsAdminEmployee = async (id: string,
+    ggsEmployeeAccountUpdate: GgsEmployeeAccountUpdate, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAccount> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsEmployeeAccount>(getUpdateGgsAdminEmployeeUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsEmployeeAccountUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateGgsAdminEmployeeMutationKey = () => ['updateGgsAdminEmployee'] as const;
+
+export const getUpdateGgsAdminEmployeeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminEmployee>>, TError,UpdateGgsAdminEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminEmployee>>, TError,UpdateGgsAdminEmployeeMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGgsAdminEmployeeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGgsAdminEmployee>>, UpdateGgsAdminEmployeeMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateGgsAdminEmployee(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGgsAdminEmployeeMutationResult = NonNullable<Awaited<ReturnType<typeof updateGgsAdminEmployee>>>
+    export type UpdateGgsAdminEmployeeMutationBody = BodyType<GgsEmployeeAccountUpdate>
+    export type UpdateGgsAdminEmployeeMutationError = ErrorType<void>
+    export type UpdateGgsAdminEmployeeMutationVariables = {id: string;data: BodyType<GgsEmployeeAccountUpdate>}
+
+    /**
+ * @summary Update or deactivate an employee account
+ */
+export const useUpdateGgsAdminEmployee = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminEmployee>>, TError,UpdateGgsAdminEmployeeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGgsAdminEmployee>>,
+        TError,
+        UpdateGgsAdminEmployeeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGgsAdminEmployeeMutationOptions(options));
     }
 
 export const getGetGgsAdminSummaryUrl = () => {

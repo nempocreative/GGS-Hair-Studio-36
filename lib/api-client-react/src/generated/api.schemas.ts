@@ -75,6 +75,87 @@ export interface GgsAccountLoginInput {
   password: string;
 }
 
+export interface GgsEmployeeAccount {
+  id: string;
+  employeeId: string;
+  name: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface GgsEmployeeLoginInput {
+  /**
+     * @minLength 2
+     * @maxLength 32
+     */
+  employeeId: string;
+  /**
+     * @minLength 8
+     * @maxLength 128
+     */
+  password: string;
+}
+
+export interface GgsEmployeeAccountInput {
+  /**
+     * @minLength 2
+     * @maxLength 32
+     * @pattern ^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$
+     */
+  employeeId: string;
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @minLength 8
+     * @maxLength 128
+     */
+  password: string;
+}
+
+export interface GgsEmployeeAccountUpdate {
+  /**
+     * @minLength 2
+     * @maxLength 32
+     * @pattern ^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$
+     */
+  employeeId?: string;
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  name?: string;
+  active?: boolean;
+  /**
+     * @minLength 8
+     * @maxLength 128
+     */
+  password?: string;
+}
+
+export type GgsEmployeeBookingStatus = typeof GgsEmployeeBookingStatus[keyof typeof GgsEmployeeBookingStatus];
+
+
+export const GgsEmployeeBookingStatus = {
+  pending: 'pending',
+  confirmed: 'confirmed',
+  completed: 'completed',
+  cancelled: 'cancelled',
+} as const;
+
+export interface GgsEmployeeBooking {
+  id: number;
+  customerName: string;
+  phone: string;
+  serviceName: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  notes: string;
+  status: GgsEmployeeBookingStatus;
+}
+
 export interface GgsSiteContent {
   brandName: string;
   tagline: string;

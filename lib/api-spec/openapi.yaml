@@ -16,6 +16,8 @@ tags:
     description: GGS CMS administration
   - name: ggs-account
     description: GGS customer account access
+  - name: ggs-employee
+    description: GGS employee account access
 paths:
   /healthz:
     get:
@@ -174,6 +176,134 @@ paths:
       responses:
         "204":
           description: Signed out
+  /ggs/employee/login:
+    post:
+      operationId: loginGgsEmployee
+      tags: [ggs-employee]
+      summary: Sign in to an employee account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeeLoginInput"
+      responses:
+        "200":
+          description: Signed-in employee account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeAccount"
+        "400":
+          description: Invalid employee ID or password format
+        "401":
+          description: Employee ID or password is incorrect
+        "429":
+          description: Too many sign-in attempts
+  /ggs/employee/session:
+    get:
+      operationId: getGgsEmployeeSession
+      tags: [ggs-employee]
+      summary: Get the currently signed-in employee account
+      responses:
+        "200":
+          description: Signed-in employee account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeAccount"
+        "401":
+          description: No active employee session
+  /ggs/employee/logout:
+    post:
+      operationId: logoutGgsEmployee
+      tags: [ggs-employee]
+      summary: Sign out of the current employee account
+      responses:
+        "204":
+          description: Signed out
+  /ggs/employee/bookings:
+    get:
+      operationId: getGgsEmployeeBookings
+      tags: [ggs-employee]
+      summary: List bookings visible to a signed-in employee
+      responses:
+        "200":
+          description: Employee booking schedule
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsEmployeeBooking"
+        "401":
+          description: No active employee session
+  /ggs/admin/employees:
+    get:
+      operationId: getGgsAdminEmployees
+      tags: [ggs-admin]
+      summary: List GGS employee accounts
+      responses:
+        "200":
+          description: Employee accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsEmployeeAccount"
+    post:
+      operationId: createGgsAdminEmployee
+      tags: [ggs-admin]
+      summary: Create an employee account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeeAccountInput"
+      responses:
+        "201":
+          description: Employee account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeAccount"
+        "400":
+          description: Invalid employee account details
+        "409":
+          description: Employee ID is already in use
+  /ggs/admin/employees/{id}:
+    patch:
+      operationId: updateGgsAdminEmployee
+      tags: [ggs-admin]
+      summary: Update or deactivate an employee account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeeAccountUpdate"
+      responses:
+        "200":
+          description: Employee account updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeAccount"
+        "400":
+          description: Invalid employee account details
+        "404":
+          description: Employee account not found
+        "409":
+          description: Employee ID is already in use
   /ggs/admin/summary:
     get:
       operationId: getGgsAdminSummary
@@ -543,6 +673,110 @@ components:
         - identifierType
         - identifier
         - password
+    GgsEmployeeAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+        name:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - employeeId
+        - name
+        - active
+        - createdAt
+    GgsEmployeeLoginInput:
+      type: object
+      properties:
+        employeeId:
+          type: string
+          minLength: 2
+          maxLength: 32
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+        - employeeId
+        - password
+    GgsEmployeeAccountInput:
+      type: object
+      properties:
+        employeeId:
+          type: string
+          minLength: 2
+          maxLength: 32
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$"
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+        - employeeId
+        - name
+        - password
+    GgsEmployeeAccountUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        employeeId:
+          type: string
+          minLength: 2
+          maxLength: 32
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$"
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        active:
+          type: boolean
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    GgsEmployeeBooking:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerName:
+          type: string
+        phone:
+          type: string
+        serviceName:
+          type: string
+        appointmentDate:
+          type: string
+          format: date
+        appointmentTime:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+      required:
+        - id
+        - customerName
+        - phone
+        - serviceName
+        - appointmentDate
+        - appointmentTime
+        - notes
+        - status
     GgsSiteContent:
       type: object
       properties:

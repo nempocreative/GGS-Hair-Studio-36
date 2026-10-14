@@ -19,4 +19,5 @@
 
 export * from "./ggs";
 export * from "./ggs-accounts";
+export * from "./ggs-employees";
 export * from "./ggs-vouchers";
