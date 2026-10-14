@@ -3,6 +3,8 @@ type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/ggs-homepage/Clearer.tsx": () => import("../components/mockups/ggs-homepage/Clearer.tsx"),
   "./components/mockups/ggs-homepage/Current.tsx": () => import("../components/mockups/ggs-homepage/Current.tsx"),
+  "./components/mockups/ggs-mens-icon/Current.tsx": () => import("../components/mockups/ggs-mens-icon/Current.tsx"),
+  "./components/mockups/ggs-mens-icon/RoundHair.tsx": () => import("../components/mockups/ggs-mens-icon/RoundHair.tsx"),
   "./components/mockups/ggs-profile/Current.tsx": () => import("../components/mockups/ggs-profile/Current.tsx"),
   "./components/mockups/ggs-profile/DemoLogin.tsx": () => import("../components/mockups/ggs-profile/DemoLogin.tsx"),
   "./components/mockups/ggs-profile/Professional.tsx": () => import("../components/mockups/ggs-profile/Professional.tsx"),

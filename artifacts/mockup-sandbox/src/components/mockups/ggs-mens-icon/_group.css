@@ -1,0 +1,168 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  color-scheme: light;
+  --background: 40 31% 93%;
+  --foreground: 43 8% 15%;
+  --border: 37 14% 75%;
+  --card: 40 35% 96%;
+  --card-foreground: 43 8% 15%;
+  --popover: 40 35% 96%;
+  --popover-foreground: 43 8% 15%;
+  --primary: 5 45% 40%;
+  --primary-foreground: 36 39% 96%;
+  --secondary: 38 21% 87%;
+  --secondary-foreground: 43 8% 15%;
+  --muted: 38 21% 87%;
+  --muted-foreground: 40 7% 39%;
+  --accent: 5 45% 40%;
+  --accent-foreground: 36 39% 96%;
+  --destructive: 0 65% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 37 14% 75%;
+  --ring: 5 45% 40%;
+  --app-font-sans: 'DM Sans', sans-serif;
+  --app-font-serif: 'Cormorant Garamond', serif;
+  --app-font-mono: 'Space Mono', monospace;
+  --radius: 0.25rem;
+  --ink: #292723;
+  --panel: #f8f5ee;
+  --gold: #923d36;
+  --paper: #f2eee5;
+  --quiet: #68645b;
+  --fusion: linear-gradient(112deg, #923d36 0%, #b47462 100%);
+}
+
+.dark {
+  --background: 40 31% 93%;
+  --foreground: 43 8% 15%;
+  --border: 37 14% 75%;
+  --card: 40 35% 96%;
+  --card-foreground: 43 8% 15%;
+  --popover: 40 35% 96%;
+  --popover-foreground: 43 8% 15%;
+  --primary: 5 45% 40%;
+  --primary-foreground: 36 39% 96%;
+  --secondary: 38 21% 87%;
+  --secondary-foreground: 43 8% 15%;
+  --muted: 38 21% 87%;
+  --muted-foreground: 40 7% 39%;
+  --accent: 5 45% 40%;
+  --accent-foreground: 36 39% 96%;
+  --destructive: 0 65% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 37 14% 75%;
+  --ring: 5 45% 40%;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { width: 100%; min-width: 320px; min-height: 100%; margin: 0; }
+body { background: #f2eee5; color: #262520; font-family: 'DM Sans', sans-serif; }
+a { color: inherit; text-decoration: none; }
+
+.ggs-icon-preview {
+  --clearer-paper: #f2eee5;
+  --clearer-ink: #262520;
+  --clearer-accent: #923d36;
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+  place-items: center;
+  background: var(--clearer-paper);
+  color: var(--clearer-ink);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.ggs-quick-menu-item {
+  display: flex;
+  min-width: 0;
+  min-height: 132px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 15px 10px;
+  color: var(--clearer-ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  transition: color .2s, transform .2s;
+}
+
+.ggs-quick-menu-item:hover {
+  color: var(--clearer-accent);
+  transform: translateY(-3px);
+}
+
+.ggs-quick-menu-item:focus-visible {
+  outline: 2px solid var(--clearer-accent);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+.ggs-quick-menu-icon {
+  position: relative;
+  display: grid;
+  width: 70px;
+  height: 70px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 18px;
+  color: #382f2a;
+  box-shadow: 0 5px 12px rgb(47 39 32 / 12%), inset 0 1px 0 rgb(255 255 255 / 62%);
+  transition: box-shadow .24s ease, transform .24s ease;
+}
+
+.ggs-quick-menu-avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(.9);
+  transform-origin: center bottom;
+}
+
+.ggs-quick-menu-item:hover .ggs-quick-menu-icon,
+.ggs-quick-menu-item:focus-visible .ggs-quick-menu-icon {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgb(47 39 32 / 16%), inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+
+.quick-tone-rose {
+  --quick-icon-edge: #74352e;
+  background: linear-gradient(145deg, #d89a8e 0%, #bd7167 52%, #913f37 100%);
+}
+
+.ggs-quick-menu-icon.ggs-mens-round {
+  overflow: hidden;
+  border-radius: 50%;
+  border-color: rgb(255 255 255 / 78%);
+  background: linear-gradient(145deg, #d89a8e 0%, #bd7167 52%, #913f37 100%);
+}
+
+.ggs-mens-round-face {
+  position: absolute;
+  z-index: 1;
+  bottom: -1px;
+  left: 50%;
+  width: 54px;
+  height: 54px;
+  overflow: visible;
+  transform: translateX(-50%);
+}
+
+.ggs-mens-hair-cap {
+  position: absolute;
+  z-index: 2;
+  top: -18px;
+  left: 50%;
+  width: 102px;
+  height: 102px;
+  max-width: none;
+  object-fit: contain;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
