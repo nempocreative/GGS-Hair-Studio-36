@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type TouchEvent as ReactTouchEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, Route, Router as WouterRouter, Switch, useLocation } from 'wouter';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -687,7 +687,7 @@ function HairModelMenuIcon({ size = 70, className, hairstyle }: QuickMenuFaceIco
 const homeShortcuts = [
   { label: 'Beranda', href: '/', hairstyle: 'crop', tone: 'quick-tone-blue' },
   { label: "Men's Grooming", href: '/mens-grooming', hairstyle: 'fade', tone: 'quick-tone-rose' },
-  { label: "Women's Hair & Beauty", href: '/womens-hair-beauty', hairstyle: 'curls', tone: 'quick-tone-violet' },
+  { label: "Women's Hair", href: '/womens-hair-beauty', hairstyle: 'curls', tone: 'quick-tone-violet' },
   { label: 'Hair & Self Care', href: '/hair-self-care', hairstyle: 'longLayers', tone: 'quick-tone-sage' },
   { label: 'Galeri Gaya', href: '/style-gallery', hairstyle: 'sidePart', tone: 'quick-tone-violet' },
   { label: 'Produk', href: '/products', hairstyle: 'bob', tone: 'quick-tone-plum' },
@@ -697,7 +697,7 @@ const homeShortcuts = [
   { label: 'Cabang', href: '/branches', hairstyle: 'ponytail', tone: 'quick-tone-blue' },
   { label: 'Kelas', href: '/kelas', hairstyle: 'shag', tone: 'quick-tone-gold' },
   { label: 'Hair Journal', href: '/hair-journal', hairstyle: 'pompadour', tone: 'quick-tone-violet' },
-  { label: 'Events & Community', href: '/events-community', hairstyle: 'braids', tone: 'quick-tone-sage' },
+  { label: 'Event', href: '/events-community', hairstyle: 'braids', tone: 'quick-tone-sage' },
   { label: 'Our Team', href: '/our-team', hairstyle: 'locs', tone: 'quick-tone-plum' },
   { label: 'Karir', href: '/karir', hairstyle: 'undercut', tone: 'quick-tone-gold' },
   { label: 'Home Service', href: '/home-service', hairstyle: 'curtain', tone: 'quick-tone-sage' },
@@ -791,12 +791,6 @@ const homeWomenServiceNames = new Set([
   'creambath relax',
   'smoothing sleek',
 ]);
-const homeWomenEstimateServiceNames = new Set([
-  'layered cut',
-  'blow & volume',
-  'creambath relax',
-  'smoothing sleek',
-]);
 const homeWomenServicePhotos: Record<string, string> = {
   'signature cut': 'ggs-carousel-consultation.jpg',
   'color expression': 'ggs-carousel-style.jpg',
@@ -817,6 +811,7 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
   const [reducedMotion, setReducedMotion] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [menuPage, setMenuPage] = useState(0);
+  const menuTouchStart = useRef<{ identifier: number; x: number; y: number } | null>(null);
   const [mensServiceIndex, setMensServiceIndex] = useState(0);
   const [mensServiceSnapCount, setMensServiceSnapCount] = useState(0);
   const [womenServiceIndex, setWomenServiceIndex] = useState(0);
@@ -870,6 +865,26 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
     [products],
   );
   const menuPageCount = Math.ceil(homeShortcuts.length / homeMenuPageSize);
+  const handleMenuTouchStart = (event: ReactTouchEvent<HTMLElement>) => {
+    if (event.touches.length !== 1) {
+      menuTouchStart.current = null;
+      return;
+    }
+    const touch = event.touches.item(0);
+    if (!touch) return;
+    menuTouchStart.current = { identifier: touch.identifier, x: touch.clientX, y: touch.clientY };
+  };
+  const handleMenuTouchEnd = (event: ReactTouchEvent<HTMLElement>) => {
+    const start = menuTouchStart.current;
+    menuTouchStart.current = null;
+    if (!start || menuPageCount < 2) return;
+    const touch = Array.from(event.changedTouches).find((item) => item.identifier === start.identifier);
+    if (!touch) return;
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+    setMenuPage((currentPage) => Math.max(0, Math.min(menuPageCount - 1, currentPage + (deltaX < 0 ? 1 : -1))));
+  };
   const visibleHomeShortcuts = homeShortcuts.slice(
     menuPage * homeMenuPageSize,
     (menuPage + 1) * homeMenuPageSize,
@@ -1136,7 +1151,13 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
         </div>
       </section>
 
-        <section className="clearer-home-menu ggs-quick-menu" aria-label="Jelajahi GGS">
+        <section
+          className="clearer-home-menu ggs-quick-menu"
+          aria-label="Jelajahi GGS"
+          onTouchStart={handleMenuTouchStart}
+          onTouchEnd={handleMenuTouchEnd}
+          onTouchCancel={() => { menuTouchStart.current = null; }}
+        >
           <nav
             className="ggs-quick-menu-grid"
             aria-label={`Pintasan GGS, halaman ${menuPage + 1} dari ${menuPageCount}`}
@@ -1397,9 +1418,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
           </div>
           <p className="home-mens-grooming-intro">Pilihan potong, warna, perawatan, dan styling rambut wanita, lengkap dengan durasi dan harga.</p>
         </div>
-        <p className="home-womens-estimate-notice">
-          Empat pilihan tambahan masih contoh sementara; harga dan durasinya perkiraan dan perlu dikonfirmasi dengan tim GGS.
-        </p>
         {servicesQuery.isLoading ? (
           <div className="home-mens-service-skeleton" role="status" aria-label="Layanan wanita sedang dimuat">
             {Array.from({ length: 8 }, (_, index) => <span key={index} />)}
@@ -1455,11 +1473,6 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                         <div className="home-mens-service-copy">
                           <h3>{service.name}</h3>
                           {service.description && <p className="home-mens-service-description">{service.description}</p>}
-                          {homeWomenEstimateServiceNames.has(serviceName) && (
-                            <p className="home-womens-estimate">
-                              Contoh sementara · harga dan durasi perkiraan
-                            </p>
-                          )}
                           <div className="home-mens-service-meta">
                             <span className="home-mens-service-duration">
                               <Clock3 size={14} aria-hidden="true" />
@@ -1973,77 +1986,175 @@ function EventsCommunityPage() {
   );
 }
 
-const teamIllustrationCategories = [
+const teamMembers = [
   {
-    label: 'Grooming',
-    image: 'team-illustration-grooming.jpg',
-    alt: 'Ilustrasi AI kategori grooming di lingkungan studio rambut',
-    number: '01',
+    id: 'dimas',
+    name: 'Dimas Pratama',
+    role: 'Barber',
+    image: '/team/dimas-pratama.jpg',
+    note: 'Detail yang rapi dimulai dari mendengarkan. Dimas membantu menemukan potongan yang terasa pas untuk keseharianmu.',
   },
   {
-    label: 'Styling',
-    image: 'team-illustration-styling.jpg',
-    alt: 'Ilustrasi AI kategori styling di lingkungan studio rambut',
-    number: '02',
+    id: 'nadia',
+    name: 'Nadia Putri',
+    role: 'Hair Stylist',
+    image: '/team/nadia-putri.jpg',
+    note: 'Nadia percaya rambut terbaik adalah rambut yang terasa seperti dirimu—lebih ringan, lebih percaya diri, dan mudah dirawat.',
   },
   {
-    label: 'Hair care',
-    image: 'team-illustration-care.jpg',
-    alt: 'Ilustrasi AI kategori hair care di lingkungan studio rambut',
-    number: '03',
+    id: 'rizky',
+    name: 'Rizky Saputra',
+    role: 'Hair Care Specialist',
+    image: '/team/rizky-saputra.jpg',
+    note: 'Dengan pendekatan yang teliti, Rizky membantu menjaga rambut dan kulit kepala tetap sehat di setiap tahap perawatan.',
   },
 ];
 
 function OurTeamShowcase({ variant }: { variant: 'home' | 'page' }) {
   const isHome = variant === 'home';
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [userPaused, setUserPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [pageHidden, setPageHidden] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const touchStart = useRef<{ identifier: number; x: number; y: number } | null>(null);
+  const activeMember = teamMembers[activeIndex];
+  const isPlaying = !userPaused && !hovered && !focused && !pageHidden && !reducedMotion;
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const syncMotionPreference = () => setReducedMotion(motionPreference.matches);
+    const syncVisibility = () => setPageHidden(document.hidden);
+    syncMotionPreference();
+    syncVisibility();
+    motionPreference.addEventListener('change', syncMotionPreference);
+    document.addEventListener('visibilitychange', syncVisibility);
+    return () => {
+      motionPreference.removeEventListener('change', syncMotionPreference);
+      document.removeEventListener('visibilitychange', syncVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % teamMembers.length);
+    }, 5600);
+    return () => window.clearInterval(timer);
+  }, [isPlaying, activeIndex]);
+
+  const showMember = (index: number) => {
+    setActiveIndex((index + teamMembers.length) % teamMembers.length);
+  };
+
+  const handleTouchStart = (event: ReactTouchEvent<HTMLElement>) => {
+    if (event.touches.length !== 1) {
+      touchStart.current = null;
+      return;
+    }
+    const touch = event.touches.item(0);
+    touchStart.current = touch
+      ? { identifier: touch.identifier, x: touch.clientX, y: touch.clientY }
+      : null;
+  };
+
+  const handleTouchEnd = (event: ReactTouchEvent<HTMLElement>) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const touch = Array.from(event.changedTouches).find((item) => item.identifier === start.identifier);
+    if (!touch) return;
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 42 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+    showMember(activeIndex + (deltaX < 0 ? 1 : -1));
+  };
+
   return (
     <section
       className={`ggs-team-showcase${isHome ? ' ggs-team-showcase-home' : ' ggs-team-showcase-page'}`}
       aria-labelledby={isHome ? 'home-team-title' : 'our-team-title'}
-      data-testid={isHome ? 'section-home-our-team' : 'section-our-team-illustrations'}
+      data-testid={isHome ? 'section-home-our-team' : 'section-our-team'}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={() => { touchStart.current = null; }}
     >
       <div className="ggs-team-heading">
         <div className="ggs-team-heading-copy">
-          <p className="clearer-kicker">{isHome ? 'GGS / OUR TEAM' : 'ILUSTRASI / KATEGORI'}</p>
+          <p className="clearer-kicker">GGS / ORANG-ORANG DI BALIK KURSI</p>
           <h2 id={isHome ? 'home-team-title' : 'our-team-title'}>
-            {isHome ? <>Ruang untuk<br /><em>berkarya.</em></> : <>Kenali<br /><em>arah kami.</em></>}
+            {isHome ? <>Temui orang<br /><em>di balik gaya.</em></> : <>Kenali<br /><em>tim kami.</em></>}
           </h2>
         </div>
         <div className="ggs-team-intro">
           <p>
             {isHome
-              ? 'Setiap kebutuhan rambut punya pendekatannya sendiri. Lihat tiga kategori ilustratif yang menjadi inspirasi layanan di GGS.'
-              : 'Halaman ini memperlihatkan kategori layanan melalui ilustrasi editorial, bukan profil atau dokumentasi anggota tim.'}
-          </p>
-          <p className="ggs-team-ai-notice" role="note" data-testid="notice-team-ai-illustrations">
-            <Sparkles size={16} aria-hidden="true" />
-            <span><strong>Gambar adalah ilustrasi AI, bukan foto staf GGS yang sebenarnya.</strong> Figur di sini bersifat fiktif dan hanya mewakili kategori ilustratif.</span>
+              ? 'Percakapan yang baik, tangan yang terampil, dan perhatian pada setiap detail. Kenali para profesional yang akan merawat rambutmu.'
+              : 'Setiap kunjungan dimulai dengan mendengarkan. Kenali para profesional GGS yang siap membantu menemukan gaya dan perawatan yang tepat untukmu.'}
           </p>
         </div>
       </div>
-      <div className="ggs-team-grid" role="list" aria-label="Kategori ilustratif layanan GGS">
-        {teamIllustrationCategories.map((category) => (
-          <article className="ggs-team-card" role="listitem" key={category.number} data-testid={`card-team-category-${category.number}`}>
-            <div className="ggs-team-image">
-              <img
-                src={`${import.meta.env.BASE_URL}${category.image}`}
-                alt={category.alt}
-                loading="lazy"
-                data-testid={`img-team-illustration-${category.number}`}
-              />
-              <span className="ggs-team-image-tag">ILUSTRASI AI</span>
-              <span className="ggs-team-image-index" aria-hidden="true">{category.number}</span>
-            </div>
-            <div className="ggs-team-card-caption">
-              <span>KATEGORI ILUSTRATIF</span>
-              <h3>{category.label}</h3>
+      <div className="ggs-team-carousel" role="region" aria-roledescription="carousel" aria-label="Profil tim GGS">
+        <div className="ggs-team-slide" aria-live={isPlaying ? 'off' : 'polite'} aria-atomic="true" key={activeMember.id}>
+          <div className="ggs-team-image">
+            <img
+              src={`${import.meta.env.BASE_URL}${activeMember.image.replace(/^\//, '')}`}
+              alt={`Potret ${activeMember.name}, ${activeMember.role} di GGS Hair Studio`}
+              loading={activeIndex === 0 ? 'eager' : 'lazy'}
+              data-testid={`img-team-profile-${activeMember.id}`}
+            />
+          </div>
+          <article className="ggs-team-profile" data-testid={`card-team-profile-${activeMember.id}`}>
+            <p className="ggs-team-profile__eyebrow">KENALI TIM KAMI</p>
+            <h3>{activeMember.name}</h3>
+            <p className="ggs-team-profile__role">{activeMember.role}</p>
+            <div className="ggs-team-profile__rule" aria-hidden="true" />
+            <p className="ggs-team-profile__note">{activeMember.note}</p>
+            <Link href="/book" className="clearer-primary-button ggs-team-book-link" data-testid="link-team-booking">
+              Jadwalkan kunjungan <ArrowUpRight size={16} aria-hidden="true" />
+            </Link>
+            <div className="ggs-team-controls">
+              <div className="ggs-team-pagination" aria-label="Pilih anggota tim">
+                {teamMembers.map((member, index) => (
+                  <button
+                    type="button"
+                    key={member.id}
+                    aria-label={`Lihat profil ${member.name}`}
+                    aria-current={index === activeIndex ? 'true' : undefined}
+                    onClick={() => showMember(index)}
+                    data-testid={`button-team-slide-${member.id}`}
+                  />
+                ))}
+              </div>
+              <div className="ggs-team-control-actions">
+                <button
+                  type="button"
+                  className="ggs-team-play"
+                  aria-label={reducedMotion ? 'Putar otomatis dinonaktifkan karena preferensi gerakan' : userPaused ? 'Putar otomatis' : 'Jeda putar otomatis'}
+                  title={reducedMotion ? 'Putar otomatis dinonaktifkan karena preferensi gerakan' : undefined}
+                  aria-pressed={!userPaused && !reducedMotion}
+                  disabled={reducedMotion}
+                  onClick={() => setUserPaused((paused) => !paused)}
+                  data-testid="button-team-autoplay"
+                >{userPaused || reducedMotion ? <Play size={15} fill="currentColor" /> : <Pause size={15} />}</button>
+                <div className="ggs-team-arrows">
+                  <button type="button" aria-label="Profil sebelumnya" onClick={() => showMember(activeIndex - 1)} data-testid="button-team-previous"><ArrowLeft size={18} /></button>
+                  <button type="button" aria-label="Profil berikutnya" onClick={() => showMember(activeIndex + 1)} data-testid="button-team-next"><ArrowRight size={18} /></button>
+                </div>
+              </div>
             </div>
           </article>
-        ))}
+        </div>
       </div>
       {isHome && (
         <div className="ggs-team-footer">
-          <p>Ilustrasi ini tidak menggambarkan staf aktual maupun susunan tim.</p>
           <Link href="/our-team" className="ggs-team-link" data-testid="link-home-our-team">
             Selengkapnya tentang tim <ArrowRight size={16} aria-hidden="true" />
           </Link>
@@ -2051,7 +2162,7 @@ function OurTeamShowcase({ variant }: { variant: 'home' | 'page' }) {
       )}
       {!isHome && (
         <div className="ggs-team-page-note">
-          <p>Profil, nama, dan informasi anggota staf tidak ditampilkan di halaman ini.</p>
+          <p>Butuh bantuan memilih layanan? Ceritakan kebutuhan rambutmu saat membuat janji.</p>
           <Link href="/" className="clearer-text-link" data-testid="link-our-team-home">
             Kembali ke beranda <ArrowRight size={16} />
           </Link>
@@ -2064,9 +2175,7 @@ function OurTeamShowcase({ variant }: { variant: 'home' | 'page' }) {
 function OurTeamPage() {
   return (
     <PageFrame
-      kicker="GGS / OUR TEAM"
       title={<>Our<br /><em>Team.</em></>}
-      intro="Kategori ilustratif layanan dan pendekatan yang dapat dibicarakan sebelum janji."
       testId="page-our-team"
     >
       <OurTeamShowcase variant="page" />
@@ -2806,17 +2915,17 @@ function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductTo
 }
 
 function PageFrame({ kicker, title, intro, children, testId }: {
-  kicker: string;
+  kicker?: string;
   title: ReactNode;
-  intro: string;
+  intro?: string;
   children: ReactNode;
   testId: string;
 }) {
   return (
     <div className="inner-page" data-testid={testId}>
-      <section className="inner-page-hero">
-        <div><p className="clearer-kicker">{kicker}</p><h1>{title}</h1></div>
-        <p className="inner-page-intro">{intro}</p>
+      <section className={`inner-page-hero${intro ? '' : ' inner-page-hero--without-intro'}`}>
+        <div>{kicker && <p className="clearer-kicker">{kicker}</p>}<h1>{title}</h1></div>
+        {intro && <p className="inner-page-intro">{intro}</p>}
         <span className="inner-page-stamp">GGS<br />STUDIO</span>
       </section>
       <div className="inner-page-content">{children}</div>
