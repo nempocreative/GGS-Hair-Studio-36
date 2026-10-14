@@ -269,8 +269,55 @@ export const GetGgsEmployeeAttendanceTodayResponse = zod.object({
 
 
 /**
+ * @summary Issue a short-lived QR challenge from inside the salon geofence
+ */
+export const createGgsEmployeeAttendanceChallengeBodyLatitudeMin = -90;
+export const createGgsEmployeeAttendanceChallengeBodyLatitudeMax = 90;
+
+export const createGgsEmployeeAttendanceChallengeBodyLongitudeMin = -180;
+export const createGgsEmployeeAttendanceChallengeBodyLongitudeMax = 180;
+
+export const createGgsEmployeeAttendanceChallengeBodyAccuracyMin = 0;
+export const createGgsEmployeeAttendanceChallengeBodyAccuracyMax = 1000;
+
+
+
+export const CreateGgsEmployeeAttendanceChallengeBody = zod.object({
+  "latitude": zod.number().min(createGgsEmployeeAttendanceChallengeBodyLatitudeMin).max(createGgsEmployeeAttendanceChallengeBodyLatitudeMax),
+  "longitude": zod.number().min(createGgsEmployeeAttendanceChallengeBodyLongitudeMin).max(createGgsEmployeeAttendanceChallengeBodyLongitudeMax),
+  "accuracy": zod.number().min(createGgsEmployeeAttendanceChallengeBodyAccuracyMin).max(createGgsEmployeeAttendanceChallengeBodyAccuracyMax)
+})
+
+export const CreateGgsEmployeeAttendanceChallengeResponse = zod.object({
+  "challengeToken": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Record the signed-in employee's check-in for today
  */
+export const checkInGgsEmployeeAttendanceBodyChallengeTokenMin = 32;
+export const checkInGgsEmployeeAttendanceBodyChallengeTokenMax = 128;
+
+export const checkInGgsEmployeeAttendanceBodyLatitudeMin = -90;
+export const checkInGgsEmployeeAttendanceBodyLatitudeMax = 90;
+
+export const checkInGgsEmployeeAttendanceBodyLongitudeMin = -180;
+export const checkInGgsEmployeeAttendanceBodyLongitudeMax = 180;
+
+export const checkInGgsEmployeeAttendanceBodyAccuracyMin = 0;
+export const checkInGgsEmployeeAttendanceBodyAccuracyMax = 1000;
+
+
+
+export const CheckInGgsEmployeeAttendanceBody = zod.object({
+  "challengeToken": zod.string().min(checkInGgsEmployeeAttendanceBodyChallengeTokenMin).max(checkInGgsEmployeeAttendanceBodyChallengeTokenMax),
+  "latitude": zod.number().min(checkInGgsEmployeeAttendanceBodyLatitudeMin).max(checkInGgsEmployeeAttendanceBodyLatitudeMax),
+  "longitude": zod.number().min(checkInGgsEmployeeAttendanceBodyLongitudeMin).max(checkInGgsEmployeeAttendanceBodyLongitudeMax),
+  "accuracy": zod.number().min(checkInGgsEmployeeAttendanceBodyAccuracyMin).max(checkInGgsEmployeeAttendanceBodyAccuracyMax)
+})
+
 export const checkInGgsEmployeeAttendanceResponseAttendanceDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
 
 
@@ -285,6 +332,27 @@ export const CheckInGgsEmployeeAttendanceResponse = zod.object({
 /**
  * @summary Record the signed-in employee's check-out for today
  */
+export const checkOutGgsEmployeeAttendanceBodyChallengeTokenMin = 32;
+export const checkOutGgsEmployeeAttendanceBodyChallengeTokenMax = 128;
+
+export const checkOutGgsEmployeeAttendanceBodyLatitudeMin = -90;
+export const checkOutGgsEmployeeAttendanceBodyLatitudeMax = 90;
+
+export const checkOutGgsEmployeeAttendanceBodyLongitudeMin = -180;
+export const checkOutGgsEmployeeAttendanceBodyLongitudeMax = 180;
+
+export const checkOutGgsEmployeeAttendanceBodyAccuracyMin = 0;
+export const checkOutGgsEmployeeAttendanceBodyAccuracyMax = 1000;
+
+
+
+export const CheckOutGgsEmployeeAttendanceBody = zod.object({
+  "challengeToken": zod.string().min(checkOutGgsEmployeeAttendanceBodyChallengeTokenMin).max(checkOutGgsEmployeeAttendanceBodyChallengeTokenMax),
+  "latitude": zod.number().min(checkOutGgsEmployeeAttendanceBodyLatitudeMin).max(checkOutGgsEmployeeAttendanceBodyLatitudeMax),
+  "longitude": zod.number().min(checkOutGgsEmployeeAttendanceBodyLongitudeMin).max(checkOutGgsEmployeeAttendanceBodyLongitudeMax),
+  "accuracy": zod.number().min(checkOutGgsEmployeeAttendanceBodyAccuracyMin).max(checkOutGgsEmployeeAttendanceBodyAccuracyMax)
+})
+
 export const checkOutGgsEmployeeAttendanceResponseAttendanceDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
 
 

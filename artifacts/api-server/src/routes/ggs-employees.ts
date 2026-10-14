@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { and, asc, eq, gt, isNull } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, lt } from "drizzle-orm";
 import {
   Router,
   type IRouter,
@@ -7,13 +7,17 @@ import {
   type Response,
 } from "express";
 import {
+  CheckInGgsEmployeeAttendanceBody,
   CreateGgsAdminEmployeeBody,
   CreateGgsAdminEmployeeResponse,
+  CreateGgsEmployeeAttendanceChallengeBody,
+  CreateGgsEmployeeAttendanceChallengeResponse,
   GetGgsAdminEmployeesResponse,
   GetGgsEmployeeAttendanceTodayResponse,
   GetGgsEmployeeBookingsResponse,
   GetGgsEmployeeSessionResponse,
   CheckInGgsEmployeeAttendanceResponse,
+  CheckOutGgsEmployeeAttendanceBody,
   CheckOutGgsEmployeeAttendanceResponse,
   LoginGgsEmployeeBody,
   LoginGgsEmployeeResponse,
@@ -25,6 +29,8 @@ import {
   db,
   ggsAppointmentsTable,
   ggsEmployeeAccountsTable,
+  ggsEmployeeAttendanceChallengeUsesTable,
+  ggsEmployeeAttendanceChallengesTable,
   ggsEmployeeAttendanceTable,
   ggsEmployeeSessionsTable,
 } from "@workspace/db";
@@ -42,6 +48,55 @@ const employeeSessionMaxAgeMs = 1000 * 60 * 60 * 12;
 const attemptWindowMs = 15 * 60 * 1000;
 const attemptLimit = 10;
 const loginAttempts = new Map<string, { count: number; expiresAt: number }>();
+const attendanceSalonLocation = {
+  latitude: -7.20282,
+  longitude: 107.8898963,
+  radiusMeters: 100,
+  maxAccuracyMeters: 100,
+};
+const attendanceChallengeLifetimeMs = 45_000;
+
+class AttendanceMutationFailure extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+type AttendanceLocation = {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+};
+
+function distanceToSalonMeters(latitude: number, longitude: number) {
+  const radians = (degrees: number) => (degrees * Math.PI) / 180;
+  const earthRadiusMeters = 6_371_000;
+  const latitudeDelta = radians(latitude - attendanceSalonLocation.latitude);
+  const longitudeDelta = radians(longitude - attendanceSalonLocation.longitude);
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(radians(attendanceSalonLocation.latitude)) *
+      Math.cos(radians(latitude)) *
+      Math.sin(longitudeDelta / 2) ** 2;
+  return (
+    earthRadiusMeters *
+    2 *
+    Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine))
+  );
+}
+
+function attendanceLocationFailure(location: AttendanceLocation): string | null {
+  if (location.accuracy > attendanceSalonLocation.maxAccuracyMeters) {
+    return "Akurasi GPS belum cukup. Aktifkan lokasi presisi lalu coba lagi.";
+  }
+  if (
+    distanceToSalonMeters(location.latitude, location.longitude) >
+    attendanceSalonLocation.radiusMeters
+  ) {
+    return "Absensi hanya dapat dilakukan di area salon.";
+  }
+  return null;
+}
 
 type EmployeeRecord = {
   id: string;
@@ -305,6 +360,48 @@ router.get(
 );
 
 router.post(
+  "/ggs/employee/attendance/qr",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const parsed = CreateGgsEmployeeAttendanceChallengeBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const locationError = attendanceLocationFailure(parsed.data);
+    if (locationError) {
+      res.status(403).json({ error: locationError });
+      return;
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + attendanceChallengeLifetimeMs);
+    const challengeToken = randomBytes(32).toString("base64url");
+    await db
+      .delete(ggsEmployeeAttendanceChallengesTable)
+      .where(lt(ggsEmployeeAttendanceChallengesTable.expiresAt, now));
+    await db.insert(ggsEmployeeAttendanceChallengesTable).values({
+      tokenHash: hashSessionToken(challengeToken),
+      createdByEmployeeId: employee.id,
+      expiresAt,
+    });
+
+    res.status(201).json(
+      CreateGgsEmployeeAttendanceChallengeResponse.parse({
+        challengeToken,
+        expiresAt: expiresAt.toISOString(),
+      }),
+    );
+  },
+);
+
+router.post(
   "/ggs/employee/attendance/check-in",
   async (req, res): Promise<void> => {
     const employee = await getEmployeeForSession(req, res);
@@ -313,26 +410,94 @@ router.post(
       return;
     }
 
+    const parsed = CheckInGgsEmployeeAttendanceBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const locationError = attendanceLocationFailure(parsed.data);
+    if (locationError) {
+      res.status(403).json({ error: locationError });
+      return;
+    }
+
     const attendanceDate = jakartaAttendanceDate();
     const checkedInAt = new Date();
-    const [attendance] = await db
-      .insert(ggsEmployeeAttendanceTable)
-      .values({
-        employeeId: employee.id,
-        attendanceDate,
-        checkInAt: checkedInAt,
-      })
-      .onConflictDoNothing({
-        target: [
-          ggsEmployeeAttendanceTable.employeeId,
-          ggsEmployeeAttendanceTable.attendanceDate,
-        ],
-      })
-      .returning();
+    let attendance: typeof ggsEmployeeAttendanceTable.$inferSelect;
+    try {
+      attendance = await db.transaction(async (tx) => {
+        const [challenge] = await tx
+          .select()
+          .from(ggsEmployeeAttendanceChallengesTable)
+          .where(
+            eq(
+              ggsEmployeeAttendanceChallengesTable.tokenHash,
+              hashSessionToken(parsed.data.challengeToken),
+            ),
+          )
+          .limit(1);
+        if (!challenge || challenge.expiresAt.getTime() <= checkedInAt.getTime()) {
+          throw new AttendanceMutationFailure(
+            "QR absensi tidak valid atau sudah kedaluwarsa.",
+          );
+        }
 
-    if (!attendance) {
-      res.status(409).json({ error: "Anda sudah absen masuk hari ini." });
-      return;
+        const [existingAttendance] = await tx
+          .select({ id: ggsEmployeeAttendanceTable.id })
+          .from(ggsEmployeeAttendanceTable)
+          .where(
+            and(
+              eq(ggsEmployeeAttendanceTable.employeeId, employee.id),
+              eq(ggsEmployeeAttendanceTable.attendanceDate, attendanceDate),
+            ),
+          )
+          .limit(1);
+        if (existingAttendance) {
+          throw new AttendanceMutationFailure("Anda sudah absen masuk hari ini.");
+        }
+
+        const [challengeUse] = await tx
+          .insert(ggsEmployeeAttendanceChallengeUsesTable)
+          .values({ challengeId: challenge.id, employeeId: employee.id })
+          .onConflictDoNothing({
+            target: [
+              ggsEmployeeAttendanceChallengeUsesTable.challengeId,
+              ggsEmployeeAttendanceChallengeUsesTable.employeeId,
+            ],
+          })
+          .returning({ id: ggsEmployeeAttendanceChallengeUsesTable.id });
+        if (!challengeUse) {
+          throw new AttendanceMutationFailure(
+            "QR ini sudah digunakan untuk absensi Anda. Muat QR terbaru.",
+          );
+        }
+
+        const [createdAttendance] = await tx
+          .insert(ggsEmployeeAttendanceTable)
+          .values({
+            employeeId: employee.id,
+            attendanceDate,
+            checkInAt: checkedInAt,
+          })
+          .onConflictDoNothing({
+            target: [
+              ggsEmployeeAttendanceTable.employeeId,
+              ggsEmployeeAttendanceTable.attendanceDate,
+            ],
+          })
+          .returning();
+        if (!createdAttendance) {
+          throw new AttendanceMutationFailure("Anda sudah absen masuk hari ini.");
+        }
+        return createdAttendance;
+      });
+    } catch (error) {
+      if (error instanceof AttendanceMutationFailure) {
+        res.status(409).json({ error: error.message });
+        return;
+      }
+      throw error;
     }
 
     res.status(201).json(
@@ -352,41 +517,95 @@ router.post(
       return;
     }
 
+    const parsed = CheckOutGgsEmployeeAttendanceBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const locationError = attendanceLocationFailure(parsed.data);
+    if (locationError) {
+      res.status(403).json({ error: locationError });
+      return;
+    }
+
     const attendanceDate = jakartaAttendanceDate();
-    const [existingAttendance] = await db
-      .select()
-      .from(ggsEmployeeAttendanceTable)
-      .where(
-        and(
-          eq(ggsEmployeeAttendanceTable.employeeId, employee.id),
-          eq(ggsEmployeeAttendanceTable.attendanceDate, attendanceDate),
-        ),
-      )
-      .limit(1);
+    const checkedOutAt = new Date();
+    let attendance: typeof ggsEmployeeAttendanceTable.$inferSelect;
+    try {
+      attendance = await db.transaction(async (tx) => {
+        const [challenge] = await tx
+          .select()
+          .from(ggsEmployeeAttendanceChallengesTable)
+          .where(
+            eq(
+              ggsEmployeeAttendanceChallengesTable.tokenHash,
+              hashSessionToken(parsed.data.challengeToken),
+            ),
+          )
+          .limit(1);
+        if (!challenge || challenge.expiresAt.getTime() <= checkedOutAt.getTime()) {
+          throw new AttendanceMutationFailure(
+            "QR absensi tidak valid atau sudah kedaluwarsa.",
+          );
+        }
 
-    if (!existingAttendance) {
-      res.status(409).json({ error: "Absen masuk terlebih dahulu." });
-      return;
-    }
-    if (existingAttendance.checkOutAt) {
-      res.status(409).json({ error: "Anda sudah absen pulang hari ini." });
-      return;
-    }
+        const [existingAttendance] = await tx
+          .select()
+          .from(ggsEmployeeAttendanceTable)
+          .where(
+            and(
+              eq(ggsEmployeeAttendanceTable.employeeId, employee.id),
+              eq(ggsEmployeeAttendanceTable.attendanceDate, attendanceDate),
+            ),
+          )
+          .limit(1);
+        if (!existingAttendance) {
+          throw new AttendanceMutationFailure("Absen masuk terlebih dahulu.");
+        }
+        if (existingAttendance.checkOutAt) {
+          throw new AttendanceMutationFailure("Anda sudah absen pulang hari ini.");
+        }
 
-    const [attendance] = await db
-      .update(ggsEmployeeAttendanceTable)
-      .set({ checkOutAt: new Date() })
-      .where(
-        and(
-          eq(ggsEmployeeAttendanceTable.id, existingAttendance.id),
-          isNull(ggsEmployeeAttendanceTable.checkOutAt),
-        ),
-      )
-      .returning();
+        const [challengeUse] = await tx
+          .insert(ggsEmployeeAttendanceChallengeUsesTable)
+          .values({ challengeId: challenge.id, employeeId: employee.id })
+          .onConflictDoNothing({
+            target: [
+              ggsEmployeeAttendanceChallengeUsesTable.challengeId,
+              ggsEmployeeAttendanceChallengeUsesTable.employeeId,
+            ],
+          })
+          .returning({ id: ggsEmployeeAttendanceChallengeUsesTable.id });
+        if (!challengeUse) {
+          throw new AttendanceMutationFailure(
+            "QR ini sudah digunakan untuk absensi Anda. Muat QR terbaru.",
+          );
+        }
 
-    if (!attendance) {
-      res.status(409).json({ error: "Absensi sudah diperbarui. Muat ulang halaman." });
-      return;
+        const [updatedAttendance] = await tx
+          .update(ggsEmployeeAttendanceTable)
+          .set({ checkOutAt: checkedOutAt })
+          .where(
+            and(
+              eq(ggsEmployeeAttendanceTable.id, existingAttendance.id),
+              isNull(ggsEmployeeAttendanceTable.checkOutAt),
+            ),
+          )
+          .returning();
+        if (!updatedAttendance) {
+          throw new AttendanceMutationFailure(
+            "Absensi sudah diperbarui. Muat ulang halaman.",
+          );
+        }
+        return updatedAttendance;
+      });
+    } catch (error) {
+      if (error instanceof AttendanceMutationFailure) {
+        res.status(409).json({ error: error.message });
+        return;
+      }
+      throw error;
     }
 
     res.json(

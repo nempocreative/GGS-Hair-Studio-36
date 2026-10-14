@@ -252,11 +252,41 @@ paths:
                 $ref: "#/components/schemas/GgsEmployeeAttendanceStatus"
         "401":
           description: No active employee session
+  /ggs/employee/attendance/qr:
+    post:
+      operationId: createGgsEmployeeAttendanceChallenge
+      tags: [ggs-employee]
+      summary: Issue a short-lived QR challenge from inside the salon geofence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeeAttendanceLocationInput"
+      responses:
+        "201":
+          description: Short-lived attendance QR challenge
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeAttendanceChallenge"
+        "400":
+          description: Invalid location reading
+        "401":
+          description: No active employee session
+        "403":
+          description: QR display device is outside the salon geofence
   /ggs/employee/attendance/check-in:
     post:
       operationId: checkInGgsEmployeeAttendance
       tags: [ggs-employee]
       summary: Record the signed-in employee's check-in for today
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeeAttendanceActionInput"
       responses:
         "201":
           description: Check-in recorded
@@ -266,13 +296,21 @@ paths:
                 $ref: "#/components/schemas/GgsEmployeeAttendanceStatus"
         "401":
           description: No active employee session
+        "403":
+          description: Employee location is outside the salon geofence or too inaccurate
         "409":
-          description: The employee already checked in today
+          description: QR challenge is invalid, expired, or already used, or the employee already checked in
   /ggs/employee/attendance/check-out:
     post:
       operationId: checkOutGgsEmployeeAttendance
       tags: [ggs-employee]
       summary: Record the signed-in employee's check-out for today
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeeAttendanceActionInput"
       responses:
         "200":
           description: Check-out recorded
@@ -282,8 +320,10 @@ paths:
                 $ref: "#/components/schemas/GgsEmployeeAttendanceStatus"
         "401":
           description: No active employee session
+        "403":
+          description: Employee location is outside the salon geofence or too inaccurate
         "409":
-          description: The employee must check in first or has already checked out
+          description: QR challenge is invalid, expired, or already used, or the employee must check in first
   /ggs/admin/employees:
     get:
       operationId: getGgsAdminEmployees
@@ -843,6 +883,51 @@ components:
         - status
         - checkInAt
         - checkOutAt
+    GgsEmployeeAttendanceLocationInput:
+      type: object
+      properties:
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+        accuracy:
+          type: number
+          minimum: 0
+          maximum: 1000
+      required: [latitude, longitude, accuracy]
+    GgsEmployeeAttendanceChallenge:
+      type: object
+      properties:
+        challengeToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+      required: [challengeToken, expiresAt]
+    GgsEmployeeAttendanceActionInput:
+      type: object
+      properties:
+        challengeToken:
+          type: string
+          minLength: 32
+          maxLength: 128
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+        accuracy:
+          type: number
+          minimum: 0
+          maximum: 1000
+      required: [challengeToken, latitude, longitude, accuracy]
     GgsSiteContent:
       type: object
       properties:

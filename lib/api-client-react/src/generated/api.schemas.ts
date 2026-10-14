@@ -175,6 +175,52 @@ export interface GgsEmployeeAttendanceStatus {
   checkOutAt: string | null;
 }
 
+export interface GgsEmployeeAttendanceLocationInput {
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude: number;
+  /**
+     * @minimum 0
+     * @maximum 1000
+     */
+  accuracy: number;
+}
+
+export interface GgsEmployeeAttendanceChallenge {
+  challengeToken: string;
+  expiresAt: string;
+}
+
+export interface GgsEmployeeAttendanceActionInput {
+  /**
+     * @minLength 32
+     * @maxLength 128
+     */
+  challengeToken: string;
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude: number;
+  /**
+     * @minimum 0
+     * @maximum 1000
+     */
+  accuracy: number;
+}
+
 export interface GgsSiteContent {
   brandName: string;
   tagline: string;

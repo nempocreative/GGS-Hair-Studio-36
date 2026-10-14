@@ -30,6 +30,9 @@ import type {
   GgsEmployeeAccount,
   GgsEmployeeAccountInput,
   GgsEmployeeAccountUpdate,
+  GgsEmployeeAttendanceActionInput,
+  GgsEmployeeAttendanceChallenge,
+  GgsEmployeeAttendanceLocationInput,
   GgsEmployeeAttendanceStatus,
   GgsEmployeeBooking,
   GgsEmployeeLoginInput,
@@ -1266,6 +1269,94 @@ export function useGetGgsEmployeeAttendanceToday<TData = Awaited<ReturnType<type
 
 
 
+export const getCreateGgsEmployeeAttendanceChallengeUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/attendance/qr`
+}
+
+/**
+ * @summary Issue a short-lived QR challenge from inside the salon geofence
+ */
+export const createGgsEmployeeAttendanceChallenge = async (ggsEmployeeAttendanceLocationInput: GgsEmployeeAttendanceLocationInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAttendanceChallenge> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsEmployeeAttendanceChallenge>(getCreateGgsEmployeeAttendanceChallengeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsEmployeeAttendanceLocationInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGgsEmployeeAttendanceChallengeMutationKey = () => ['createGgsEmployeeAttendanceChallenge'] as const;
+
+export const getCreateGgsEmployeeAttendanceChallengeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsEmployeeAttendanceChallenge>>, TError,CreateGgsEmployeeAttendanceChallengeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGgsEmployeeAttendanceChallenge>>, TError,CreateGgsEmployeeAttendanceChallengeMutationVariables, TContext> => {
+
+const mutationKey = getCreateGgsEmployeeAttendanceChallengeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGgsEmployeeAttendanceChallenge>>, CreateGgsEmployeeAttendanceChallengeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGgsEmployeeAttendanceChallenge(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGgsEmployeeAttendanceChallengeMutationResult = NonNullable<Awaited<ReturnType<typeof createGgsEmployeeAttendanceChallenge>>>
+    export type CreateGgsEmployeeAttendanceChallengeMutationBody = BodyType<GgsEmployeeAttendanceLocationInput>
+    export type CreateGgsEmployeeAttendanceChallengeMutationError = ErrorType<void>
+    export type CreateGgsEmployeeAttendanceChallengeMutationVariables = {data: BodyType<GgsEmployeeAttendanceLocationInput>}
+
+    /**
+ * @summary Issue a short-lived QR challenge from inside the salon geofence
+ */
+export const useCreateGgsEmployeeAttendanceChallenge = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsEmployeeAttendanceChallenge>>, TError,CreateGgsEmployeeAttendanceChallengeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGgsEmployeeAttendanceChallenge>>,
+        TError,
+        CreateGgsEmployeeAttendanceChallengeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGgsEmployeeAttendanceChallengeMutationOptions(options));
+    }
+
 export const getCheckInGgsEmployeeAttendanceUrl = () => {
 
 
@@ -1277,14 +1368,28 @@ export const getCheckInGgsEmployeeAttendanceUrl = () => {
 /**
  * @summary Record the signed-in employee's check-in for today
  */
-export const checkInGgsEmployeeAttendance = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAttendanceStatus> => {
+export const checkInGgsEmployeeAttendance = async (ggsEmployeeAttendanceActionInput: GgsEmployeeAttendanceActionInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAttendanceStatus> => {
 
-  return customFetch<GgsEmployeeAttendanceStatus>(getCheckInGgsEmployeeAttendanceUrl(),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsEmployeeAttendanceStatus>(getCheckInGgsEmployeeAttendanceUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsEmployeeAttendanceActionInput)
   }
 );}
 
@@ -1295,8 +1400,8 @@ export const checkInGgsEmployeeAttendance = async ( options?: Parameters<typeof 
 export const getCheckInGgsEmployeeAttendanceMutationKey = () => ['checkInGgsEmployeeAttendance'] as const;
 
 export const getCheckInGgsEmployeeAttendanceMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, TError,CheckInGgsEmployeeAttendanceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, TError,CheckInGgsEmployeeAttendanceMutationVariables, TContext> => {
 
 const mutationKey = getCheckInGgsEmployeeAttendanceMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1308,10 +1413,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, CheckInGgsEmployeeAttendanceMutationVariables> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  checkInGgsEmployeeAttendance(requestOptions)
+          return  checkInGgsEmployeeAttendance(data,requestOptions)
         }
 
 
@@ -1322,19 +1427,19 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type CheckInGgsEmployeeAttendanceMutationResult = NonNullable<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>>
-
+    export type CheckInGgsEmployeeAttendanceMutationBody = BodyType<GgsEmployeeAttendanceActionInput>
     export type CheckInGgsEmployeeAttendanceMutationError = ErrorType<void>
-
+    export type CheckInGgsEmployeeAttendanceMutationVariables = {data: BodyType<GgsEmployeeAttendanceActionInput>}
 
     /**
  * @summary Record the signed-in employee's check-in for today
  */
 export const useCheckInGgsEmployeeAttendance = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, TError,CheckInGgsEmployeeAttendanceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>,
         TError,
-        void,
+        CheckInGgsEmployeeAttendanceMutationVariables,
         TContext
       > => {
       return useMutation(getCheckInGgsEmployeeAttendanceMutationOptions(options));
@@ -1351,14 +1456,28 @@ export const getCheckOutGgsEmployeeAttendanceUrl = () => {
 /**
  * @summary Record the signed-in employee's check-out for today
  */
-export const checkOutGgsEmployeeAttendance = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAttendanceStatus> => {
+export const checkOutGgsEmployeeAttendance = async (ggsEmployeeAttendanceActionInput: GgsEmployeeAttendanceActionInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAttendanceStatus> => {
 
-  return customFetch<GgsEmployeeAttendanceStatus>(getCheckOutGgsEmployeeAttendanceUrl(),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsEmployeeAttendanceStatus>(getCheckOutGgsEmployeeAttendanceUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsEmployeeAttendanceActionInput)
   }
 );}
 
@@ -1369,8 +1488,8 @@ export const checkOutGgsEmployeeAttendance = async ( options?: Parameters<typeof
 export const getCheckOutGgsEmployeeAttendanceMutationKey = () => ['checkOutGgsEmployeeAttendance'] as const;
 
 export const getCheckOutGgsEmployeeAttendanceMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, TError,CheckOutGgsEmployeeAttendanceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, TError,CheckOutGgsEmployeeAttendanceMutationVariables, TContext> => {
 
 const mutationKey = getCheckOutGgsEmployeeAttendanceMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1382,10 +1501,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, CheckOutGgsEmployeeAttendanceMutationVariables> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  checkOutGgsEmployeeAttendance(requestOptions)
+          return  checkOutGgsEmployeeAttendance(data,requestOptions)
         }
 
 
@@ -1396,19 +1515,19 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type CheckOutGgsEmployeeAttendanceMutationResult = NonNullable<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>>
-
+    export type CheckOutGgsEmployeeAttendanceMutationBody = BodyType<GgsEmployeeAttendanceActionInput>
     export type CheckOutGgsEmployeeAttendanceMutationError = ErrorType<void>
-
+    export type CheckOutGgsEmployeeAttendanceMutationVariables = {data: BodyType<GgsEmployeeAttendanceActionInput>}
 
     /**
  * @summary Record the signed-in employee's check-out for today
  */
 export const useCheckOutGgsEmployeeAttendance = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, TError,CheckOutGgsEmployeeAttendanceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>,
         TError,
-        void,
+        CheckOutGgsEmployeeAttendanceMutationVariables,
         TContext
       > => {
       return useMutation(getCheckOutGgsEmployeeAttendanceMutationOptions(options));
