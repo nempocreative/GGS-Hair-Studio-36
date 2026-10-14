@@ -1768,6 +1768,8 @@
   transform-origin: center bottom;
 }
 .ggs-quick-menu-avatar-photo { object-fit: contain; transform: none; transform-origin: center; }
+.ggs-quick-menu-item.ggs-menu-home .ggs-quick-menu-icon,
+.ggs-quick-menu-item.ggs-menu-self-care .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-mens .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-womens .ggs-quick-menu-icon {
   overflow: visible;
@@ -1786,7 +1788,11 @@
 .ggs-quick-menu-item.ggs-menu-mens:hover .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-mens:focus-visible .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-womens:hover .ggs-quick-menu-icon,
-.ggs-quick-menu-item.ggs-menu-womens:focus-visible .ggs-quick-menu-icon { box-shadow: none; }
+.ggs-quick-menu-item.ggs-menu-womens:focus-visible .ggs-quick-menu-icon,
+.ggs-quick-menu-item.ggs-menu-home:hover .ggs-quick-menu-icon,
+.ggs-quick-menu-item.ggs-menu-home:focus-visible .ggs-quick-menu-icon,
+.ggs-quick-menu-item.ggs-menu-self-care:hover .ggs-quick-menu-icon,
+.ggs-quick-menu-item.ggs-menu-self-care:focus-visible .ggs-quick-menu-icon { box-shadow: none; }
 .quick-tone-rose { --quick-icon-edge: #74352e; background: linear-gradient(145deg, #d89a8e 0%, #bd7167 52%, #913f37 100%); }
 .quick-tone-violet { --quick-icon-edge: #58415f; background: linear-gradient(145deg, #c0a0c0 0%, #9b779d 52%, #705477 100%); }
 .quick-tone-gold { --quick-icon-edge: #8b5d2c; background: linear-gradient(145deg, #f0d08a 0%, #d4a454 52%, #a87436 100%); }

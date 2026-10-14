@@ -15,6 +15,18 @@ Use illustrated people for homepage shortcuts with varied hairstyles, except for
 
 **How to apply:** Show the supplied Men's and Women's Grooming images as-is with no additional icon, background tile, or crop; vary illustrated hairstyles across the other shortcuts. Preserve their tile colors, the four-column/eight-per-slide layout, dot navigation, and background-free shortcut links.
 
+Show the supplied Beranda home-avatar image directly, without an added colored tile or shape, matching the clean treatment used for Men's and Women's Grooming.
+
+**Why:** The user explicitly asked for the Beranda icon to be clean and without a shape, like the Men's and Women's icons.
+
+**How to apply:** Use the supplied Beranda image as-is on the homepage shortcut; do not add a colored shape or tile behind it.
+
+Show the supplied Hair & Self Care skincare avatar directly, without an added outer tile or shape.
+
+**Why:** The user explicitly asked not to put an outer shape behind the Hair & Self Care icon.
+
+**How to apply:** Use the supplied Hair & Self Care image as-is, with its transparent background and no added colored tile.
+
 Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
 **Why:** The user specifically clarified that the person icon's body should visually connect to its tile.
