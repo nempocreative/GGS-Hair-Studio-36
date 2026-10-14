@@ -33,6 +33,12 @@ Show the supplied Galeri Gaya avatar directly, without an added outer tile or sh
 
 **How to apply:** Use the supplied Galeri Gaya image as-is on the homepage shortcut, preserving transparency and adding no colored tile.
 
+Show the supplied Booking avatar directly, without an added outer tile or shape.
+
+**Why:** The user asked for the Booking icon to follow the other supplied menu icons and not use a shape.
+
+**How to apply:** Use the supplied Booking image as-is on the homepage shortcut, preserving its transparency and adding no colored tile.
+
 Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
 **Why:** The user specifically clarified that the person icon's body should visually connect to its tile.
