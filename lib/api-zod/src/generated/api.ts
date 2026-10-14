@@ -239,6 +239,41 @@ export const LogoutGgsEmployeeResponse = zod.void()
 
 
 /**
+ * @summary Get the signed-in employee's cashier access
+ */
+export const GetGgsEmployeeCashierSessionResponse = zod.object({
+  "active": zod.boolean(),
+  "register": zod.union([zod.literal('ggs_beauty'),zod.literal('barber_ggs'),zod.literal(null)]).nullable(),
+  "expiresAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Unlock one cashier register with its password
+ */
+export const unlockGgsEmployeeCashierBodyPasswordMin = 8;
+export const unlockGgsEmployeeCashierBodyPasswordMax = 128;
+
+
+
+export const UnlockGgsEmployeeCashierBody = zod.object({
+  "register": zod.enum(['ggs_beauty', 'barber_ggs']),
+  "password": zod.string().min(unlockGgsEmployeeCashierBodyPasswordMin).max(unlockGgsEmployeeCashierBodyPasswordMax)
+})
+
+export const UnlockGgsEmployeeCashierResponse = zod.object({
+  "register": zod.enum(['ggs_beauty', 'barber_ggs']),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Lock the currently unlocked cashier register
+ */
+export const LogoutGgsEmployeeCashierResponse = zod.void()
+
+
+/**
  * @summary List bookings visible to a signed-in employee
  */
 export const GetGgsEmployeeBookingsResponseItem = zod.object({

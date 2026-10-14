@@ -83,6 +83,47 @@ export interface GgsEmployeeAccount {
   createdAt: string;
 }
 
+export type GgsEmployeeCashierRegister = typeof GgsEmployeeCashierRegister[keyof typeof GgsEmployeeCashierRegister];
+
+
+export const GgsEmployeeCashierRegister = {
+  ggs_beauty: 'ggs_beauty',
+  barber_ggs: 'barber_ggs',
+} as const;
+
+/**
+ * @nullable
+ */
+export type GgsEmployeeCashierSessionRegister = typeof GgsEmployeeCashierSessionRegister[keyof typeof GgsEmployeeCashierSessionRegister] | null;
+
+
+export const GgsEmployeeCashierSessionRegister = {
+  ggs_beauty: 'ggs_beauty',
+  barber_ggs: 'barber_ggs',
+} as const;
+
+export interface GgsEmployeeCashierSession {
+  active: boolean;
+  /** @nullable */
+  register: GgsEmployeeCashierSessionRegister;
+  /** @nullable */
+  expiresAt: string | null;
+}
+
+export interface GgsEmployeeCashierAccessInput {
+  register: GgsEmployeeCashierRegister;
+  /**
+     * @minLength 8
+     * @maxLength 128
+     */
+  password: string;
+}
+
+export interface GgsEmployeeCashierAccess {
+  register: GgsEmployeeCashierRegister;
+  expiresAt: string;
+}
+
 export interface GgsEmployeeLoginInput {
   /**
      * @minLength 2

@@ -222,6 +222,56 @@ paths:
       responses:
         "204":
           description: Signed out
+  /ggs/employee/cashier/session:
+    get:
+      operationId: getGgsEmployeeCashierSession
+      tags: [ggs-employee]
+      summary: Get the signed-in employee's cashier access
+      responses:
+        "200":
+          description: Cashier access status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeCashierSession"
+        "401":
+          description: No active employee session
+  /ggs/employee/cashier/access:
+    post:
+      operationId: unlockGgsEmployeeCashier
+      tags: [ggs-employee]
+      summary: Unlock one cashier register with its password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeeCashierAccessInput"
+      responses:
+        "200":
+          description: Cashier register unlocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeCashierAccess"
+        "400":
+          description: Invalid cashier access request
+        "401":
+          description: No active employee session
+        "403":
+          description: Cashier password is incorrect
+        "429":
+          description: Too many password attempts
+        "503":
+          description: Cashier password is not configured
+  /ggs/employee/cashier/logout:
+    post:
+      operationId: logoutGgsEmployeeCashier
+      tags: [ggs-employee]
+      summary: Lock the currently unlocked cashier register
+      responses:
+        "204":
+          description: Cashier register locked
   /ggs/employee/bookings:
     get:
       operationId: getGgsEmployeeBookings
@@ -796,6 +846,47 @@ components:
         - name
         - active
         - createdAt
+    GgsEmployeeCashierRegister:
+      type: string
+      enum: [ggs_beauty, barber_ggs]
+    GgsEmployeeCashierSession:
+      type: object
+      properties:
+        active:
+          type: boolean
+        register:
+          type: [string, "null"]
+          enum: [ggs_beauty, barber_ggs, null]
+        expiresAt:
+          type: [string, "null"]
+          format: date-time
+      required:
+        - active
+        - register
+        - expiresAt
+    GgsEmployeeCashierAccessInput:
+      type: object
+      properties:
+        register:
+          $ref: "#/components/schemas/GgsEmployeeCashierRegister"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+        - register
+        - password
+    GgsEmployeeCashierAccess:
+      type: object
+      properties:
+        register:
+          $ref: "#/components/schemas/GgsEmployeeCashierRegister"
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - register
+        - expiresAt
     GgsEmployeeLoginInput:
       type: object
       properties:

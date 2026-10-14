@@ -35,6 +35,9 @@ import type {
   GgsEmployeeAttendanceLocationInput,
   GgsEmployeeAttendanceStatus,
   GgsEmployeeBooking,
+  GgsEmployeeCashierAccess,
+  GgsEmployeeCashierAccessInput,
+  GgsEmployeeCashierSession,
   GgsEmployeeLoginInput,
   GgsProduct,
   GgsProductInput,
@@ -1113,6 +1116,245 @@ export const useLogoutGgsEmployee = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getLogoutGgsEmployeeMutationOptions(options));
+    }
+
+export const getGetGgsEmployeeCashierSessionUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/cashier/session`
+}
+
+/**
+ * @summary Get the signed-in employee's cashier access
+ */
+export const getGgsEmployeeCashierSession = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeCashierSession> => {
+
+  return customFetch<GgsEmployeeCashierSession>(getGetGgsEmployeeCashierSessionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeCashierSessionQueryKey = () => {
+    return [
+    `/api/ggs/employee/cashier/session`
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeCashierSessionQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeCashierSession>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeCashierSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeCashierSession>>> = ({ signal }) => getGgsEmployeeCashierSession({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeCashierSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeCashierSession>>>
+export type GetGgsEmployeeCashierSessionQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the signed-in employee's cashier access
+ */
+
+export function useGetGgsEmployeeCashierSession<TData = Awaited<ReturnType<typeof getGgsEmployeeCashierSession>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeCashierSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUnlockGgsEmployeeCashierUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/cashier/access`
+}
+
+/**
+ * @summary Unlock one cashier register with its password
+ */
+export const unlockGgsEmployeeCashier = async (ggsEmployeeCashierAccessInput: GgsEmployeeCashierAccessInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeCashierAccess> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsEmployeeCashierAccess>(getUnlockGgsEmployeeCashierUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsEmployeeCashierAccessInput)
+  }
+);}
+
+
+
+
+
+export const getUnlockGgsEmployeeCashierMutationKey = () => ['unlockGgsEmployeeCashier'] as const;
+
+export const getUnlockGgsEmployeeCashierMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockGgsEmployeeCashier>>, TError,UnlockGgsEmployeeCashierMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unlockGgsEmployeeCashier>>, TError,UnlockGgsEmployeeCashierMutationVariables, TContext> => {
+
+const mutationKey = getUnlockGgsEmployeeCashierMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unlockGgsEmployeeCashier>>, UnlockGgsEmployeeCashierMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  unlockGgsEmployeeCashier(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnlockGgsEmployeeCashierMutationResult = NonNullable<Awaited<ReturnType<typeof unlockGgsEmployeeCashier>>>
+    export type UnlockGgsEmployeeCashierMutationBody = BodyType<GgsEmployeeCashierAccessInput>
+    export type UnlockGgsEmployeeCashierMutationError = ErrorType<void>
+    export type UnlockGgsEmployeeCashierMutationVariables = {data: BodyType<GgsEmployeeCashierAccessInput>}
+
+    /**
+ * @summary Unlock one cashier register with its password
+ */
+export const useUnlockGgsEmployeeCashier = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockGgsEmployeeCashier>>, TError,UnlockGgsEmployeeCashierMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unlockGgsEmployeeCashier>>,
+        TError,
+        UnlockGgsEmployeeCashierMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnlockGgsEmployeeCashierMutationOptions(options));
+    }
+
+export const getLogoutGgsEmployeeCashierUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/cashier/logout`
+}
+
+/**
+ * @summary Lock the currently unlocked cashier register
+ */
+export const logoutGgsEmployeeCashier = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getLogoutGgsEmployeeCashierUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getLogoutGgsEmployeeCashierMutationKey = () => ['logoutGgsEmployeeCashier'] as const;
+
+export const getLogoutGgsEmployeeCashierMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutGgsEmployeeCashier>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logoutGgsEmployeeCashier>>, TError,void, TContext> => {
+
+const mutationKey = getLogoutGgsEmployeeCashierMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutGgsEmployeeCashier>>, void> = () => {
+
+
+          return  logoutGgsEmployeeCashier(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutGgsEmployeeCashierMutationResult = NonNullable<Awaited<ReturnType<typeof logoutGgsEmployeeCashier>>>
+
+    export type LogoutGgsEmployeeCashierMutationError = ErrorType<unknown>
+
+
+    /**
+ * @summary Lock the currently unlocked cashier register
+ */
+export const useLogoutGgsEmployeeCashier = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutGgsEmployeeCashier>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof logoutGgsEmployeeCashier>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutGgsEmployeeCashierMutationOptions(options));
     }
 
 export const getGetGgsEmployeeBookingsUrl = () => {
