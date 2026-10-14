@@ -269,6 +269,21 @@ export const GetGgsEmployeeAttendanceTodayResponse = zod.object({
 
 
 /**
+ * @summary Get the signed-in employee's recent attendance history
+ */
+export const getGgsEmployeeAttendanceHistoryResponseAttendanceDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const GetGgsEmployeeAttendanceHistoryResponseItem = zod.object({
+  "attendanceDate": zod.string().regex(getGgsEmployeeAttendanceHistoryResponseAttendanceDateRegExp),
+  "status": zod.enum(['not_started', 'checked_in', 'checked_out']),
+  "checkInAt": zod.coerce.date().nullable(),
+  "checkOutAt": zod.coerce.date().nullable()
+})
+export const GetGgsEmployeeAttendanceHistoryResponse = zod.array(GetGgsEmployeeAttendanceHistoryResponseItem)
+
+
+/**
  * @summary Issue a short-lived QR challenge from inside the salon geofence
  */
 export const createGgsEmployeeAttendanceChallengeBodyLatitudeMin = -90;

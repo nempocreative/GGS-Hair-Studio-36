@@ -1269,6 +1269,83 @@ export function useGetGgsEmployeeAttendanceToday<TData = Awaited<ReturnType<type
 
 
 
+export const getGetGgsEmployeeAttendanceHistoryUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/attendance/history`
+}
+
+/**
+ * @summary Get the signed-in employee's recent attendance history
+ */
+export const getGgsEmployeeAttendanceHistory = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAttendanceStatus[]> => {
+
+  return customFetch<GgsEmployeeAttendanceStatus[]>(getGetGgsEmployeeAttendanceHistoryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeAttendanceHistoryQueryKey = () => {
+    return [
+    `/api/ggs/employee/attendance/history`
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeAttendanceHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeAttendanceHistory>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeAttendanceHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeAttendanceHistoryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeAttendanceHistory>>> = ({ signal }) => getGgsEmployeeAttendanceHistory({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeAttendanceHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeAttendanceHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeAttendanceHistory>>>
+export type GetGgsEmployeeAttendanceHistoryQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the signed-in employee's recent attendance history
+ */
+
+export function useGetGgsEmployeeAttendanceHistory<TData = Awaited<ReturnType<typeof getGgsEmployeeAttendanceHistory>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeAttendanceHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeAttendanceHistoryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getCreateGgsEmployeeAttendanceChallengeUrl = () => {
 
 

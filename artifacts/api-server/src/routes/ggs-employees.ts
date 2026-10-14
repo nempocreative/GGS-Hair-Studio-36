@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { and, asc, eq, gt, isNull, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, lt } from "drizzle-orm";
 import {
   Router,
   type IRouter,
@@ -12,6 +12,7 @@ import {
   CreateGgsAdminEmployeeResponse,
   CreateGgsEmployeeAttendanceChallengeBody,
   CreateGgsEmployeeAttendanceChallengeResponse,
+  GetGgsEmployeeAttendanceHistoryResponse,
   GetGgsAdminEmployeesResponse,
   GetGgsEmployeeAttendanceTodayResponse,
   GetGgsEmployeeBookingsResponse,
@@ -354,6 +355,38 @@ router.get(
     res.json(
       GetGgsEmployeeAttendanceTodayResponse.parse(
         serializeAttendance(attendanceDate, attendance),
+      ),
+    );
+  },
+);
+
+router.get(
+  "/ggs/employee/attendance/history",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const attendanceDate = jakartaAttendanceDate();
+    const history = await db
+      .select()
+      .from(ggsEmployeeAttendanceTable)
+      .where(
+        and(
+          eq(ggsEmployeeAttendanceTable.employeeId, employee.id),
+          lt(ggsEmployeeAttendanceTable.attendanceDate, attendanceDate),
+        ),
+      )
+      .orderBy(desc(ggsEmployeeAttendanceTable.attendanceDate))
+      .limit(5);
+
+    res.json(
+      GetGgsEmployeeAttendanceHistoryResponse.parse(
+        history.map((attendance) =>
+          serializeAttendance(attendance.attendanceDate, attendance),
+        ),
       ),
     );
   },

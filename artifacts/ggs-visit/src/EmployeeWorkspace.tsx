@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, Clock3, Layou
 import { Link, useLocation } from 'wouter';
 import {
   getGetGgsEmployeeBookingsQueryKey,
+  getGetGgsEmployeeAttendanceHistoryQueryKey,
   getGetGgsEmployeeAttendanceTodayQueryKey,
   getGetGgsEmployeeSessionQueryKey,
   useGetGgsEmployeeBookings,
@@ -39,6 +40,25 @@ function dateKey(value: string): string {
 function isSameDayAsJakarta(value: string): boolean {
   const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
   return dateKey(value) === today;
+}
+
+function employeeNextPath(): string {
+  const requestedPath = new URLSearchParams(window.location.search).get('next');
+  if (!requestedPath) return '/employee/overview';
+
+  try {
+    const destination = new URL(requestedPath, window.location.origin);
+    if (
+      destination.origin !== window.location.origin ||
+      !destination.pathname.startsWith('/employee/') ||
+      destination.pathname === '/employee/sign-in'
+    ) {
+      return '/employee/overview';
+    }
+    return `${destination.pathname}${destination.search}${destination.hash}`;
+  } catch {
+    return '/employee/overview';
+  }
 }
 
 const statusLabels: Record<GgsEmployeeBooking['status'], string> = {
@@ -178,11 +198,12 @@ export function EmployeeSignInPage() {
     login.mutate(variables, {
       onSuccess: async () => {
         queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceTodayQueryKey(), exact: true });
+        queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceHistoryQueryKey(), exact: true });
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeSessionQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeBookingsQueryKey() }),
         ]);
-        setLocation('/employee/overview');
+        setLocation(employeeNextPath());
       },
       onError: (error) => setFormError(employeeErrorMessage(error)),
     });
@@ -206,7 +227,7 @@ export function EmployeeSignInPage() {
             <span />
           </div>
           <h1>Kerja rapi.<br /><em>Studio siap.</em></h1>
-          <p>Masuk untuk melihat agenda booking studio hari ini dan seterusnya.</p>
+          <p>Masuk untuk membuka ruang kerja karyawan dan melanjutkan absensi.</p>
           <div className="employee-sign-in__privacy">
             <ShieldCheck size={17} strokeWidth={1.7} aria-hidden="true" />
             <span>Area khusus tim GGS. Informasi booking ditampilkan untuk kebutuhan operasional.</span>
@@ -366,6 +387,7 @@ export function EmployeeSchedulePage() {
     logout.mutate(undefined, {
       onSuccess: async () => {
         queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceTodayQueryKey(), exact: true });
+        queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceHistoryQueryKey(), exact: true });
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeSessionQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeBookingsQueryKey() }),
@@ -483,10 +505,14 @@ export function EmployeeSchedulePage() {
             <span className="employee-protected-message__icon"><ShieldCheck size={20} aria-hidden="true" /></span>
             <div>
               <p className="employee-kicker">SESI TIDAK AKTIF</p>
-              <h1>Masuk untuk melihat jadwal.</h1>
-              <p>Jadwal studio hanya tersedia untuk karyawan yang sudah masuk.</p>
+              <h1>Masuk untuk melanjutkan.</h1>
+              <p>Ruang kerja dan absensi hanya tersedia untuk karyawan yang sudah masuk.</p>
             </div>
-            <Link href="/employee/sign-in" className="employee-primary-button" data-testid="link-schedule-sign-in">
+            <Link
+              href={`/employee/sign-in?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`}
+              className="employee-primary-button"
+              data-testid="link-schedule-sign-in"
+            >
               Masuk karyawan <ArrowRight size={15} aria-hidden="true" />
             </Link>
           </section>
