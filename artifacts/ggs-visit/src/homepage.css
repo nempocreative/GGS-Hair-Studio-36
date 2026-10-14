@@ -1,10 +1,10 @@
 .clearer-page {
-  --clearer-paper: #f2eee5;
-  --clearer-paper-deep: #e6dfd2;
-  --clearer-ink: #262520;
-  --clearer-muted: #5c5a52;
-  --clearer-accent: #923d36;
-  --clearer-line: #c9c0b1;
+  --clearer-paper: #fff7fa;
+  --clearer-paper-deep: #f8e8ef;
+  --clearer-ink: #111113;
+  --clearer-muted: #68555f;
+  --clearer-accent: #c2185b;
+  --clearer-line: #edc9d8;
   min-height: 100vh;
   min-height: 100svh;
   background: var(--clearer-paper);
@@ -488,7 +488,7 @@
   display: flex;
   max-width: 580px;
   align-items: flex-start;
-  gap: 12px;
+  gap: 15px;
   margin: 0;
   border-top: 1px solid #b9ad9c;
   border-bottom: 1px solid #b9ad9c;
@@ -1051,7 +1051,7 @@
 }
 
 /* Multi-route studio experience */
-.clearer-page { --clearer-paper: #f2eee5; --clearer-paper-deep: #e6dfd2; --clearer-ink: #292723; --clearer-muted: #625e55; --clearer-accent: #923d36; --clearer-line: #c9c0b1; min-height: 100dvh; padding-bottom: 0; }
+.clearer-page { --clearer-paper: #fff7fa; --clearer-paper-deep: #f8e8ef; --clearer-ink: #111113; --clearer-muted: #68555f; --clearer-accent: #c2185b; --clearer-line: #edc9d8; min-height: 100dvh; padding-bottom: 0; }
 .clearer-header { min-height: 76px; }
 .clearer-nav { gap: clamp(12px, 1.7vw, 25px); margin-right: 24px; }
 .clearer-nav a { font-size: 13px; white-space: nowrap; }
@@ -1739,7 +1739,7 @@
 .ggs-quick-menu-icon {
   position: relative;
   display: grid;
-  --quick-menu-icon-size: 70px;
+  --quick-menu-icon-size: 58px;
   width: var(--quick-menu-icon-size);
   height: var(--quick-menu-icon-size);
   place-items: center;
@@ -1855,8 +1855,8 @@
 @media (max-width: 680px) {
   .clearer-home-menu.ggs-quick-menu { padding: 8px 22px 50px; }
   .ggs-quick-menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-  .ggs-quick-menu-item { min-height: 96px; gap: 6px; padding: 7px 4px; font-size: 10px; line-height: 1.3; }
-  .ggs-quick-menu-icon { --quick-menu-icon-size: 48px; border-radius: 14px; }
+  .ggs-quick-menu-item { min-height: 96px; gap: 10px; padding: 7px 4px; font-size: 10px; line-height: 1.3; }
+  .ggs-quick-menu-icon { --quick-menu-icon-size: 40px; border-radius: 14px; }
   .ggs-quick-menu-symbol { width: 24px; height: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2190,10 +2190,13 @@
 
 /* Homepage sections alternate white and light gray to keep each block distinct. */
 .clearer-page:has(.ggs-carousel) {
-  --clearer-paper: #fff;
-  --clearer-paper-deep: #f1f1f1;
-  --clearer-line: #d7d7d7;
-  background: #fff;
+  --clearer-paper: #fff7fa;
+  --clearer-paper-deep: #f8e8ef;
+  --clearer-ink: #111113;
+  --clearer-muted: #68555f;
+  --clearer-accent: #c2185b;
+  --clearer-line: #edc9d8;
+  background: var(--clearer-paper);
 }
 .clearer-page:has(.ggs-carousel) .clearer-header { background: #fff; }
 .clearer-page:has(.ggs-carousel) .clearer-footer {
@@ -2414,4 +2417,164 @@
 @media (max-width: 390px) {
   .voucher-ticket-card { grid-template-columns: minmax(0, 1fr) 104px; }
   .voucher-ticket-card .sample-voucher-ticket-copy { padding-right: 12px; padding-left: 13px; }
+}
+
+/* Keep the visitor site aligned with the pink-and-black shortcut menu. */
+.clearer-page:has(.ggs-carousel) .clearer-header,
+.clearer-page:has(.ggs-carousel) .ggs-carousel,
+.clearer-page:has(.ggs-carousel) .home-programs.home-programs-direct,
+.clearer-page:has(.ggs-carousel) .ggs-team-showcase.ggs-team-showcase-home,
+.clearer-page:has(.ggs-carousel) .home-womens-grooming,
+.clearer-page:has(.ggs-carousel) .home-style-models,
+.clearer-page:has(.ggs-carousel) .home-products,
+.clearer-page:has(.ggs-carousel) .home-last-cta {
+  background: var(--clearer-paper);
+}
+
+.clearer-page:has(.ggs-carousel) .clearer-footer,
+.clearer-page:has(.ggs-carousel) .clearer-home-menu.ggs-quick-menu,
+.clearer-page:has(.ggs-carousel) .clearer-promise,
+.clearer-page:has(.ggs-carousel) .home-mens-grooming:not(.home-womens-grooming),
+.clearer-page:has(.ggs-carousel) .home-service-promo,
+.clearer-page:has(.ggs-carousel) .home-style-models + .home-style-models,
+.clearer-page:has(.ggs-carousel) .home-testimonials {
+  background: var(--clearer-paper-deep);
+}
+
+.clearer-page:has(.ggs-carousel) .clearer-footer {
+  border-top-color: var(--clearer-line);
+  color: var(--clearer-ink);
+}
+
+.clearer-page:has(.ggs-carousel) .clearer-mobile-tabbar {
+  border-top-color: var(--clearer-line);
+  background: var(--clearer-paper);
+}
+
+.clearer-page:has(.ggs-carousel) .clearer-mobile-tabbar a[aria-current='location'] {
+  color: var(--clearer-accent);
+  background: rgb(194 24 91 / 8%);
+}
+
+.clearer-page:has(.ggs-carousel) .clearer-mobile-tabbar a[href='#booking'] {
+  background: var(--clearer-accent);
+  color: #fffafd;
+}
+
+.clearer-page:has(.ggs-carousel) .clearer-mobile-tabbar a[href='#booking'][aria-current='location'] {
+  background: #9e1248;
+}
+
+.clearer-page:has(.ggs-carousel) .clearer-home-book-card {
+  border-color: var(--clearer-ink);
+  background: var(--clearer-ink);
+  color: var(--clearer-paper);
+}
+
+.clearer-page:has(.ggs-carousel) .home-products,
+.clearer-page:has(.ggs-carousel) .home-testimonials {
+  color: var(--clearer-ink);
+}
+
+.clearer-page:has(.ggs-carousel) .home-products::before,
+.clearer-page:has(.ggs-carousel) .home-products::after,
+.clearer-page:has(.ggs-carousel) .home-testimonials::before {
+  border-color: rgb(194 24 91 / 10%);
+}
+
+.clearer-page:has(.ggs-carousel) .home-products-title-block .clearer-kicker,
+.clearer-page:has(.ggs-carousel) .home-products-heading h2 em,
+.clearer-page:has(.ggs-carousel) .home-product-stock,
+.clearer-page:has(.ggs-carousel) .home-product-add,
+.clearer-page:has(.ggs-carousel) .home-products-controls button:hover:not(:disabled),
+.clearer-page:has(.ggs-carousel) .home-testimonials-heading .clearer-kicker,
+.clearer-page:has(.ggs-carousel) .home-testimonials-heading h2 em,
+.clearer-page:has(.ggs-carousel) .home-testimonials-slide-index,
+.clearer-page:has(.ggs-carousel) .home-testimonials-disclaimer,
+.clearer-page:has(.ggs-carousel) .home-testimonials-dot.is-active {
+  color: var(--clearer-accent);
+}
+
+.clearer-page:has(.ggs-carousel) .home-products-all-link,
+.clearer-page:has(.ggs-carousel) .home-products-message button,
+.clearer-page:has(.ggs-carousel) .home-products-message a,
+.clearer-page:has(.ggs-carousel) .home-testimonials-arrow:hover,
+.clearer-page:has(.ggs-carousel) .home-testimonials-toggle:hover {
+  border-color: var(--clearer-accent);
+  color: var(--clearer-accent);
+}
+
+.clearer-page:has(.ggs-carousel) .home-products-intro p,
+.clearer-page:has(.ggs-carousel) .home-products-footnote,
+.clearer-page:has(.ggs-carousel) .home-product-copy > p,
+.clearer-page:has(.ggs-carousel) .home-products-message p,
+.clearer-page:has(.ggs-carousel) .home-testimonials-heading > p:not(.clearer-kicker),
+.clearer-page:has(.ggs-carousel) .home-testimonials-attribution,
+.clearer-page:has(.ggs-carousel) .home-testimonials-toggle {
+  color: var(--clearer-muted);
+}
+
+.clearer-page:has(.ggs-carousel) .home-product-copy,
+.clearer-page:has(.ggs-carousel) .home-testimonials-carousel,
+.clearer-page:has(.ggs-carousel) .voucher-ticket-card {
+  border-color: var(--clearer-line);
+  background: #fffafd;
+}
+
+.clearer-page:has(.ggs-carousel) .home-product-bottom,
+.clearer-page:has(.ggs-carousel) .home-products-controls,
+.clearer-page:has(.ggs-carousel) .home-testimonials-controls {
+  border-color: var(--clearer-line);
+}
+
+.clearer-page:has(.ggs-carousel) .home-product-price,
+.clearer-page:has(.ggs-carousel) .home-products-footnote > span:first-child,
+.clearer-page:has(.ggs-carousel) .home-products-message strong,
+.clearer-page:has(.ggs-carousel) .home-testimonials-heading h2,
+.clearer-page:has(.ggs-carousel) .home-testimonials-slide blockquote,
+.clearer-page:has(.ggs-carousel) .voucher-ticket-card h3,
+.clearer-page:has(.ggs-carousel) .voucher-ticket-card h4,
+.clearer-page:has(.ggs-carousel) .voucher-ticket-stub code {
+  color: var(--clearer-ink);
+}
+
+.clearer-page:has(.ggs-carousel) .home-product-add:hover:not(:disabled),
+.clearer-page:has(.ggs-carousel) .home-products-controls button:hover:not(:disabled),
+.clearer-page:has(.ggs-carousel) .voucher-ticket-stub button {
+  border-color: var(--clearer-accent);
+  background: var(--clearer-accent);
+  color: #fffafd;
+}
+
+.clearer-page:has(.ggs-carousel) .home-testimonials-disclaimer {
+  border-left-color: var(--clearer-accent);
+  background: rgb(194 24 91 / 7%);
+}
+
+.clearer-page:has(.ggs-carousel) .home-testimonials-dot.is-active {
+  background: var(--clearer-accent);
+}
+
+.clearer-page:has(.ggs-carousel) .home-testimonials-arrow:hover,
+.clearer-page:has(.ggs-carousel) .home-testimonials-toggle:hover {
+  background: rgb(194 24 91 / 8%);
+}
+
+.clearer-page:has(.ggs-carousel) .voucher-ticket-card .sample-voucher-ticket-copy > strong {
+  color: var(--clearer-accent);
+}
+
+.clearer-page:has(.ggs-carousel) .voucher-ticket-stub {
+  border-left-color: var(--clearer-line);
+  background: var(--clearer-paper-deep);
+}
+
+.clearer-page:has(.ggs-carousel) .voucher-ticket-kicker,
+.clearer-page:has(.ggs-carousel) .voucher-ticket-studio {
+  color: var(--clearer-muted);
+}
+
+.clearer-page:has(.ggs-carousel) .voucher-ticket-stub button:hover {
+  border-color: #9e1248;
+  background: #9e1248;
 }

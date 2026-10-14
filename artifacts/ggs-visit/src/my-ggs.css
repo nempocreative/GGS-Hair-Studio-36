@@ -1,12 +1,12 @@
 .ggs-professional,
 .ggs-auth-page {
-  --ggsp-paper: #f2eee5;
-  --ggsp-paper-light: #f8f5ee;
-  --ggsp-paper-shadow: #e8e1d5;
-  --ggsp-ink: #302d27;
-  --ggsp-muted: #686258;
-  --ggsp-brick: #923d36;
-  --ggsp-line: #cfc6b8;
+  --ggsp-paper: #fff7fa;
+  --ggsp-paper-light: #fffafd;
+  --ggsp-paper-shadow: #f8e8ef;
+  --ggsp-ink: #111113;
+  --ggsp-muted: #68555f;
+  --ggsp-brick: #c2185b;
+  --ggsp-line: #edc9d8;
 }
 
 .ggs-professional {
@@ -71,7 +71,7 @@
 .ggs-professional__tab:hover { border-color: var(--ggsp-brick); transform: translateY(-1px); }
 .ggs-professional__tab[aria-selected='true'] { border-color: var(--ggsp-ink); background: var(--ggsp-ink); color: var(--ggsp-paper); }
 .ggs-professional__tab-icon { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid var(--ggsp-line); color: var(--ggsp-brick); }
-.ggs-professional__tab[aria-selected='true'] .ggs-professional__tab-icon { border-color: #8a8173; color: #dba49b; }
+.ggs-professional__tab[aria-selected='true'] .ggs-professional__tab-icon { border-color: #c2185b; color: #f4b8d0; }
 .ggs-professional__tab-label { display: block; }
 .ggs-professional__tab-label strong { font-size: 13px; font-weight: 700; }
 .ggs-professional__panel[hidden] { display: none; }
@@ -90,7 +90,7 @@
 .ggs-professional__employee-copy h2 { margin: 20px 0 0; font: 500 clamp(37px, 3.5vw, 47px)/.96 'Cormorant Garamond', serif; letter-spacing: -.035em; }
 .ggs-professional__consumer-intro h2 { margin: 14px 0 8px; }
 .ggs-professional__employee-copy > p { max-width: 410px; margin: 12px 0 0; color: var(--ggsp-muted); font-size: 13px; line-height: 1.6; }
-.ggs-professional__demo-badge { display: inline-flex; align-items: center; border: 1px solid rgb(146 61 54 / 35%); padding: 5px 8px; color: var(--ggsp-brick); font: 8px 'Space Mono', monospace; letter-spacing: .08em; }
+.ggs-professional__demo-badge { display: inline-flex; align-items: center; border: 1px solid rgb(194 24 91 / 35%); padding: 5px 8px; color: var(--ggsp-brick); font: 8px 'Space Mono', monospace; letter-spacing: .08em; }
 .ggs-professional__demo-role { margin: 0 0 19px; color: var(--ggsp-muted); font-size: 12px; }
 .ggs-professional .ggs-professional__booking-link {
   display: inline-flex;
@@ -106,7 +106,7 @@
   font-weight: 700;
   transition: transform .2s ease, background .2s ease;
 }
-.ggs-professional .ggs-professional__booking-link:hover { transform: translateY(-2px); background: #762f2a; }
+.ggs-professional .ggs-professional__booking-link:hover { transform: translateY(-2px); background: #9e1248; }
 .ggs-professional__booking-link svg { transition: transform .2s ease; }
 .ggs-professional__booking-link:hover svg { transform: translateX(3px); }
 
@@ -121,7 +121,7 @@
 .ggs-professional__demo-record dt { color: var(--ggsp-muted); font-size: 11px; }
 .ggs-professional__demo-record dd { margin: 0; color: var(--ggsp-ink); font-size: 12px; overflow-wrap: anywhere; text-align: right; }
 
-.ggs-professional__panel--employee { grid-template-columns: minmax(0, .9fr) minmax(370px, 1.1fr); min-height: 290px; background: radial-gradient(ellipse at 85% 110%, rgb(146 61 54 / 8%), transparent 32rem), var(--ggsp-paper-light); }
+.ggs-professional__panel--employee { grid-template-columns: minmax(0, .9fr) minmax(370px, 1.1fr); min-height: 290px; background: radial-gradient(ellipse at 85% 110%, rgb(194 24 91 / 8%), transparent 32rem), var(--ggsp-paper-light); }
 
 .ggs-professional__account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 .ggs-professional__signup-link,
@@ -169,7 +169,7 @@
 .ggs-account-section-heading a { display: inline-flex; align-items: center; gap: 6px; color: var(--ggsp-brick) !important; font-size: 10px; font-weight: 700; }
 .ggs-account-section-heading a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ggs-account-product-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.ggs-account-product { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--ggsp-line); background: #fffdf8; }
+.ggs-account-product { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--ggsp-line); background: #fffafd; }
 .ggs-account-product > img,
 .ggs-account-product-image-empty { width: 100%; aspect-ratio: 1.65 / 1; object-fit: cover; background: var(--ggsp-paper-shadow); }
 .ggs-account-product-image-empty { display: grid; place-items: center; color: var(--ggsp-brick); }
@@ -229,10 +229,10 @@
 .ggs-auth-form__switch button { min-height: 40px; border: 0; background: transparent; color: var(--ggsp-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
 .ggs-auth-form__switch button.is-active { background: var(--ggsp-ink); color: var(--ggsp-paper-light); }
 .ggs-auth-form label { display: grid; gap: 7px; color: var(--ggsp-ink); font-size: 11px; font-weight: 700; }
-.ggs-auth-form input { width: 100%; min-height: 46px; border: 1px solid var(--ggsp-line); border-radius: 0; background: #fffdf8; padding: 0 12px; color: var(--ggsp-ink); font-size: 13px; font-weight: 400; }
+.ggs-auth-form input { width: 100%; min-height: 46px; border: 1px solid var(--ggsp-line); border-radius: 0; background: #fffafd; padding: 0 12px; color: var(--ggsp-ink); font-size: 13px; font-weight: 400; }
 .ggs-auth-form input:focus { border-color: var(--ggsp-brick); outline: 2px solid rgb(146 61 54 / 18%); outline-offset: 1px; }
 .ggs-auth-form__submit { display: flex; min-height: 48px; align-items: center; justify-content: space-between; border: 1px solid var(--ggsp-brick); background: var(--ggsp-brick); padding: 0 15px; color: #fff8ed; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .2s ease, transform .2s ease; }
-.ggs-auth-form__submit:hover:not(:disabled) { transform: translateY(-1px); background: #762f2a; }
+.ggs-auth-form__submit:hover:not(:disabled) { transform: translateY(-1px); background: #9e1248; }
 .ggs-auth-form__submit:disabled { opacity: .65; cursor: wait; }
 .ggs-auth-form__error { margin: 0; border-left: 2px solid var(--ggsp-brick); background: #f6e8e5; padding: 10px 12px; color: #762f2a; font-size: 11px; }
 .ggs-auth-form__footnote { margin: 0; color: var(--ggsp-muted); font-size: 11px; text-align: center; }

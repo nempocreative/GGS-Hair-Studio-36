@@ -120,11 +120,11 @@ button { color: inherit; }
 .btn-gold:hover { transform: translateY(-2px); background: #9e1248; }
 .btn-outline { border: 1px solid rgba(194,24,91,.45); transition: border-color .25s, background .25s; }
 .btn-outline:hover { border-color: #c2185b; background: rgba(194,24,91,.08); }
-.input-field { width:100%; border:1px solid #39352e; background:#0e0d0b; color:#eee9de; border-radius:2px; padding:13px 14px; transition:border-color .2s; }
+.input-field { width:100%; border:1px solid #3b3036; background:#111113; color:#fff7fa; border-radius:2px; padding:13px 14px; transition:border-color .2s; }
 .input-field:hover, .input-field:focus { border-color:#c2185b; outline:none; }
-.input-field::placeholder { color:#706a60; }
+.input-field::placeholder { color:#ad9eaa; }
 .service-card { transition: border-color .28s, transform .28s, background .28s; }
-.service-card:hover { transform: translateY(-4px); border-color:rgba(194,24,91,.58); background:#171217; }
+.service-card:hover { transform: translateY(-4px); border-color:rgba(194,24,91,.58); background:#1a0c13; }
 .media-image { filter: saturate(.8); transition: transform .9s cubic-bezier(.2,.7,.25,1), filter .6s; }
 .media-frame:hover .media-image { transform: scale(1.035); filter:saturate(1); }
 @media (prefers-reduced-motion: reduce) {

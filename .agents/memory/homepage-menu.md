@@ -99,11 +99,11 @@ Show Home Service with the supplied complete person-and-house-scissors avatar, p
 
 **How to apply:** Use the transparent avatar on the Home Service shortcut, retaining the full person and house-scissors symbol.
 
-Keep every homepage shortcut icon at the Cabang reference size: 70px on desktop and 48px on mobile, preserving each image's proportions and complete artwork.
+Keep every homepage shortcut icon at the same shared size: 58px on desktop and 40px on mobile, with enough gap that labels do not crowd them. Preserve each image's proportions and complete artwork.
 
-**Why:** The user asked for all shortcut icons to be the same size as Cabang.
+**Why:** The user asked for the icons to be smaller because they were too large and crowded the labels.
 
-**How to apply:** Use one shared icon frame and normalize transparent artwork to fill the same maximum dimension; never stretch or crop away people or symbols.
+**How to apply:** Use one shared icon frame and normalize transparent artwork to fill the same maximum dimension; never stretch or crop away people or symbols. Keep a clear vertical gap between each icon and its label.
 
 Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
