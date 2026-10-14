@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
-import { Link, Route, Switch, useLocation } from 'wouter';
+import { ClerkProvider, SignIn, SignUp, UserProfile, useClerk, useUser } from '@clerk/react';
+import { publishableKeyFromHost } from '@clerk/react/internal';
+import { idID } from '@clerk/localizations';
+import { shadcn } from '@clerk/themes';
+import { Link, Route, Router as WouterRouter, Switch, useLocation } from 'wouter';
 import useEmblaCarousel from 'embla-carousel-react';
 import {
   ArrowLeft,
@@ -90,8 +94,159 @@ const initialFields: BookingFields = {
 
 const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
 const money = (amount: number) => `Rp${new Intl.NumberFormat('id-ID').format(amount)}`;
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+const clerkPubKey = publishableKeyFromHost(
+  window.location.hostname,
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+);
+const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
+
+if (!clerkPubKey) throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
+
+const clerkAppearance = {
+  theme: shadcn,
+  cssLayerName: 'clerk',
+  options: {
+    logoPlacement: 'inside' as const,
+    logoLinkUrl: basePath || '/',
+    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+  },
+  variables: {
+    colorPrimary: '#923d36',
+    colorForeground: '#302d27',
+    colorMutedForeground: '#686258',
+    colorDanger: '#a8332b',
+    colorBackground: '#f8f5ee',
+    colorInput: '#fffdf8',
+    colorInputForeground: '#302d27',
+    colorNeutral: '#cfc6b8',
+    fontFamily: 'DM Sans, sans-serif',
+    borderRadius: '2px',
+  },
+  elements: {
+    rootBox: 'w-full flex justify-center',
+    cardBox: 'bg-[#f8f5ee] border border-[#cfc6b8] rounded-sm w-[440px] max-w-full overflow-hidden',
+    card: '!shadow-none !border-0 !bg-transparent !rounded-none',
+    footer: '!shadow-none !border-0 !bg-transparent !rounded-none',
+    headerTitle: 'text-[#302d27] font-display text-4xl',
+    headerSubtitle: 'text-[#686258]',
+    socialButtonsBlockButtonText: 'text-[#302d27] font-medium',
+    formFieldLabel: 'text-[#302d27] font-medium',
+    footerActionLink: 'text-[#923d36] hover:text-[#762f2a]',
+    footerActionText: 'text-[#686258]',
+    dividerText: 'text-[#686258]',
+    identityPreviewEditButton: 'text-[#923d36]',
+    formFieldSuccessText: 'text-emerald-700',
+    alertText: 'text-[#302d27]',
+    logoBox: 'mb-5',
+    logoImage: 'max-h-10',
+    socialButtonsBlockButton: 'border border-[#cfc6b8] bg-[#fffdf8] hover:bg-[#f2eee5]',
+    formButtonPrimary: 'bg-[#923d36] text-white hover:bg-[#762f2a] shadow-none',
+    formFieldInput: 'border-[#cfc6b8] bg-[#fffdf8] text-[#302d27] focus:border-[#923d36]',
+    footerAction: 'border-t border-[#cfc6b8]',
+    dividerLine: 'bg-[#cfc6b8]',
+    alert: 'border-[#d8aaa4] bg-[#f6e8e5]',
+    otpCodeFieldInput: 'border-[#cfc6b8] bg-[#fffdf8]',
+    formFieldRow: 'mb-4',
+    main: 'text-[#302d27]',
+  },
+};
 
 function App() {
+  return (
+    <WouterRouter base={basePath}>
+      <ClerkApp />
+    </WouterRouter>
+  );
+}
+
+function ClerkApp() {
+  const [, setLocation] = useLocation();
+
+  const stripBase = (path: string) =>
+    basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
+
+  return (
+    <ClerkProvider
+      publishableKey={clerkPubKey}
+      proxyUrl={clerkProxyUrl}
+      appearance={clerkAppearance}
+      signInUrl={`${basePath}/sign-in`}
+      signUpUrl={`${basePath}/sign-up`}
+      localization={{
+        ...idID,
+        formFieldInputPlaceholder__emailAddress: 'nama@contoh.com',
+        signIn: {
+          ...idID.signIn,
+          start: {
+            ...idID.signIn?.start,
+            title: 'Selamat datang kembali',
+            subtitle: 'Masuk untuk membuka ruang personal GGS',
+            actionText: 'Belum punya akun?',
+            actionLink: 'Daftar akun',
+          },
+        },
+        signUp: {
+          ...idID.signUp,
+          start: {
+            ...idID.signUp?.start,
+            title: 'Buat akun GGS',
+            subtitle: 'Simpan informasi akunmu untuk kunjungan berikutnya',
+            actionText: 'Sudah punya akun?',
+            actionLink: 'Masuk ke akun',
+          },
+        },
+      }}
+      routerPush={(to) => setLocation(stripBase(to))}
+      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
+    >
+      <VisitorWebsite />
+    </ClerkProvider>
+  );
+}
+
+function AccountAuthPage({ mode }: { mode: 'in' | 'up' }) {
+  return (
+    <main className="ggs-auth-page" data-testid={`page-account-${mode === 'in' ? 'sign-in' : 'sign-up'}`}>
+      <header className="ggs-auth-page__header">
+        <Link href="/" className="ggs-auth-page__brand">
+          <span className="ggs-auth-page__mark" aria-hidden="true">G</span>
+          <span>GGS <em>Hair Studio</em></span>
+        </Link>
+        <span className="ggs-auth-page__note">RUANG PERSONAL GGS</span>
+      </header>
+      <div className="ggs-auth-page__content">
+        <div className="ggs-auth-page__copy">
+          <p className="ggs-professional__eyebrow">GGS / MY GGS</p>
+          <h1>{mode === 'in' ? <>Senang<br /><em>bertemu lagi.</em></> : <>Ruang untuk<br /><em>kunjunganmu.</em></>}</h1>
+          <p>Masuk atau buat akun untuk mengelola informasi profil GGS-mu.</p>
+          <Link href="/my-ggs" className="ggs-auth-page__back">
+            Kembali ke My GGS <ArrowRight size={15} aria-hidden="true" />
+          </Link>
+        </div>
+        <div className="ggs-auth-page__form">
+          {mode === 'in' ? (
+            <SignIn
+              routing="path"
+              path={`${basePath}/sign-in`}
+              signUpUrl={`${basePath}/sign-up`}
+              fallbackRedirectUrl={`${basePath}/my-ggs`}
+            />
+          ) : (
+            <SignUp
+              routing="path"
+              path={`${basePath}/sign-up`}
+              signInUrl={`${basePath}/sign-in`}
+              fallbackRedirectUrl={`${basePath}/my-ggs`}
+            />
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function VisitorWebsite() {
   const siteQuery = useGetGgsSite({ query: { queryKey: getGetGgsSiteQueryKey() } });
   const servicesQuery = useGetGgsPublicServices({
     query: { queryKey: getGetGgsPublicServicesQueryKey() },
@@ -242,6 +397,9 @@ function App() {
     changeCartQuantity,
     removeCartItem,
   };
+
+  if (location.startsWith('/sign-in')) return <AccountAuthPage mode="in" />;
+  if (location.startsWith('/sign-up')) return <AccountAuthPage mode="up" />;
 
   return (
     <main className="clearer-page">
@@ -2502,12 +2660,14 @@ function BranchesPage({ site, siteQuery }: SharedProps) {
 }
 
 function MyGgsPage() {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
   const [profileType, setProfileType] = useState<'consumer' | 'employee'>('consumer');
   const consumerRecords = [
-    { label: 'Booking mendatang', value: 'Belum terhubung', note: 'Data booking akun belum tersedia', Icon: CalendarClock },
-    { label: 'Riwayat kunjungan', value: 'Belum terhubung', note: 'Data kunjungan pelanggan belum tersedia', Icon: ClipboardList },
-    { label: 'Voucher pribadi', value: 'Belum tersedia', note: 'Voucher pribadi belum terhubung', Icon: TicketPercent },
-    { label: 'Preferensi gaya', value: 'Belum disimpan', note: 'Website ini belum menyimpan data profil', Icon: UserRound },
+    { label: 'Booking mendatang', value: 'Belum tertaut', note: 'Janji dari formulir belum dikaitkan ke akun', Icon: CalendarClock },
+    { label: 'Riwayat kunjungan', value: 'Belum tersedia', note: 'Catatan kunjungan belum terhubung', Icon: ClipboardList },
+    { label: 'Voucher pribadi', value: 'Belum tersedia', note: 'Voucher belum tersimpan di akun', Icon: TicketPercent },
+    { label: 'Preferensi gaya', value: 'Belum diatur', note: 'Preferensi rambut belum disimpan', Icon: UserRound },
   ];
 
   const handleProfileTabKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -2532,11 +2692,11 @@ function MyGgsPage() {
         <header className="ggs-professional__hero">
           <div className="ggs-professional__hero-copy">
             <p className="ggs-professional__eyebrow">GGS <span>/</span> MY GGS</p>
-            <h1>My GGS,<br /><em>pilih profil.</em></h1>
+            <h1>My GGS,<br /><em>ruang personal.</em></h1>
           </div>
           <div className="ggs-professional__intro">
             <span className="ggs-professional__intro-mark" aria-hidden="true"><UserRound size={19} /></span>
-            <p>Pilih Pengguna (Konsumen) atau Karyawan. Data profil dan riwayat belum terhubung.</p>
+            <p>Kelola informasi akunmu dan temukan layanan GGS yang sesuai. Pilih ruang pengguna atau karyawan.</p>
           </div>
           <div className="ggs-professional__studio-note">
             <span>RUANG PERSONAL</span>
@@ -2598,35 +2758,82 @@ function MyGgsPage() {
                 <span className="ggs-professional__label-rule" />
                 <span>PROFIL PENGGUNA</span>
               </div>
-              <div className="ggs-professional__availability">
+              <div className="ggs-professional__availability" role="status">
                 <span className="ggs-professional__availability-dot" aria-hidden="true" />
-                <span>Belum terhubung</span>
+                <span>{!isLoaded ? 'Memuat akun' : isSignedIn ? 'Akun aktif' : 'Belum masuk'}</span>
               </div>
-              <h2>Riwayat kunjunganmu<br />belum bisa ditampilkan.</h2>
-              <p>Website ini belum memiliki akun pelanggan, riwayat booking, atau data member. Permintaan janji dikelola oleh tim studio dan belum tampil sebagai riwayat pribadi.</p>
-              <Link href="/book" className="ggs-professional__booking-link" data-testid="link-my-ggs-book">
-                <span>Ajukan janji</span><ArrowRight size={17} aria-hidden="true" />
+              <h2>
+                {!isLoaded
+                  ? <>Memuat akun<br />GGS-mu.</>
+                  : isSignedIn
+                    ? <>Halo, {user?.firstName || 'sahabat GGS'}.</>
+                    : <>Masuk untuk membuka<br />profilmu.</>}
+              </h2>
+              <p>
+                {!isLoaded
+                  ? 'Sebentar, kami sedang memeriksa status akunmu.'
+                  : isSignedIn
+                    ? 'Informasi akunmu dikelola dengan aman. Ubah nama, email, atau pengaturan akun kapan saja.'
+                    : 'Masuk atau buat akun untuk melihat dan mengelola informasi profil GGS-mu.'}
+              </p>
+              {!isLoaded ? (
+                <span className="ggs-professional__account-loading" role="status">Memuat informasi akun…</span>
+              ) : isSignedIn ? (
+                <button
+                  type="button"
+                  className="ggs-professional__booking-link"
+                  onClick={() => void signOut({ redirectUrl: basePath || '/' })}
+                  data-testid="button-my-ggs-sign-out"
+                >
+                  <span>Keluar dari akun</span><ArrowRight size={17} aria-hidden="true" />
+                </button>
+              ) : (
+                <div className="ggs-professional__account-actions">
+                  <Link href="/sign-in" className="ggs-professional__booking-link" data-testid="link-my-ggs-sign-in">
+                    <span>Masuk</span><ArrowRight size={17} aria-hidden="true" />
+                  </Link>
+                  <Link href="/sign-up" className="ggs-professional__signup-link" data-testid="link-my-ggs-sign-up">
+                    Buat akun baru
+                  </Link>
+                </div>
+              )}
+              <Link href="/book" className="ggs-professional__book-secondary" data-testid="link-my-ggs-book">
+                Ajukan janji tanpa akun <ArrowRight size={15} aria-hidden="true" />
               </Link>
             </section>
 
-            <section className="ggs-professional__records" aria-label="Data profil pengguna yang belum tersedia">
-              <div className="ggs-professional__records-heading">
-                <h3>Yang belum terhubung</h3>
-                <p>Belum ada data pribadi yang tersimpan di website.</p>
-              </div>
-              <div className="ggs-professional__record-list">
-                {consumerRecords.map(({ label, value, note, Icon }, index) => (
-                  <article className="ggs-professional__record" key={label} data-testid={`card-my-ggs-${index}`}>
-                    <span className="ggs-professional__record-icon" aria-hidden="true"><Icon size={17} /></span>
-                    <div className="ggs-professional__record-copy">
-                      <span className="ggs-professional__record-label">{label}</span>
-                      <strong>{value}</strong>
-                      <p>{note}</p>
-                    </div>
-                    <span className="ggs-professional__record-marker" aria-hidden="true" />
-                  </article>
-                ))}
-              </div>
+            <section className="ggs-professional__records" aria-label="Profil dan informasi akun">
+              {isLoaded && isSignedIn ? (
+                <>
+                  <div className="ggs-professional__records-heading">
+                    <h3>Kelola akun</h3>
+                    <p>Perbarui informasi masuk dan data profilmu.</p>
+                  </div>
+                  <div className="ggs-professional__user-profile" data-testid="my-ggs-account-settings">
+                    <UserProfile routing="hash" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="ggs-professional__records-heading">
+                    <h3>Informasi akun</h3>
+                    <p>Detail booking belum terhubung ke akun.</p>
+                  </div>
+                  <div className="ggs-professional__record-list">
+                    {consumerRecords.map(({ label, value, note, Icon }, index) => (
+                      <article className="ggs-professional__record" key={label} data-testid={`card-my-ggs-${index}`}>
+                        <span className="ggs-professional__record-icon" aria-hidden="true"><Icon size={17} /></span>
+                        <div className="ggs-professional__record-copy">
+                          <span className="ggs-professional__record-label">{label}</span>
+                          <strong>{value}</strong>
+                          <p>{note}</p>
+                        </div>
+                        <span className="ggs-professional__record-marker" aria-hidden="true" />
+                      </article>
+                    ))}
+                  </div>
+                </>
+              )}
             </section>
           </div>
 
@@ -2650,12 +2857,12 @@ function MyGgsPage() {
                   <span className="ggs-professional__availability-dot" aria-hidden="true" />
                   <span>Belum terhubung</span>
                 </div>
-                <h2>Informasi karyawan<br />belum tersedia.</h2>
-                <p>Akun dan informasi karyawan belum tersedia di website pengunjung.</p>
+                <h2>Ruang karyawan<br />belum tersedia.</h2>
+                <p>Profil dan informasi internal karyawan tidak ditampilkan melalui website pengunjung.</p>
               </div>
               <aside className="ggs-professional__employee-note">
                 <span>WEBSITE PENGUNJUNG</span>
-                <p>Area ini belum menyediakan informasi untuk tim GGS.</p>
+                <p>Untuk informasi akses karyawan, silakan hubungi pengelola GGS.</p>
               </aside>
             </section>
           </div>
@@ -2663,7 +2870,7 @@ function MyGgsPage() {
 
         <footer className="ggs-professional__footer">
           <span>GGS HAIR STUDIO</span>
-          <p>Informasi profil saat ini belum terhubung ke website.</p>
+          <p>Profil akun dikelola melalui My GGS. Riwayat booking belum tertaut ke akun.</p>
         </footer>
       </div>
     </div>
