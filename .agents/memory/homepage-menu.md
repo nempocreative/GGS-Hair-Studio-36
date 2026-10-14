@@ -57,6 +57,12 @@ Show the supplied Events & Community celebration avatar directly, without an add
 
 **How to apply:** Use the supplied Events & Community image as-is on the homepage shortcut, preserving its transparency and adding no colored tile.
 
+Show the supplied Karir avatar directly, without an added outer tile or shape.
+
+**Why:** The user explicitly asked for the Karir icon to appear without a shape.
+
+**How to apply:** Use the supplied Karir image as-is on the homepage shortcut, preserving its transparency and adding no colored tile.
+
 Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
 **Why:** The user specifically clarified that the person icon's body should visually connect to its tile.
