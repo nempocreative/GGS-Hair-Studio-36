@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, CalendarDays, Clock3, LogIn, LogOut, MapPin, QrCode, RefreshCw, ShieldCheck, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, Camera, Clock3, LogIn, LogOut, MapPin, QrCode, RefreshCw, ShieldCheck, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLocation } from 'wouter';
+import { BrowserQRCodeReader } from '@zxing/browser';
+import type { IScannerControls } from '@zxing/browser';
 import {
   getGetGgsEmployeeAttendanceHistoryQueryKey,
   getGetGgsEmployeeAttendanceTodayQueryKey,
@@ -82,11 +84,25 @@ function readCurrentLocation(): Promise<GgsEmployeeAttendanceLocationInput> {
   });
 }
 
+function challengeTokenFromQr(value: string): string | null {
+  const content = value.trim();
+  try {
+    const url = new URL(content);
+    if (url.origin !== window.location.origin || url.pathname !== '/employee/attendance') {
+      return null;
+    }
+    const token = url.searchParams.get('attendanceChallenge')?.trim();
+    return token && /^[A-Za-z0-9_-]{32,128}$/.test(token) ? token : null;
+  } catch {
+    return /^[A-Za-z0-9_-]{32,128}$/.test(content) ? content : null;
+  }
+}
+
 export function EmployeeAttendancePage({ employeeName }: { employeeName: string }) {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const attendanceQueryKey = getGetGgsEmployeeAttendanceTodayQueryKey();
-  const historyQueryKey = getGetGgsEmployeeAttendanceHistoryQueryKey();
+  const attendanceQueryKey = useMemo(() => getGetGgsEmployeeAttendanceTodayQueryKey(), []);
+  const historyQueryKey = useMemo(() => getGetGgsEmployeeAttendanceHistoryQueryKey(), []);
   const attendance = useGetGgsEmployeeAttendanceToday({
     query: {
       queryKey: attendanceQueryKey,
@@ -113,7 +129,15 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
   const [qrChallenge, setQrChallenge] = useState<GgsEmployeeAttendanceChallenge | null>(null);
   const [qrError, setQrError] = useState('');
   const [qrSecondsLeft, setQrSecondsLeft] = useState(0);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannerError, setScannerError] = useState('');
+  const [actionSuccess, setActionSuccess] = useState('');
   const autoRefreshForToken = useRef('');
+  const autoProcessToken = useRef('');
+  const processingToken = useRef('');
+  const scanHandled = useRef(false);
+  const scannerVideo = useRef<HTMLVideoElement | null>(null);
+  const scannerControls = useRef<IScannerControls | null>(null);
   const isSubmitting = isLocating || checkIn.isPending || checkOut.isPending;
   const currentStatus = attendance.data?.status;
   const challengeToken = useMemo(
@@ -127,14 +151,17 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
     return url.toString();
   }, [qrChallenge]);
 
-  const saveAttendanceResult = async (result: NonNullable<typeof attendance.data>) => {
+  const saveAttendanceResult = useCallback(async (result: NonNullable<typeof attendance.data>) => {
     setActionError('');
+    setActionSuccess(result.status === 'checked_out'
+      ? 'Absen pulang berhasil. Lokasi Anda sudah diverifikasi.'
+      : 'Absen masuk berhasil. Lokasi Anda sudah diverifikasi.');
     queryClient.setQueryData(attendanceQueryKey, result);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: attendanceQueryKey, exact: true }),
       queryClient.invalidateQueries({ queryKey: historyQueryKey, exact: true }),
     ]);
-  };
+  }, [attendanceQueryKey, historyQueryKey, queryClient]);
 
   const createQrChallenge = useCallback(async () => {
     if (isCreatingQr) return;
@@ -152,6 +179,102 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
       setIsCreatingQr(false);
     }
   }, [createChallenge.mutateAsync, isCreatingQr]);
+
+  const processAttendance = useCallback(async (token: string) => {
+    if (!token || processingToken.current === token) return;
+    if (!currentStatus) {
+      setActionError('Status absensi belum siap. Muat ulang halaman lalu scan kembali.');
+      return;
+    }
+    if (currentStatus === 'checked_out') {
+      setActionError('Absensi hari ini sudah lengkap.');
+      return;
+    }
+
+    processingToken.current = token;
+    setActionError('');
+    setActionSuccess('');
+    setIsLocating(true);
+    try {
+      const location = await readCurrentLocation();
+      const input: GgsEmployeeAttendanceActionInput = {
+        challengeToken: token,
+        ...location,
+      };
+      const result = currentStatus === 'not_started'
+        ? await checkIn.mutateAsync({ data: input })
+        : await checkOut.mutateAsync({ data: input });
+      await saveAttendanceResult(result);
+      if (new URLSearchParams(window.location.search).get('attendanceChallenge') === token) {
+        setLocation('/employee/attendance');
+      }
+    } catch (error) {
+      setActionError(attendanceErrorMessage(
+        error,
+        error instanceof Error ? error.message : 'Absensi belum tersimpan. Silakan coba lagi.',
+      ));
+    } finally {
+      processingToken.current = '';
+      setIsLocating(false);
+    }
+  }, [checkIn.mutateAsync, checkOut.mutateAsync, currentStatus, saveAttendanceResult, setLocation]);
+
+  const acceptScannedQr = useCallback((content: string) => {
+    const token = challengeTokenFromQr(content);
+    if (!token) {
+      setScannerError('QR ini bukan QR absensi GGS. Arahkan kamera ke QR yang tampil di salon.');
+      return false;
+    }
+    scanHandled.current = true;
+    setScannerError('');
+    setShowScanner(false);
+    scannerControls.current?.stop();
+    void processAttendance(token);
+    return true;
+  }, [processAttendance]);
+
+  useEffect(() => {
+    if (!challengeToken || !currentStatus || currentStatus === 'checked_out') return;
+    if (autoProcessToken.current === challengeToken) return;
+    autoProcessToken.current = challengeToken;
+    void processAttendance(challengeToken);
+  }, [challengeToken, currentStatus, processAttendance]);
+
+  useEffect(() => {
+    if (!showScanner || !scannerVideo.current) return;
+    let cancelled = false;
+    let activeControls: IScannerControls | null = null;
+    const reader = new BrowserQRCodeReader();
+
+    void reader.decodeFromVideoDevice(
+      undefined,
+      scannerVideo.current,
+      (result, _error, controls) => {
+        activeControls = controls;
+        scannerControls.current = controls;
+        if (result && !scanHandled.current && acceptScannedQr(result.getText())) {
+          controls.stop();
+        }
+      },
+    ).then((controls) => {
+      activeControls = controls;
+      scannerControls.current = controls;
+      if (cancelled) controls.stop();
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      const isPermissionDenied = error instanceof DOMException && error.name === 'NotAllowedError';
+      setScannerError(isPermissionDenied
+        ? 'Izin kamera ditolak. Izinkan kamera di pengaturan browser, lalu buka pemindai lagi.'
+        : 'Kamera tidak dapat dibuka. Pastikan izin kamera aktif dan gunakan browser yang aman.');
+    });
+
+    return () => {
+      cancelled = true;
+      activeControls?.stop();
+      scannerControls.current?.stop();
+      scannerControls.current = null;
+    };
+  }, [acceptScannedQr, showScanner]);
 
   useEffect(() => {
     if (!showQr || !qrChallenge) return;
@@ -171,33 +294,19 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
     return () => window.clearInterval(timer);
   }, [createQrChallenge, isCreatingQr, qrChallenge, showQr]);
 
-  const submitAttendance = async () => {
+  const openScanner = () => {
+    scanHandled.current = false;
+    setScannerError('');
     setActionError('');
+    setShowScanner(true);
+  };
+
+  const submitAttendance = () => {
     if (!challengeToken) {
-      setActionError('Scan QR absensi di layar salon dengan kamera HP terlebih dahulu.');
+      openScanner();
       return;
     }
-
-    setIsLocating(true);
-    try {
-      const location = await readCurrentLocation();
-      const input: GgsEmployeeAttendanceActionInput = {
-        challengeToken,
-        ...location,
-      };
-      const result = currentStatus === 'not_started'
-        ? await checkIn.mutateAsync({ data: input })
-        : await checkOut.mutateAsync({ data: input });
-      await saveAttendanceResult(result);
-      setLocation('/employee/attendance');
-    } catch (error) {
-      setActionError(attendanceErrorMessage(
-        error,
-        error instanceof Error ? error.message : 'Absensi belum tersimpan. Silakan coba lagi.',
-      ));
-    } finally {
-      setIsLocating(false);
-    }
+    void processAttendance(challengeToken);
   };
 
   return (
@@ -206,7 +315,7 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
         <div>
           <p className="employee-kicker">KEHADIRAN KARYAWAN</p>
           <h1>Absensi <em>hari ini.</em></h1>
-          <p>Halo, {employeeName}. Scan QR salon, aktifkan lokasi, lalu konfirmasi absensi dari HP.</p>
+          <p>Halo, {employeeName}. Pindai QR di layar salon dari HP ini; lokasi akan diperiksa otomatis.</p>
         </div>
         <div className="employee-attendance__heading-actions">
           <button
@@ -288,12 +397,16 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
                 <p>
                   {currentStatus === 'not_started'
                     ? challengeToken
-                      ? 'QR ditemukan. Izinkan akses lokasi untuk mencatat kedatangan.'
-                      : 'Scan QR absensi di layar salon dengan kamera HP untuk melanjutkan.'
+                      ? isLocating
+                        ? 'QR terbaca. Sedang mendeteksi lokasi HP dan mengirim absensi.'
+                        : 'QR terbaca. Absensi akan dikirim otomatis setelah izin lokasi diberikan.'
+                      : 'Tekan tombol pindai, arahkan kamera HP ke QR salon, lalu lokasi akan diperiksa otomatis.'
                     : currentStatus === 'checked_in'
                       ? challengeToken
-                        ? 'QR ditemukan. Izinkan akses lokasi untuk mencatat waktu pulang.'
-                        : 'Scan QR absensi di layar salon dengan kamera HP untuk melanjutkan.'
+                        ? isLocating
+                          ? 'QR terbaca. Sedang mendeteksi lokasi HP dan mengirim absensi.'
+                          : 'QR terbaca. Absensi akan dikirim otomatis setelah izin lokasi diberikan.'
+                        : 'Tekan tombol pindai, arahkan kamera HP ke QR salon, lalu lokasi akan diperiksa otomatis.'
                       : 'Waktu masuk dan pulang Anda sudah tersimpan.'}
                 </p>
               </div>
@@ -301,24 +414,24 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
                 <button
                   type="button"
                   className="employee-primary-button"
-                  onClick={() => void submitAttendance()}
-                  disabled={isSubmitting || !challengeToken}
+                  onClick={submitAttendance}
+                  disabled={isSubmitting}
                   data-testid="button-employee-check-in"
                 >
-                  {isSubmitting ? <MapPin size={15} aria-hidden="true" /> : <LogIn size={15} aria-hidden="true" />}
-                  {isLocating ? 'Memeriksa lokasi…' : checkIn.isPending ? 'Menyimpan…' : 'Absen masuk'}
+                  {isSubmitting ? <MapPin size={15} aria-hidden="true" /> : challengeToken && actionError ? <LogIn size={15} aria-hidden="true" /> : <Camera size={15} aria-hidden="true" />}
+                  {isLocating ? 'Mendeteksi lokasi…' : checkIn.isPending ? 'Menyimpan…' : challengeToken && actionError ? 'Coba absensi lagi' : 'Pindai QR & absen masuk'}
                   {!isSubmitting && <ArrowRight size={15} aria-hidden="true" />}
                 </button>
               ) : currentStatus === 'checked_in' ? (
                 <button
                   type="button"
                   className="employee-primary-button"
-                  onClick={() => void submitAttendance()}
-                  disabled={isSubmitting || !challengeToken}
+                  onClick={submitAttendance}
+                  disabled={isSubmitting}
                   data-testid="button-employee-check-out"
                 >
-                  {isSubmitting ? <MapPin size={15} aria-hidden="true" /> : <LogOut size={15} aria-hidden="true" />}
-                  {isLocating ? 'Memeriksa lokasi…' : checkOut.isPending ? 'Menyimpan…' : 'Absen pulang'}
+                  {isSubmitting ? <MapPin size={15} aria-hidden="true" /> : challengeToken && actionError ? <LogOut size={15} aria-hidden="true" /> : <Camera size={15} aria-hidden="true" />}
+                  {isLocating ? 'Mendeteksi lokasi…' : checkOut.isPending ? 'Menyimpan…' : challengeToken && actionError ? 'Coba absensi lagi' : 'Pindai QR & absen pulang'}
                   {!isSubmitting && <ArrowRight size={15} aria-hidden="true" />}
                 </button>
               ) : (
@@ -327,12 +440,13 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
             </div>
             {challengeToken && currentStatus !== 'checked_out' && (
               <p className="employee-attendance__scan-confirmation" role="status">
-                <QrCode size={14} aria-hidden="true" /> QR absensi terbaca. Konfirmasi untuk meminta lokasi GPS.
+                <QrCode size={14} aria-hidden="true" /> QR absensi terbaca. Lokasi HP sedang diperiksa otomatis.
               </p>
             )}
+            {actionSuccess && <p className="employee-attendance__action-success" role="status">{actionSuccess}</p>}
             {actionError && <p className="employee-attendance__action-error" role="alert" data-testid="status-employee-attendance-action-error">{actionError}</p>}
           </section>
-          <p className="employee-attendance__note">QR berlaku 45 detik dan hanya dapat dipakai satu kali per karyawan. Absensi memerlukan GPS dalam radius 100 meter dari salon.</p>
+          <p className="employee-attendance__note">Pindai dari akun karyawan masing-masing. Kamera dan lokasi HP digunakan otomatis; QR berlaku 45 detik, dan lokasi harus dalam radius 100 meter dari salon.</p>
 
           <section className="employee-attendance__history" aria-labelledby="employee-attendance-history-title">
             <div className="employee-attendance__history-heading">
@@ -371,6 +485,35 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
         </>
       )}
 
+      {showScanner && (
+        <div className="employee-attendance__qr-backdrop" role="presentation">
+          <section className="employee-attendance__scanner-dialog" role="dialog" aria-modal="true" aria-labelledby="employee-attendance-scanner-title">
+            <button
+              type="button"
+              className="employee-attendance__qr-close"
+              onClick={() => setShowScanner(false)}
+              aria-label="Tutup pemindai QR"
+              data-testid="button-close-attendance-scanner"
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+            <p className="employee-kicker">ABSENSI / AKUN ANDA</p>
+            <h2 id="employee-attendance-scanner-title">Pindai QR salon</h2>
+            <p className="employee-attendance__qr-instruction">Arahkan kamera belakang HP ke QR di tablet salon. Setelah terbaca, lokasi HP akan terdeteksi dan absensi dikirim otomatis.</p>
+            <div className="employee-attendance__scanner-frame">
+              <video ref={scannerVideo} autoPlay muted playsInline aria-label="Kamera untuk memindai QR absensi" />
+              <span className="employee-attendance__scanner-guide" aria-hidden="true" />
+            </div>
+            {scannerError ? (
+              <p className="employee-attendance__qr-error" role="alert">{scannerError}</p>
+            ) : (
+              <p className="employee-attendance__scanner-status" role="status">Kamera aktif. Arahkan ke QR yang tampil di salon.</p>
+            )}
+            <p className="employee-attendance__qr-footer">Izin kamera dan lokasi hanya diminta untuk memproses absensi akun Anda.</p>
+          </section>
+        </div>
+      )}
+
       {showQr && (
         <div className="employee-attendance__qr-backdrop" role="presentation">
           <section className="employee-attendance__qr-dialog" role="dialog" aria-modal="true" aria-labelledby="employee-attendance-qr-title">
@@ -384,8 +527,8 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
               <X size={18} aria-hidden="true" />
             </button>
             <p className="employee-kicker">GGS / ABSENSI SALON</p>
-            <h2 id="employee-attendance-qr-title">Scan untuk absen</h2>
-            <p className="employee-attendance__qr-instruction">Buka kamera HP karyawan dan arahkan ke QR ini. Kode diperbarui otomatis dan hanya berlaku singkat.</p>
+            <h2 id="employee-attendance-qr-title">QR absensi salon</h2>
+            <p className="employee-attendance__qr-instruction">Tampilkan layar ini di tablet salon. Setiap karyawan memindai QR dari akun dan HP masing-masing; kode diperbarui otomatis.</p>
             {qrChallenge && qrSecondsLeft > 0 ? (
               <div className="employee-attendance__qr-code" data-testid="employee-attendance-qr-code">
                 <QRCodeSVG value={challengeUrl} size={264} level="M" includeMargin />
@@ -411,7 +554,7 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
               <RefreshCw size={15} aria-hidden="true" className={isCreatingQr ? 'is-spinning' : ''} />
               {isCreatingQr ? 'Memperbarui…' : 'Buat QR baru'}
             </button>
-            <p className="employee-attendance__qr-footer">Karyawan perlu masuk ke akun masing-masing. Lokasi dan masa berlaku diverifikasi server.</p>
+            <p className="employee-attendance__qr-footer">QR berlaku 45 detik. Setiap absensi menggunakan lokasi HP karyawan dan diverifikasi server.</p>
           </section>
         </div>
       )}
