@@ -173,8 +173,8 @@ function AccountAuthPage({ mode }: { mode: 'in' | 'up' }) {
           <p className="ggs-professional__eyebrow">GGS / MY GGS</p>
           <h1>{isRegister ? <>Buat akun<br /><em>GGS-mu.</em></> : <>Masuk ke<br /><em>My GGS.</em></>}</h1>
           <p>{isRegister ? 'Simpan poin dan akses kebutuhan kunjungan GGS.' : 'Akses poin, voucher, produk, dan booking.'}</p>
-          <Link href="/my-ggs" className="ggs-auth-page__back">
-            Kembali ke My GGS <ArrowRight size={15} aria-hidden="true" />
+          <Link href="/" className="ggs-auth-page__back">
+            Kembali ke GGS <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>
         <div className="ggs-auth-page__form">
@@ -2635,6 +2635,10 @@ function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductTo
   const getCartQuantity = (productId: number) =>
     cartItems.find((item) => item.productId === productId)?.quantity ?? 0;
 
+  useEffect(() => {
+    if (signedOut) setLocation('/sign-in');
+  }, [setLocation, signedOut]);
+
   const signOut = () => logout.mutate(undefined, {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: getGetGgsAccountSessionQueryKey() });
@@ -2660,14 +2664,8 @@ function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductTo
               <button type="button" onClick={() => void sessionQuery.refetch()}>Coba lagi</button>
             </div>
           ) : signedOut ? (
-            <section className="ggs-account-signed-out" data-testid="panel-my-ggs-signed-out">
-              <div className="ggs-account-signed-out__icon"><UserRound size={22} /></div>
-              <div><p className="ggs-professional__eyebrow">AKUN PELANGGAN</p><h2>Masuk ke My GGS</h2><p>Gunakan email atau WhatsApp dan kata sandi.</p></div>
-              <div className="ggs-account-signed-out__actions">
-                <Link href="/sign-in" className="ggs-professional__booking-link" data-testid="link-my-ggs-sign-in">Masuk <ArrowRight size={15} /></Link>
-                <Link href="/sign-up" className="ggs-account-text-button" data-testid="link-my-ggs-sign-up">Buat akun</Link>
-                <Link href="/employee/sign-in" className="ggs-account-text-button" data-testid="link-my-ggs-employee-sign-in">Masuk karyawan</Link>
-              </div>
+            <section className="ggs-account-session-error" role="status" data-testid="panel-my-ggs-signed-out">
+              <p>Membuka halaman masuk pelanggan…</p>
             </section>
           ) : account ? (
           <div className="ggs-professional__panel" data-testid="panel-my-ggs-account">
