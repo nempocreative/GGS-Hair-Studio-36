@@ -27,6 +27,12 @@ Show the supplied Hair & Self Care skincare avatar directly, without an added ou
 
 **How to apply:** Use the supplied Hair & Self Care image as-is, with its transparent background and no added colored tile.
 
+Show the supplied Galeri Gaya avatar directly, without an added outer tile or shape, matching the other supplied cutout icons.
+
+**Why:** The user explicitly asked for Galeri Gaya to follow the other menu icons and not use an outer shape.
+
+**How to apply:** Use the supplied Galeri Gaya image as-is on the homepage shortcut, preserving transparency and adding no colored tile.
+
 Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
 **Why:** The user specifically clarified that the person icon's body should visually connect to its tile.

@@ -1146,16 +1146,16 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
             {visibleHomeShortcuts.map((item) => {
               return (
                 <Link
-                  className={`ggs-quick-menu-item${item.href === '/' ? ' ggs-menu-home' : ''}${item.href === '/mens-grooming' ? ' ggs-menu-mens' : ''}${item.href === '/womens-hair-beauty' ? ' ggs-menu-womens' : ''}${item.href === '/hair-self-care' ? ' ggs-menu-self-care' : ''}`}
+                  className={`ggs-quick-menu-item${item.href === '/' ? ' ggs-menu-home' : ''}${item.href === '/style-gallery' ? ' ggs-menu-style-gallery' : ''}${item.href === '/mens-grooming' ? ' ggs-menu-mens' : ''}${item.href === '/womens-hair-beauty' ? ' ggs-menu-womens' : ''}${item.href === '/hair-self-care' ? ' ggs-menu-self-care' : ''}`}
                   href={item.href}
                   key={item.href}
                   data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
                 >
                   <span className={`ggs-quick-menu-icon ${item.tone}`}>
-                    {item.href === '/' || item.href === '/mens-grooming' || item.href === '/womens-hair-beauty' || item.href === '/hair-self-care' ? (
+                    {item.href === '/' || item.href === '/style-gallery' || item.href === '/mens-grooming' || item.href === '/womens-hair-beauty' || item.href === '/hair-self-care' ? (
                       <img
                         className="ggs-quick-menu-avatar ggs-quick-menu-avatar-photo"
-                        src={`${import.meta.env.BASE_URL}menu-icons/${item.href === '/' ? 'home-pink-avatar.png' : item.href === '/hair-self-care' ? 'hair-self-care-skincare.png' : item.href === '/mens-grooming' ? 'mens-grooming-glossy-scissors.webp' : 'womens-pink-scissors.webp'}`}
+                        src={`${import.meta.env.BASE_URL}menu-icons/${item.href === '/' ? 'home-pink-avatar.png' : item.href === '/style-gallery' ? 'hair-gallery-pink-avatar.png' : item.href === '/hair-self-care' ? 'hair-self-care-skincare.png' : item.href === '/mens-grooming' ? 'mens-grooming-glossy-scissors.webp' : 'womens-pink-scissors.webp'}`}
                         alt=""
                         aria-hidden="true"
                       />
