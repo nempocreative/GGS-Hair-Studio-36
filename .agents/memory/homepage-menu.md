@@ -63,6 +63,18 @@ Show the supplied Karir avatar directly, without an added outer tile or shape.
 
 **How to apply:** Use the supplied Karir image as-is on the homepage shortcut, preserving its transparency and adding no colored tile.
 
+Show the supplied Produk skincare avatar directly, without an added outer tile or shape.
+
+**Why:** The user explicitly asked for the Produk icon to appear without a shape.
+
+**How to apply:** Use the supplied Produk image as-is on the homepage shortcut, preserving its transparency and adding no colored tile.
+
+Show the supplied Voucher avatar directly, without an added outer tile or shape.
+
+**Why:** The user explicitly asked for the Voucher icon to appear without a shape.
+
+**How to apply:** Use the supplied Voucher image as-is on the homepage shortcut, preserving its transparency and adding no colored tile.
+
 Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
 **Why:** The user specifically clarified that the person icon's body should visually connect to its tile.
