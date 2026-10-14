@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, CalendarDays, Clock3, LogOut, RefreshCw, Search, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, Clock3, LayoutDashboard, LogOut, Menu, Package, RefreshCw, Search, ShieldCheck, UserRound, UsersRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import {
   getGetGgsEmployeeBookingsQueryKey,
@@ -46,6 +46,116 @@ const statusLabels: Record<GgsEmployeeBooking['status'], string> = {
   cancelled: 'Dibatalkan',
 };
 
+const employeeMenuItems = [
+  { href: '/employee/overview', label: 'Ringkasan', icon: LayoutDashboard, description: 'Ringkasan operasional studio.' },
+  { href: '/employee/schedule', label: 'Jadwal booking', icon: CalendarDays, description: 'Booking pelanggan yang masuk ke studio.' },
+  { href: '/employee/attendance', label: 'Absensi', icon: Clock3, description: 'Pencatatan kehadiran tim karyawan.' },
+  { href: '/employee/cashier', label: 'Kasir', icon: Banknote, description: 'Pencatatan transaksi layanan dan produk.' },
+  { href: '/employee/customers', label: 'Pelanggan', icon: UsersRound, description: 'Informasi dan riwayat kunjungan pelanggan.' },
+  { href: '/employee/stock', label: 'Stok produk', icon: Package, description: 'Pemantauan ketersediaan produk studio.' },
+  { href: '/employee/reports', label: 'Laporan', icon: BarChart3, description: 'Rekap kegiatan dan performa studio.' },
+] as const;
+
+type EmployeeMenuItem = (typeof employeeMenuItems)[number];
+
+function EmployeeOverview({
+  employeeName,
+  bookings,
+  isLoading,
+  isError,
+  onRetry,
+}: {
+  employeeName: string;
+  bookings: GgsEmployeeBooking[];
+  isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
+}) {
+  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
+  const todayBookings = bookings.filter((booking) => isSameDayAsJakarta(booking.appointmentDate));
+  const pendingBookings = bookings.filter((booking) => booking.status === 'pending');
+  const latestBookings = [...bookings]
+    .sort((first, second) => `${dateKey(first.appointmentDate)} ${first.appointmentTime}`.localeCompare(`${dateKey(second.appointmentDate)} ${second.appointmentTime}`))
+    .filter((booking) => dateKey(booking.appointmentDate) >= today)
+    .slice(0, 3);
+  const displayCount = (count: number) => isLoading ? '—' : isError ? '–' : count.toString().padStart(2, '0');
+
+  return (
+    <div className="employee-dashboard" data-testid="employee-overview">
+      <section className="employee-dashboard__heading">
+        <div>
+          <p className="employee-kicker">RINGKASAN OPERASIONAL</p>
+          <h1>Selamat datang,<br /><em>{employeeName}.</em></h1>
+          <p>Berikut gambaran booking studio untuk hari ini.</p>
+        </div>
+        <Link href="/employee/schedule" className="employee-primary-button" data-testid="link-overview-schedule">
+          Lihat jadwal <ArrowRight size={15} aria-hidden="true" />
+        </Link>
+      </section>
+
+      <section className="employee-dashboard__stats" aria-label="Ringkasan booking">
+        <article className="employee-dashboard__stat">
+          <span>BOOKING HARI INI</span>
+          <strong>{displayCount(todayBookings.length)}</strong>
+          <CalendarDays size={18} aria-hidden="true" />
+        </article>
+        <article className="employee-dashboard__stat">
+          <span>MENUNGGU KONFIRMASI</span>
+          <strong>{displayCount(pendingBookings.length)}</strong>
+          <Clock3 size={18} aria-hidden="true" />
+        </article>
+        <article className="employee-dashboard__stat">
+          <span>SELURUH BOOKING</span>
+          <strong>{displayCount(bookings.length)}</strong>
+          <BarChart3 size={18} aria-hidden="true" />
+        </article>
+      </section>
+
+      <section className="employee-dashboard__activity" aria-labelledby="employee-overview-activity-title">
+        <div className="employee-dashboard__section-title">
+          <div>
+            <p className="employee-kicker">AGENDA STUDIO</p>
+            <h2 id="employee-overview-activity-title">Booking terdekat</h2>
+          </div>
+          <Link href="/employee/schedule" className="employee-dashboard__text-link">Semua jadwal <ArrowRight size={14} aria-hidden="true" /></Link>
+        </div>
+        {isLoading ? (
+          <EmployeeBookingsSkeleton />
+        ) : isError ? (
+          <div className="employee-bookings__error" role="alert">
+            <div><strong>Ringkasan belum dapat dimuat.</strong><p>Periksa koneksi, lalu coba lagi.</p></div>
+            <button type="button" onClick={onRetry}>Coba lagi</button>
+          </div>
+        ) : latestBookings.length ? (
+          <div className="employee-booking-list">
+            {latestBookings.map((booking) => <BookingCard key={booking.id} booking={booking} />)}
+          </div>
+        ) : (
+          <div className="employee-bookings__empty">
+            <div className="employee-bookings__empty-mark"><CalendarDays size={21} aria-hidden="true" /></div>
+            <h3>Belum ada booking terdekat.</h3>
+            <p>Booking studio akan muncul di sini saat pelanggan membuat janji.</p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function EmployeeModulePlaceholder({ item }: { item: EmployeeMenuItem }) {
+  const Icon = item.icon;
+
+  return (
+    <section className="employee-module-placeholder" data-testid={`employee-module-${item.href.split('/').pop()}`}>
+      <div className="employee-module-placeholder__icon"><Icon size={21} aria-hidden="true" /></div>
+      <p className="employee-kicker">MENU KARYAWAN</p>
+      <h1>{item.label}</h1>
+      <p>{item.description}</p>
+      <span className="employee-module-placeholder__status">MENU BELUM AKTIF</span>
+    </section>
+  );
+}
+
 export function EmployeeSignInPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -69,7 +179,7 @@ export function EmployeeSignInPage() {
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeSessionQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeBookingsQueryKey() }),
         ]);
-        setLocation('/employee/schedule');
+        setLocation('/employee/overview');
       },
       onError: (error) => setFormError(employeeErrorMessage(error)),
     });
@@ -199,7 +309,7 @@ function BookingCard({ booking }: { booking: GgsEmployeeBooking }) {
 }
 
 export function EmployeeSchedulePage() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const session = useGetGgsEmployeeSession({
     query: {
@@ -221,6 +331,11 @@ export function EmployeeSchedulePage() {
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'upcoming'>('all');
   const [logoutError, setLogoutError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches,
+  );
+  const currentMenu = employeeMenuItems.find((item) => item.href === location) ?? employeeMenuItems[0];
+  const authenticated = Boolean(session.isSuccess && session.data?.active);
 
   const sortedBookings = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('id-ID');
@@ -258,124 +373,219 @@ export function EmployeeSchedulePage() {
   };
 
   const needsSignIn = session.isError || (session.isSuccess && !session.data.active);
+  const closeSidebarAfterNavigation = () => {
+    if (window.matchMedia('(max-width: 900px)').matches) setSidebarCollapsed(true);
+  };
 
   return (
-    <main className="employee-workspace employee-schedule" data-testid="page-employee-schedule">
-      <header className="employee-schedule__topbar">
-        <Link href="/" className="employee-brand" data-testid="link-schedule-home">
-          <span className="employee-brand__mark" aria-hidden="true">G</span>
-          <span><strong>GGS</strong><small>HAIR STUDIO</small></span>
-        </Link>
-        <div className="employee-schedule__topbar-actions">
-          <span className="employee-private-label"><span /> AREA KARYAWAN</span>
-          <button type="button" className="employee-logout-button" onClick={signOut} disabled={logout.isPending || needsSignIn} data-testid="button-employee-sign-out">
-            <LogOut size={15} aria-hidden="true" />
-            {logout.isPending ? 'Keluar…' : 'Keluar'}
-          </button>
-        </div>
-      </header>
-
-      {session.isLoading ? (
-        <div className="employee-schedule__loading">
-          <div className="employee-schedule__loading-line" />
-          <EmployeeBookingsSkeleton />
-        </div>
-      ) : needsSignIn ? (
-        <section className="employee-protected-message" role="alert" data-testid="status-employee-session-required">
-          <span className="employee-protected-message__icon"><ShieldCheck size={20} aria-hidden="true" /></span>
-          <div>
-            <p className="employee-kicker">SESI TIDAK AKTIF</p>
-            <h1>Masuk untuk melihat jadwal.</h1>
-            <p>Jadwal studio hanya tersedia untuk karyawan yang sudah masuk.</p>
-          </div>
-          <Link href="/employee/sign-in" className="employee-primary-button" data-testid="link-schedule-sign-in">
-            Masuk karyawan <ArrowRight size={15} aria-hidden="true" />
-          </Link>
-        </section>
-      ) : (
-        <div className="employee-schedule__content">
-          <section className="employee-schedule__heading">
-            <div>
-              <p className="employee-kicker">GGS / DAILY OPERATIONS</p>
-              <h1>Jadwal <em>studio.</em></h1>
-              <p className="employee-schedule__welcome">Halo, {session.data?.name} <span>· ID {session.data?.employeeId}</span>. Berikut seluruh booking studio yang perlu diperhatikan.</p>
+    <main className={`employee-workspace employee-schedule employee-cms${sidebarCollapsed ? ' employee-cms--collapsed' : ''}`} data-testid="page-employee-schedule">
+      {authenticated && (
+        <>
+          <aside
+            id="employee-workspace-nav"
+            className={`employee-cms__sidebar${sidebarCollapsed ? ' employee-cms__sidebar--collapsed' : ''}`}
+            aria-label="Navigasi karyawan"
+            data-testid="employee-sidebar"
+          >
+            <Link href="/employee/overview" className="employee-sidebar__brand" aria-label="GGS workspace">
+              <span className="employee-brand__mark" aria-hidden="true">G</span>
+              <span className="employee-sidebar__brand-copy"><strong>GGS</strong><small>HAIR STUDIO</small></span>
+            </Link>
+            <p className="employee-sidebar__eyebrow">MENU KARYAWAN</p>
+            <nav className="employee-sidebar__nav">
+              {employeeMenuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentMenu.href === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`employee-sidebar__item${isActive ? ' employee-sidebar__item--active' : ''}`}
+                    aria-label={item.label}
+                    aria-current={isActive ? 'page' : undefined}
+                    title={sidebarCollapsed ? item.label : undefined}
+                    onClick={closeSidebarAfterNavigation}
+                    data-testid={`link-employee-menu-${item.href.split('/').pop()}`}
+                  >
+                    <Icon size={18} aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="employee-sidebar__account" title={session.data?.name}>
+              <span className="employee-sidebar__avatar" aria-hidden="true">
+                {session.data?.name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase()}
+              </span>
+              <span className="employee-sidebar__account-copy">
+                <strong>{session.data?.name}</strong>
+                <small>ID {session.data?.employeeId}</small>
+              </span>
             </div>
+          </aside>
+          {!sidebarCollapsed && (
             <button
               type="button"
-              className="employee-refresh-button"
-              onClick={refreshSchedule}
-              disabled={refreshing || bookings.isFetching || session.isFetching}
-              data-testid="button-refresh-employee-schedule"
-            >
-              <RefreshCw size={15} aria-hidden="true" className={refreshing || bookings.isFetching ? 'is-spinning' : ''} />
-              Perbarui jadwal
-            </button>
-          </section>
-
-          <section className="employee-schedule__summary" aria-label="Ringkasan jadwal">
-            <div className="employee-schedule__summary-icon"><CalendarDays size={19} aria-hidden="true" /></div>
-            <div><span>BOOKING TERLIHAT</span><strong>{bookings.isLoading ? '—' : (bookings.data?.length ?? 0).toString().padStart(2, '0')}</strong></div>
-            <p>Semua booking tampil untuk tim studio. Booking belum ditetapkan ke karyawan tertentu.</p>
-          </section>
-
-          <section className="employee-bookings" aria-label="Daftar booking studio">
-            <div className="employee-bookings__toolbar">
-              <div className="employee-bookings__title">
-                <h2>Agenda booking</h2>
-                <span>{sortedBookings.length} tampil</span>
-              </div>
-              <div className="employee-bookings__filters">
-                <label className="employee-search">
-                  <Search size={15} aria-hidden="true" />
-                  <span className="sr-only">Cari booking</span>
-                  <input
-                    type="search"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Cari nama, telepon, layanan"
-                    data-testid="input-search-employee-bookings"
-                  />
-                </label>
-                <label className="employee-date-filter">
-                  <span className="sr-only">Filter tanggal booking</span>
-                  <select value={dateFilter} onChange={(event) => setDateFilter(event.target.value as 'all' | 'today' | 'upcoming')} data-testid="select-employee-booking-date">
-                    <option value="all">Semua tanggal</option>
-                    <option value="today">Hari ini</option>
-                    <option value="upcoming">Hari ini & berikutnya</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-
-            {bookings.isLoading ? (
-              <EmployeeBookingsSkeleton />
-            ) : bookings.isError ? (
-              <div className="employee-bookings__error" role="alert" data-testid="status-employee-bookings-error">
-                <div><strong>Jadwal belum dapat dimuat.</strong><p>Periksa koneksi, lalu coba perbarui data booking.</p></div>
-                <button type="button" onClick={refreshSchedule} disabled={refreshing}>Coba lagi</button>
-              </div>
-            ) : sortedBookings.length ? (
-              <div className="employee-booking-list">
-                {sortedBookings.map((booking) => (
-                  <BookingCard key={booking.id} booking={booking} />
-                ))}
-              </div>
-            ) : (
-              <div className="employee-bookings__empty" data-testid="status-employee-bookings-empty">
-                <div className="employee-bookings__empty-mark"><CalendarDays size={21} aria-hidden="true" /></div>
-                <h3>{bookings.data?.length ? 'Tidak ada booking yang cocok.' : 'Belum ada booking.'}</h3>
-                <p>{bookings.data?.length ? 'Ubah kata pencarian atau filter tanggal untuk melihat agenda lain.' : 'Booking yang masuk ke studio akan muncul di halaman ini.'}</p>
-                {search || dateFilter !== 'all' ? <button type="button" onClick={() => { setSearch(''); setDateFilter('all'); }}>Hapus filter</button> : null}
-              </div>
-            )}
-          </section>
-          {logoutError && <p className="employee-form-error employee-schedule__logout-error" role="alert">{logoutError}</p>}
-          <footer className="employee-schedule__footer">
-            <span>JADWAL INTERNAL / GGS</span>
-            <span>Hanya baca · Data pelanggan untuk operasional studio</span>
-          </footer>
-        </div>
+              className="employee-sidebar-backdrop"
+              aria-label="Tutup menu"
+              onClick={() => setSidebarCollapsed(true)}
+            />
+          )}
+        </>
       )}
+
+      <div className="employee-cms__main">
+        <header className="employee-schedule__topbar employee-cms__topbar">
+          {authenticated ? (
+            <>
+              <button
+                type="button"
+                className="employee-menu-toggle"
+                aria-label={sidebarCollapsed ? 'Tampilkan menu' : 'Sembunyikan menu'}
+                aria-controls="employee-workspace-nav"
+                aria-expanded={!sidebarCollapsed}
+                onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+                data-testid="button-employee-sidebar-toggle"
+              >
+                <Menu size={18} aria-hidden="true" />
+              </button>
+              <div className="employee-cms__breadcrumb">
+                <span>RUANG KERJA / KARYAWAN</span>
+                <strong>{currentMenu.label}</strong>
+              </div>
+            </>
+          ) : (
+            <Link href="/" className="employee-brand" data-testid="link-schedule-home">
+              <span className="employee-brand__mark" aria-hidden="true">G</span>
+              <span><strong>GGS</strong><small>HAIR STUDIO</small></span>
+            </Link>
+          )}
+          <div className="employee-schedule__topbar-actions">
+            {authenticated && <span className="employee-private-label"><span /> AREA KARYAWAN</span>}
+            <button type="button" className="employee-logout-button" onClick={signOut} disabled={logout.isPending || needsSignIn} data-testid="button-employee-sign-out">
+              <LogOut size={15} aria-hidden="true" />
+              {logout.isPending ? 'Keluar…' : 'Keluar'}
+            </button>
+          </div>
+        </header>
+
+        {session.isLoading ? (
+          <div className="employee-schedule__loading">
+            <div className="employee-schedule__loading-line" />
+            <EmployeeBookingsSkeleton />
+          </div>
+        ) : needsSignIn ? (
+          <section className="employee-protected-message" role="alert" data-testid="status-employee-session-required">
+            <span className="employee-protected-message__icon"><ShieldCheck size={20} aria-hidden="true" /></span>
+            <div>
+              <p className="employee-kicker">SESI TIDAK AKTIF</p>
+              <h1>Masuk untuk melihat jadwal.</h1>
+              <p>Jadwal studio hanya tersedia untuk karyawan yang sudah masuk.</p>
+            </div>
+            <Link href="/employee/sign-in" className="employee-primary-button" data-testid="link-schedule-sign-in">
+              Masuk karyawan <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </section>
+        ) : currentMenu.href === '/employee/overview' ? (
+          <EmployeeOverview
+            employeeName={session.data?.name ?? 'Karyawan'}
+            bookings={bookings.data ?? []}
+            isLoading={bookings.isLoading}
+            isError={bookings.isError}
+            onRetry={() => void refreshSchedule()}
+          />
+        ) : currentMenu.href === '/employee/schedule' ? (
+          <div className="employee-schedule__content">
+            <section className="employee-schedule__heading">
+              <div>
+                <p className="employee-kicker">AGENDA STUDIO</p>
+                <h1>Jadwal <em>studio.</em></h1>
+                <p className="employee-schedule__welcome">Halo, {session.data?.name} <span>· ID {session.data?.employeeId}</span>. Berikut seluruh booking studio yang perlu diperhatikan.</p>
+              </div>
+              <button
+                type="button"
+                className="employee-refresh-button"
+                onClick={refreshSchedule}
+                disabled={refreshing || bookings.isFetching || session.isFetching}
+                data-testid="button-refresh-employee-schedule"
+              >
+                <RefreshCw size={15} aria-hidden="true" className={refreshing || bookings.isFetching ? 'is-spinning' : ''} />
+                Perbarui jadwal
+              </button>
+            </section>
+
+            <section className="employee-schedule__summary" aria-label="Ringkasan jadwal">
+              <div className="employee-schedule__summary-icon"><CalendarDays size={19} aria-hidden="true" /></div>
+              <div><span>BOOKING TERLIHAT</span><strong>{bookings.isLoading ? '—' : (bookings.data?.length ?? 0).toString().padStart(2, '0')}</strong></div>
+              <p>Semua booking tampil untuk tim studio. Booking belum ditetapkan ke karyawan tertentu.</p>
+            </section>
+
+            <section className="employee-bookings" aria-label="Daftar booking studio">
+              <div className="employee-bookings__toolbar">
+                <div className="employee-bookings__title">
+                  <h2>Agenda booking</h2>
+                  <span>{sortedBookings.length} tampil</span>
+                </div>
+                <div className="employee-bookings__filters">
+                  <label className="employee-search">
+                    <Search size={15} aria-hidden="true" />
+                    <span className="sr-only">Cari booking</span>
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Cari nama, telepon, layanan"
+                      data-testid="input-search-employee-bookings"
+                    />
+                  </label>
+                  <label className="employee-date-filter">
+                    <span className="sr-only">Filter tanggal booking</span>
+                    <select value={dateFilter} onChange={(event) => setDateFilter(event.target.value as 'all' | 'today' | 'upcoming')} data-testid="select-employee-booking-date">
+                      <option value="all">Semua tanggal</option>
+                      <option value="today">Hari ini</option>
+                      <option value="upcoming">Hari ini & berikutnya</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              {bookings.isLoading ? (
+                <EmployeeBookingsSkeleton />
+              ) : bookings.isError ? (
+                <div className="employee-bookings__error" role="alert" data-testid="status-employee-bookings-error">
+                  <div><strong>Jadwal belum dapat dimuat.</strong><p>Periksa koneksi, lalu coba perbarui data booking.</p></div>
+                  <button type="button" onClick={refreshSchedule} disabled={refreshing}>Coba lagi</button>
+                </div>
+              ) : sortedBookings.length ? (
+                <div className="employee-booking-list">
+                  {sortedBookings.map((booking) => (
+                    <BookingCard key={booking.id} booking={booking} />
+                  ))}
+                </div>
+              ) : (
+                <div className="employee-bookings__empty" data-testid="status-employee-bookings-empty">
+                  <div className="employee-bookings__empty-mark"><CalendarDays size={21} aria-hidden="true" /></div>
+                  <h3>{bookings.data?.length ? 'Tidak ada booking yang cocok.' : 'Belum ada booking.'}</h3>
+                  <p>{bookings.data?.length ? 'Ubah kata pencarian atau filter tanggal untuk melihat agenda lain.' : 'Booking yang masuk ke studio akan muncul di halaman ini.'}</p>
+                  {search || dateFilter !== 'all' ? <button type="button" onClick={() => { setSearch(''); setDateFilter('all'); }}>Hapus filter</button> : null}
+                </div>
+              )}
+            </section>
+          </div>
+        ) : (
+          <EmployeeModulePlaceholder item={currentMenu} />
+        )}
+
+        {authenticated && (
+          <>
+            {logoutError && <p className="employee-form-error employee-schedule__logout-error" role="alert">{logoutError}</p>}
+            <footer className="employee-schedule__footer employee-cms__footer">
+              <span>AREA KARYAWAN / GGS</span>
+              <span>Informasi ditampilkan untuk operasional studio.</span>
+            </footer>
+          </>
+        )}
+      </div>
     </main>
   );
 }

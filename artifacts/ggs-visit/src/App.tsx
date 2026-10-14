@@ -118,7 +118,7 @@ function App() {
 function VisitorRouteSwitch() {
   const [location] = useLocation();
   if (location === '/employee/sign-in') return <EmployeeSignInPage />;
-  if (location === '/employee/schedule') return <EmployeeSchedulePage />;
+  if (location.startsWith('/employee/')) return <EmployeeSchedulePage />;
   return <VisitorWebsite />;
 }
 
