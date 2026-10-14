@@ -1152,10 +1152,10 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                   data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
                 >
                   <span className={`ggs-quick-menu-icon ${item.tone}`}>
-                    {item.href === '/mens-grooming' ? (
+                    {item.href === '/mens-grooming' || item.href === '/womens-hair-beauty' ? (
                       <img
                         className="ggs-quick-menu-avatar ggs-quick-menu-avatar-photo"
-                        src={`${import.meta.env.BASE_URL}menu-icons/mens-grooming-glossy-scissors.webp`}
+                        src={`${import.meta.env.BASE_URL}menu-icons/${item.href === '/mens-grooming' ? 'mens-grooming-glossy-scissors.webp' : 'womens-pink-scissors.webp'}`}
                         alt=""
                         aria-hidden="true"
                       />

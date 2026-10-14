@@ -9,11 +9,11 @@ For the GGS visitor website, show four menu shortcuts per row and eight per slid
 
 **How to apply:** Preserve this layout, overflow behavior, navigation control, and background-free styling when adding or changing homepage shortcuts.
 
-Use illustrated people for homepage shortcuts with varied hairstyles, except for Men's Grooming, which uses the user's supplied full hair-and-scissors image by itself, without a separate badge or colored tile. Keep the other portraits in the existing colored rounded-square tiles and avoid cream-colored line details.
+Use illustrated people for homepage shortcuts with varied hairstyles, except for Men's Grooming and Women's Hair & Beauty, which use their supplied full hair-and-scissors images by themselves, without separate badges or colored tiles. Keep the other portraits in the existing colored rounded-square tiles and avoid cream-colored line details.
 
-**Why:** The user explicitly chose the supplied full hair-and-scissors image as the entire Men's Grooming icon and asked to remove the separate icon and shape behind it.
+**Why:** The user explicitly chose full hair-and-scissors images as the entire Men's Grooming and Women's Hair & Beauty icons, without added icons or shapes behind them.
 
-**How to apply:** Show the Men's Grooming image as-is with no additional icon, background tile, or crop; vary illustrated hairstyles across the other shortcuts. Preserve their tile colors, the four-column/eight-per-slide layout, dot navigation, and background-free shortcut links.
+**How to apply:** Show the supplied Men's and Women's Grooming images as-is with no additional icon, background tile, or crop; vary illustrated hairstyles across the other shortcuts. Preserve their tile colors, the four-column/eight-per-slide layout, dot navigation, and background-free shortcut links.
 
 Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
