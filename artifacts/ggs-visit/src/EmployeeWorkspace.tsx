@@ -69,7 +69,7 @@ const statusLabels: Record<GgsEmployeeBooking['status'], string> = {
 };
 
 const employeeMenuItems = [
-  { href: '/employee/overview', label: 'Ringkasan', icon: LayoutDashboard, description: 'Ringkasan operasional studio.' },
+  { href: '/employee/overview', label: 'Ringkasan', icon: LayoutDashboard, description: 'Ringkasan studio.' },
   { href: '/employee/schedule', label: 'Jadwal booking', icon: CalendarDays, description: 'Booking pelanggan yang masuk ke studio.' },
   { href: '/employee/attendance', label: 'Absensi', icon: Clock3, description: 'Pencatatan kehadiran tim karyawan.' },
   { href: '/employee/cashier', label: 'Kasir', icon: Banknote, description: 'Pencatatan transaksi layanan dan produk.' },
@@ -100,46 +100,38 @@ function EmployeeOverview({
     .sort((first, second) => `${dateKey(first.appointmentDate)} ${first.appointmentTime}`.localeCompare(`${dateKey(second.appointmentDate)} ${second.appointmentTime}`))
     .filter((booking) => dateKey(booking.appointmentDate) >= today)
     .slice(0, 3);
-  const displayCount = (count: number) => isLoading ? '—' : isError ? '–' : count.toString().padStart(2, '0');
+  const displayCount = (count: number) => isLoading ? '—' : isError ? '–' : count.toString();
 
   return (
     <div className="employee-dashboard" data-testid="employee-overview">
       <section className="employee-dashboard__heading">
         <div>
-          <p className="employee-kicker">RINGKASAN OPERASIONAL</p>
-          <h1>Selamat datang,<br /><em>{employeeName}.</em></h1>
-          <p>Berikut gambaran booking studio untuk hari ini.</p>
+          <h1>Halo, {employeeName}</h1>
+          <p>{displayDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
         <Link href="/employee/schedule" className="employee-primary-button" data-testid="link-overview-schedule">
-          Lihat jadwal <ArrowRight size={15} aria-hidden="true" />
+          Jadwal booking <ArrowRight size={15} aria-hidden="true" />
         </Link>
       </section>
 
       <section className="employee-dashboard__stats" aria-label="Ringkasan booking">
         <article className="employee-dashboard__stat">
-          <span>BOOKING HARI INI</span>
+          <span>Booking hari ini</span>
           <strong>{displayCount(todayBookings.length)}</strong>
-          <CalendarDays size={18} aria-hidden="true" />
         </article>
         <article className="employee-dashboard__stat">
-          <span>MENUNGGU KONFIRMASI</span>
+          <span>Menunggu konfirmasi</span>
           <strong>{displayCount(pendingBookings.length)}</strong>
-          <Clock3 size={18} aria-hidden="true" />
         </article>
         <article className="employee-dashboard__stat">
-          <span>SELURUH BOOKING</span>
+          <span>Total booking</span>
           <strong>{displayCount(bookings.length)}</strong>
-          <BarChart3 size={18} aria-hidden="true" />
         </article>
       </section>
 
       <section className="employee-dashboard__activity" aria-labelledby="employee-overview-activity-title">
         <div className="employee-dashboard__section-title">
-          <div>
-            <p className="employee-kicker">AGENDA STUDIO</p>
-            <h2 id="employee-overview-activity-title">Booking terdekat</h2>
-          </div>
-          <Link href="/employee/schedule" className="employee-dashboard__text-link">Semua jadwal <ArrowRight size={14} aria-hidden="true" /></Link>
+          <h2 id="employee-overview-activity-title">Booking terdekat</h2>
         </div>
         {isLoading ? (
           <EmployeeBookingsSkeleton />
@@ -154,9 +146,7 @@ function EmployeeOverview({
           </div>
         ) : (
           <div className="employee-bookings__empty">
-            <div className="employee-bookings__empty-mark"><CalendarDays size={21} aria-hidden="true" /></div>
-            <h3>Belum ada booking terdekat.</h3>
-            <p>Booking studio akan muncul di sini saat pelanggan membuat janji.</p>
+            <p>Belum ada booking.</p>
           </div>
         )}
       </section>
@@ -417,7 +407,6 @@ export function EmployeeSchedulePage() {
               <span className="employee-brand__mark" aria-hidden="true">G</span>
               <span className="employee-sidebar__brand-copy"><strong>GGS</strong><small>HAIR STUDIO</small></span>
             </Link>
-            <p className="employee-sidebar__eyebrow">MENU KARYAWAN</p>
             <nav className="employee-sidebar__nav">
               {employeeMenuItems.map((item) => {
                 const Icon = item.icon;
@@ -476,7 +465,6 @@ export function EmployeeSchedulePage() {
                 <Menu size={18} aria-hidden="true" />
               </button>
               <div className="employee-cms__breadcrumb">
-                <span>RUANG KERJA / KARYAWAN</span>
                 <strong>{currentMenu.label}</strong>
               </div>
             </>
@@ -487,7 +475,6 @@ export function EmployeeSchedulePage() {
             </Link>
           )}
           <div className="employee-schedule__topbar-actions">
-            {authenticated && <span className="employee-private-label"><span /> AREA KARYAWAN</span>}
             <button type="button" className="employee-logout-button" onClick={signOut} disabled={logout.isPending || needsSignIn} data-testid="button-employee-sign-out">
               <LogOut size={15} aria-hidden="true" />
               {logout.isPending ? 'Keluar…' : 'Keluar'}
@@ -608,15 +595,7 @@ export function EmployeeSchedulePage() {
           <EmployeeModulePlaceholder item={currentMenu} />
         )}
 
-        {authenticated && (
-          <>
-            {logoutError && <p className="employee-form-error employee-schedule__logout-error" role="alert">{logoutError}</p>}
-            <footer className="employee-schedule__footer employee-cms__footer">
-              <span>AREA KARYAWAN / GGS</span>
-              <span>Informasi ditampilkan untuk operasional studio.</span>
-            </footer>
-          </>
-        )}
+        {authenticated && logoutError && <p className="employee-form-error employee-schedule__logout-error" role="alert">{logoutError}</p>}
       </div>
     </main>
   );

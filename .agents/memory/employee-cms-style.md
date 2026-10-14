@@ -3,8 +3,10 @@ name: Employee CMS style
 description: Preferred copy and typography for GGS employee management screens in the CMS.
 ---
 
-Keep the GGS employee CMS concise and professional. Remove nonessential copy and use standard system typography such as Arial or Poppins rather than editorial serif or monospaced display styling.
+“Employee CMS” refers to the signed-in employee workspace at `/employee/...` in the visitor app, not the owner-only employee-account manager in the admin app.
 
-**Why:** The user explicitly asked to simplify the employee CMS page and use Poppins or Arial.
+Keep the employee workspace concise and practical. Use standard system typography such as Arial or Poppins, avoid marketing-style hero copy, padded counts, decorative metric icons, and repeated labels.
 
-**How to apply:** On CMS employee-management screens, keep key details and action labels clear without decorative copy or display typography.
+**Why:** The user clarified the intended screen with a screenshot after an earlier change targeted the wrong employee page.
+
+**How to apply:** When the user asks to refine the employee CMS, start with the signed-in employee workspace unless they explicitly refer to owner account administration.
