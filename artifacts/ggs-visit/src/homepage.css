@@ -1767,24 +1767,14 @@
   transform: scale(.9);
   transform-origin: center bottom;
 }
-.ggs-quick-menu-avatar-photo { object-fit: contain; transform: scale(1); transform-origin: center; }
-.ggs-menu-mens-scissors-badge {
-  position: absolute;
-  z-index: 2;
-  top: 64%;
-  left: 50%;
-  display: grid;
-  width: 20px;
-  height: 20px;
-  place-items: center;
-  border: 1px solid rgb(135 62 56 / 18%);
-  border-radius: 50%;
-  background: #f7e8d8;
-  box-shadow: 0 2px 6px rgb(55 31 27 / 20%), inset 0 1px 0 rgb(255 255 255 / 86%);
-  color: #873e38;
-  transform: translate(-50%, -50%);
+.ggs-quick-menu-avatar-photo { object-fit: contain; transform: none; transform-origin: center; }
+.ggs-quick-menu-item.ggs-menu-mens .ggs-quick-menu-icon {
+  overflow: visible;
+  border-color: transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
-.ggs-menu-mens-scissors-icon { display: block; width: 12px; height: 12px; stroke-width: 1.8; }
 .ggs-quick-menu-item:hover .ggs-quick-menu-icon,
 .ggs-quick-menu-item:focus-visible .ggs-quick-menu-icon {
   transform: translateY(-2px);
@@ -1792,6 +1782,8 @@
     0 8px 16px rgb(47 39 32 / 16%),
     inset 0 1px 0 rgb(255 255 255 / 70%);
 }
+.ggs-quick-menu-item.ggs-menu-mens:hover .ggs-quick-menu-icon,
+.ggs-quick-menu-item.ggs-menu-mens:focus-visible .ggs-quick-menu-icon { box-shadow: none; }
 .quick-tone-rose { --quick-icon-edge: #74352e; background: linear-gradient(145deg, #d89a8e 0%, #bd7167 52%, #913f37 100%); }
 .quick-tone-violet { --quick-icon-edge: #58415f; background: linear-gradient(145deg, #c0a0c0 0%, #9b779d 52%, #705477 100%); }
 .quick-tone-gold { --quick-icon-edge: #8b5d2c; background: linear-gradient(145deg, #f0d08a 0%, #d4a454 52%, #a87436 100%); }
@@ -1822,8 +1814,6 @@
   .ggs-quick-menu-symbol { width: 24px; height: 24px; }
   .ggs-quick-menu-avatar { width: 46px; height: 46px; }
   .ggs-quick-menu-avatar-photo { width: 48px; height: 48px; }
-  .ggs-menu-mens-scissors-badge { top: 64%; width: 16px; height: 16px; }
-  .ggs-menu-mens-scissors-icon { width: 10px; height: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ggs-quick-menu-item,
