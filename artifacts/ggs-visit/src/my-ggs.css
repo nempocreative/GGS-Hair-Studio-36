@@ -1,4 +1,5 @@
-.ggs-professional {
+.ggs-professional,
+.ggs-auth-page {
   --ggsp-paper: #f2eee5;
   --ggsp-paper-light: #f8f5ee;
   --ggsp-paper-shadow: #e8e1d5;
@@ -6,6 +7,9 @@
   --ggsp-muted: #686258;
   --ggsp-brick: #923d36;
   --ggsp-line: #cfc6b8;
+}
+
+.ggs-professional {
   min-height: 100dvh;
   background:
     radial-gradient(ellipse at 12% 8%, rgb(255 255 255 / 35%), transparent 34rem),
@@ -182,6 +186,28 @@
 .ggs-account-settings summary { color: var(--ggsp-brick); font-size: 11px; font-weight: 700; cursor: pointer; }
 .ggs-account-settings > div { max-width: 100%; margin-top: 16px; }
 
+.ggs-account-loading { display: grid; gap: 12px; padding: 26px; border: 1px solid var(--ggsp-line); background: var(--ggsp-paper-light); }
+.ggs-account-loading span { display: block; height: 17px; background: linear-gradient(90deg, var(--ggsp-paper-shadow), #f4f0e8, var(--ggsp-paper-shadow)); background-size: 200% 100%; animation: ggs-account-shimmer 1.5s ease-in-out infinite; }
+.ggs-account-loading span:nth-child(1) { width: 38%; height: 24px; }
+.ggs-account-loading span:nth-child(2) { width: 100%; height: 60px; }
+.ggs-account-loading span:nth-child(3) { width: 72%; }
+.ggs-account-session-error { display: flex; min-height: 100px; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid var(--ggsp-line); background: var(--ggsp-paper-light); padding: 22px; }
+.ggs-account-session-error p { margin: 0; font-size: 13px; }
+.ggs-account-session-error button,
+.ggs-account-vouchers button { border: 0; background: transparent; color: var(--ggsp-brick); font-size: 12px; font-weight: 700; cursor: pointer; }
+.ggs-account-signed-out { display: flex; min-height: 150px; align-items: center; gap: 18px; border: 1px solid var(--ggsp-line); background: var(--ggsp-paper-light); padding: clamp(20px, 4vw, 34px); }
+.ggs-account-signed-out__icon { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 1px solid var(--ggsp-line); color: var(--ggsp-brick); }
+.ggs-account-signed-out h2 { margin: 2px 0 5px; font: 600 27px/1 'Cormorant Garamond', serif; }
+.ggs-account-signed-out p:not(.ggs-professional__eyebrow) { margin: 0; color: var(--ggsp-muted); font-size: 12px; }
+.ggs-account-signed-out__actions { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+.ggs-professional .ggs-account-signed-out .ggs-professional__booking-link { min-height: 42px; margin: 0; }
+.ggs-account-vouchers { display: flex; min-height: 56px; align-items: center; gap: 12px; border: 1px solid var(--ggsp-line); background: var(--ggsp-paper-light); padding: 12px 15px; color: var(--ggsp-muted); font-size: 11px; }
+.ggs-account-vouchers > div { display: flex; align-items: center; gap: 8px; color: var(--ggsp-ink); }
+.ggs-account-vouchers > div svg { color: var(--ggsp-brick); }
+.ggs-account-vouchers > span { margin-left: auto; }
+.ggs-account-vouchers > a { display: inline-flex; align-items: center; gap: 4px; color: var(--ggsp-brick); font-weight: 700; }
+@keyframes ggs-account-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
 .ggs-auth-page { min-height: 100dvh; background: var(--ggsp-paper); color: var(--ggsp-ink); }
 .ggs-auth-page__header { display: flex; width: min(100% - 64px, 1180px); min-height: 76px; align-items: center; justify-content: space-between; margin: 0 auto; border-bottom: 1px solid var(--ggsp-line); }
 .ggs-auth-page__brand { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; letter-spacing: .08em; }
@@ -198,16 +224,25 @@
 .ggs-auth-page__back:hover svg { transform: translateX(3px); }
 .ggs-auth-page__form { width: 100%; }
 .ggs-auth-page__form > div { width: 100%; }
+.ggs-auth-form { display: grid; gap: 16px; width: 100%; max-width: 510px; margin-left: auto; border: 1px solid var(--ggsp-line); background: var(--ggsp-paper-light); padding: clamp(22px, 4vw, 38px); }
+.ggs-auth-form__switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; border: 1px solid var(--ggsp-line); background: var(--ggsp-paper); padding: 4px; }
+.ggs-auth-form__switch button { min-height: 40px; border: 0; background: transparent; color: var(--ggsp-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
+.ggs-auth-form__switch button.is-active { background: var(--ggsp-ink); color: var(--ggsp-paper-light); }
+.ggs-auth-form label { display: grid; gap: 7px; color: var(--ggsp-ink); font-size: 11px; font-weight: 700; }
+.ggs-auth-form input { width: 100%; min-height: 46px; border: 1px solid var(--ggsp-line); border-radius: 0; background: #fffdf8; padding: 0 12px; color: var(--ggsp-ink); font-size: 13px; font-weight: 400; }
+.ggs-auth-form input:focus { border-color: var(--ggsp-brick); outline: 2px solid rgb(146 61 54 / 18%); outline-offset: 1px; }
+.ggs-auth-form__submit { display: flex; min-height: 48px; align-items: center; justify-content: space-between; border: 1px solid var(--ggsp-brick); background: var(--ggsp-brick); padding: 0 15px; color: #fff8ed; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .2s ease, transform .2s ease; }
+.ggs-auth-form__submit:hover:not(:disabled) { transform: translateY(-1px); background: #762f2a; }
+.ggs-auth-form__submit:disabled { opacity: .65; cursor: wait; }
+.ggs-auth-form__error { margin: 0; border-left: 2px solid var(--ggsp-brick); background: #f6e8e5; padding: 10px 12px; color: #762f2a; font-size: 11px; }
+.ggs-auth-form__footnote { margin: 0; color: var(--ggsp-muted); font-size: 11px; text-align: center; }
+.ggs-auth-form__footnote a { color: var(--ggsp-brick); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 760px) {
   .ggs-professional__page { width: min(100% - 40px, 600px); padding-bottom: 96px; }
   .ggs-professional__hero { padding: 34px 0 22px; }
   .ggs-professional__hero h1 { font-size: clamp(50px, 12vw, 68px); }
   .ggs-professional__workspace { padding-top: 16px; }
-  .ggs-professional__tabs { gap: 7px; margin-bottom: 12px; }
-  .ggs-professional__tab { min-height: 56px; gap: 9px; padding: 9px 10px; }
-  .ggs-professional__tab-icon { width: 32px; height: 32px; }
-  .ggs-professional__tab-label strong { font-size: 12px; }
   .ggs-professional__panel { grid-template-columns: 1fr; }
   .ggs-professional__consumer-intro { border-right: 0; border-bottom: 1px solid var(--ggsp-line); padding: 23px; }
   .ggs-professional__consumer-intro h2 { margin-bottom: 19px; font-size: clamp(32px, 8.5vw, 40px); }
@@ -237,18 +272,24 @@
   .ggs-account-product-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
   .ggs-account-product-info { padding: 9px 9px 7px; }
   .ggs-professional .ggs-account-add-button { min-height: 34px; margin: 0 9px 9px; }
+  .ggs-account-signed-out { align-items: flex-start; flex-wrap: wrap; }
+  .ggs-account-signed-out__actions { width: 100%; margin-left: 66px; }
+  .ggs-account-vouchers { flex-wrap: wrap; }
+  .ggs-account-vouchers > span { width: 100%; margin-left: 26px; }
+  .ggs-account-vouchers > a { margin-left: auto; }
+  .ggs-account-welcome { flex-wrap: wrap; }
+  .ggs-account-actions { width: 100%; justify-content: flex-end; }
   .ggs-auth-page__header { width: calc(100% - 40px); min-height: 63px; }
   .ggs-auth-page__content { width: calc(100% - 40px); min-height: calc(100dvh - 64px); grid-template-columns: 1fr; gap: 30px; padding: 34px 0 48px; }
   .ggs-auth-page__copy h1 { font-size: clamp(53px, 13vw, 70px); }
   .ggs-auth-page__copy > p:not(.ggs-professional__eyebrow) { max-width: 450px; font-size: 13px; }
   .ggs-auth-page__back { margin-top: 8px; }
+  .ggs-auth-form { margin: 0; }
 }
 
 @media (max-width: 390px) {
   .ggs-professional__page { width: calc(100% - 32px); }
   .ggs-professional__hero h1 { font-size: 54px; }
-  .ggs-professional__tab { padding: 9px 8px; }
-  .ggs-professional__tab-icon { width: 28px; height: 28px; }
   .ggs-auth-page__header,
   .ggs-auth-page__content { width: calc(100% - 32px); }
   .ggs-auth-page__note { font-size: 7px; }
@@ -258,4 +299,5 @@
   .ggs-professional *,
   .ggs-professional *::before,
   .ggs-professional *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+  .ggs-account-loading span { animation: none; }
 }

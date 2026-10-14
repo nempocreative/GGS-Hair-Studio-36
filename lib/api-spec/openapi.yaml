@@ -14,6 +14,8 @@ tags:
     description: Public GGS Hair Studio content and booking
   - name: ggs-admin
     description: GGS CMS administration
+  - name: ggs-account
+    description: GGS customer account access
 paths:
   /healthz:
     get:
@@ -102,6 +104,76 @@ paths:
                 $ref: "#/components/schemas/GgsAppointment"
         "400":
           description: Invalid request
+  /ggs/account/register:
+    post:
+      operationId: registerGgsAccount
+      tags: [ggs-account]
+      summary: Create a GGS customer account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsAccountRegistrationInput"
+      responses:
+        "201":
+          description: Account created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAccount"
+        "400":
+          description: Invalid registration details
+        "409":
+          description: Email or WhatsApp number is already in use
+        "429":
+          description: Too many account attempts
+  /ggs/account/login:
+    post:
+      operationId: loginGgsAccount
+      tags: [ggs-account]
+      summary: Sign in to a GGS customer account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsAccountLoginInput"
+      responses:
+        "200":
+          description: Signed-in customer account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAccount"
+        "400":
+          description: Invalid sign-in details
+        "401":
+          description: Identifier or password is incorrect
+        "429":
+          description: Too many account attempts
+  /ggs/account/session:
+    get:
+      operationId: getGgsAccountSession
+      tags: [ggs-account]
+      summary: Get the currently signed-in customer account
+      responses:
+        "200":
+          description: Signed-in customer account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAccount"
+        "401":
+          description: No active customer session
+  /ggs/account/logout:
+    post:
+      operationId: logoutGgsAccount
+      tags: [ggs-account]
+      summary: Sign out of the current customer account
+      responses:
+        "204":
+          description: Signed out
   /ggs/admin/summary:
     get:
       operationId: getGgsAdminSummary
@@ -405,6 +477,72 @@ components:
           type: string
       required:
         - status
+    GgsAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        identifierType:
+          type: string
+          enum: [email, whatsapp]
+        identifier:
+          type: string
+        points:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - identifierType
+        - identifier
+        - points
+        - createdAt
+    GgsAccountRegistrationInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        identifierType:
+          type: string
+          enum: [email, whatsapp]
+        identifier:
+          type: string
+          minLength: 6
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+        - name
+        - identifierType
+        - identifier
+        - password
+    GgsAccountLoginInput:
+      type: object
+      properties:
+        identifierType:
+          type: string
+          enum: [email, whatsapp]
+        identifier:
+          type: string
+          minLength: 6
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+        - identifierType
+        - identifier
+        - password
     GgsSiteContent:
       type: object
       properties:

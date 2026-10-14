@@ -1,8 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
-import { ClerkProvider, SignIn, SignUp, UserProfile, useClerk, useUser } from '@clerk/react';
-import { publishableKeyFromHost } from '@clerk/react/internal';
-import { idID } from '@clerk/localizations';
-import { shadcn } from '@clerk/themes';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, Route, Router as WouterRouter, Switch, useLocation } from 'wouter';
 import useEmblaCarousel from 'embla-carousel-react';
 import {
@@ -10,7 +7,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bell,
-  BriefcaseBusiness,
   CalendarDays,
   Check,
   Clock3,
@@ -30,19 +26,25 @@ import {
   Scissors,
   Sparkles,
   UserRound,
+  TicketPercent,
 } from 'lucide-react';
 import {
+  getGetGgsAccountSessionQueryKey,
   getGetGgsPublicServicesQueryKey,
   getGetGgsSiteQueryKey,
   getGetGgsPublicProductsQueryKey,
   getGetGgsPublicVouchersQueryKey,
   useCreateGgsAppointment,
+  useGetGgsAccountSession,
   useGetGgsPublicProducts,
   useGetGgsPublicServices,
   useGetGgsPublicVouchers,
   useGetGgsSite,
+  useLoginGgsAccount,
+  useLogoutGgsAccount,
+  useRegisterGgsAccount,
 } from '@workspace/api-client-react';
-import type { GgsProduct, GgsPublicVoucher, GgsService, GgsSiteContent } from '@workspace/api-client-react';
+import type { GgsAccount, GgsProduct, GgsPublicVoucher, GgsService, GgsSiteContent } from '@workspace/api-client-react';
 import './homepage.css';
 import './my-ggs.css';
 
@@ -92,117 +94,63 @@ const initialFields: BookingFields = {
 const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
 const money = (amount: number) => `Rp${new Intl.NumberFormat('id-ID').format(amount)}`;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
-const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 
-if (!clerkPubKey) throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
-
-const clerkAppearance = {
-  theme: shadcn,
-  cssLayerName: 'clerk',
-  options: {
-    logoPlacement: 'inside' as const,
-    logoLinkUrl: basePath || '/',
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
-  },
-  variables: {
-    colorPrimary: '#923d36',
-    colorForeground: '#302d27',
-    colorMutedForeground: '#686258',
-    colorDanger: '#a8332b',
-    colorBackground: '#f8f5ee',
-    colorInput: '#fffdf8',
-    colorInputForeground: '#302d27',
-    colorNeutral: '#cfc6b8',
-    fontFamily: 'DM Sans, sans-serif',
-    borderRadius: '2px',
-  },
-  elements: {
-    rootBox: 'w-full flex justify-center',
-    cardBox: 'bg-[#f8f5ee] border border-[#cfc6b8] rounded-sm w-[440px] max-w-full overflow-hidden',
-    card: '!shadow-none !border-0 !bg-transparent !rounded-none',
-    footer: '!shadow-none !border-0 !bg-transparent !rounded-none',
-    headerTitle: 'text-[#302d27] font-display text-4xl',
-    headerSubtitle: 'text-[#686258]',
-    socialButtonsBlockButtonText: 'text-[#302d27] font-medium',
-    formFieldLabel: 'text-[#302d27] font-medium',
-    footerActionLink: 'text-[#923d36] hover:text-[#762f2a]',
-    footerActionText: 'text-[#686258]',
-    dividerText: 'text-[#686258]',
-    identityPreviewEditButton: 'text-[#923d36]',
-    formFieldSuccessText: 'text-emerald-700',
-    alertText: 'text-[#302d27]',
-    logoBox: 'mb-5',
-    logoImage: 'max-h-10',
-    socialButtonsBlockButton: 'border border-[#cfc6b8] bg-[#fffdf8] hover:bg-[#f2eee5]',
-    formButtonPrimary: 'bg-[#923d36] text-white hover:bg-[#762f2a] shadow-none',
-    formFieldInput: 'border-[#cfc6b8] bg-[#fffdf8] text-[#302d27] focus:border-[#923d36]',
-    footerAction: 'border-t border-[#cfc6b8]',
-    dividerLine: 'bg-[#cfc6b8]',
-    alert: 'border-[#d8aaa4] bg-[#f6e8e5]',
-    otpCodeFieldInput: 'border-[#cfc6b8] bg-[#fffdf8]',
-    formFieldRow: 'mb-4',
-    main: 'text-[#302d27]',
-  },
-};
+function accountMutationError(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'data' in error) {
+    const data = (error as { data?: unknown }).data;
+    if (typeof data === 'object' && data !== null && 'error' in data) {
+      const message = (data as { error?: unknown }).error;
+      if (typeof message === 'string' && message.trim()) return message;
+    }
+  }
+  return 'Tidak dapat memproses akun. Periksa data lalu coba lagi.';
+}
 
 function App() {
   return (
     <WouterRouter base={basePath}>
-      <ClerkApp />
+      <VisitorWebsite />
     </WouterRouter>
   );
 }
 
-function ClerkApp() {
-  const [, setLocation] = useLocation();
-
-  const stripBase = (path: string) =>
-    basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
-
-  return (
-    <ClerkProvider
-      publishableKey={clerkPubKey}
-      proxyUrl={clerkProxyUrl}
-      appearance={clerkAppearance}
-      signInUrl={`${basePath}/sign-in`}
-      signUpUrl={`${basePath}/sign-up`}
-      localization={{
-        ...idID,
-        formFieldInputPlaceholder__emailAddress: 'nama@contoh.com',
-        signIn: {
-          ...idID.signIn,
-          start: {
-            ...idID.signIn?.start,
-            title: 'Selamat datang kembali',
-            subtitle: 'Masuk untuk membuka ruang personal GGS',
-            actionText: 'Belum punya akun?',
-            actionLink: 'Daftar akun',
-          },
-        },
-        signUp: {
-          ...idID.signUp,
-          start: {
-            ...idID.signUp?.start,
-            title: 'Buat akun GGS',
-            subtitle: 'Simpan informasi akunmu untuk kunjungan berikutnya',
-            actionText: 'Sudah punya akun?',
-            actionLink: 'Masuk ke akun',
-          },
-        },
-      }}
-      routerPush={(to) => setLocation(stripBase(to))}
-      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
-    >
-      <VisitorWebsite />
-    </ClerkProvider>
-  );
-}
-
 function AccountAuthPage({ mode }: { mode: 'in' | 'up' }) {
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const login = useLoginGgsAccount();
+  const register = useRegisterGgsAccount();
+  const [identifierType, setIdentifierType] = useState<'email' | 'whatsapp'>('email');
+  const [name, setName] = useState('');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [formError, setFormError] = useState('');
+  const isRegister = mode === 'up';
+  const pending = login.isPending || register.isPending;
+
+  const submitAuth = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError('');
+    if (isRegister && password !== confirmation) {
+      setFormError('Konfirmasi kata sandi belum sama.');
+      return;
+    }
+    if (password.length < 8) {
+      setFormError('Kata sandi minimal 8 karakter.');
+      return;
+    }
+    const onSuccess = () => {
+      void queryClient.invalidateQueries({ queryKey: getGetGgsAccountSessionQueryKey() });
+      setLocation('/my-ggs');
+    };
+    const onError = (error: unknown) => setFormError(accountMutationError(error));
+    if (isRegister) {
+      register.mutate({ data: { name: name.trim(), identifierType, identifier: identifier.trim(), password } }, { onSuccess, onError });
+    } else {
+      login.mutate({ data: { identifierType, identifier: identifier.trim(), password } }, { onSuccess, onError });
+    }
+  };
+
   return (
     <main className="ggs-auth-page" data-testid={`page-account-${mode === 'in' ? 'sign-in' : 'sign-up'}`}>
       <header className="ggs-auth-page__header">
@@ -215,28 +163,60 @@ function AccountAuthPage({ mode }: { mode: 'in' | 'up' }) {
       <div className="ggs-auth-page__content">
         <div className="ggs-auth-page__copy">
           <p className="ggs-professional__eyebrow">GGS / MY GGS</p>
-          <h1>{mode === 'in' ? <>Senang<br /><em>bertemu lagi.</em></> : <>Ruang untuk<br /><em>kunjunganmu.</em></>}</h1>
-          <p>Masuk atau buat akun untuk mengelola informasi profil GGS-mu.</p>
+          <h1>{isRegister ? <>Buat akun<br /><em>GGS-mu.</em></> : <>Masuk ke<br /><em>My GGS.</em></>}</h1>
+          <p>{isRegister ? 'Simpan poin dan akses kebutuhan kunjungan GGS.' : 'Akses poin, voucher, produk, dan booking.'}</p>
           <Link href="/my-ggs" className="ggs-auth-page__back">
             Kembali ke My GGS <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>
         <div className="ggs-auth-page__form">
-          {mode === 'in' ? (
-            <SignIn
-              routing="path"
-              path={`${basePath}/sign-in`}
-              signUpUrl={`${basePath}/sign-up`}
-              fallbackRedirectUrl={`${basePath}/my-ggs`}
-            />
-          ) : (
-            <SignUp
-              routing="path"
-              path={`${basePath}/sign-up`}
-              signInUrl={`${basePath}/sign-in`}
-              fallbackRedirectUrl={`${basePath}/my-ggs`}
-            />
-          )}
+          <form className="ggs-auth-form" onSubmit={submitAuth}>
+            <div className="ggs-auth-form__switch" role="group" aria-label="Metode masuk">
+              <button type="button" className={identifierType === 'email' ? 'is-active' : ''} aria-pressed={identifierType === 'email'} onClick={() => { setIdentifierType('email'); setIdentifier(''); }}>Email</button>
+              <button type="button" className={identifierType === 'whatsapp' ? 'is-active' : ''} aria-pressed={identifierType === 'whatsapp'} onClick={() => { setIdentifierType('whatsapp'); setIdentifier(''); }}>WhatsApp</button>
+            </div>
+            {isRegister && (
+              <label>
+                Nama
+                <input name="name" autoComplete="name" required minLength={2} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} data-testid="input-account-name" />
+              </label>
+            )}
+            <label>
+              {identifierType === 'email' ? 'Alamat email' : 'Nomor WhatsApp'}
+              <input
+                name="identifier"
+                type={identifierType === 'email' ? 'email' : 'tel'}
+                autoComplete={identifierType === 'email' ? 'email' : 'tel'}
+                inputMode={identifierType === 'email' ? 'email' : 'tel'}
+                placeholder={identifierType === 'email' ? 'nama@contoh.com' : '+62 812 3456 7890'}
+                required
+                minLength={6}
+                maxLength={254}
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
+                data-testid="input-account-identifier"
+              />
+            </label>
+            <label>
+              Kata sandi
+              <input name="password" type="password" autoComplete={isRegister ? 'new-password' : 'current-password'} required minLength={8} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} data-testid="input-account-password" />
+            </label>
+            {isRegister && (
+              <label>
+                Konfirmasi kata sandi
+                <input name="confirmation" type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} data-testid="input-account-confirmation" />
+              </label>
+            )}
+            {(formError || login.isError || register.isError) && <p className="ggs-auth-form__error" role="alert">{formError || 'Terjadi kendala. Silakan coba lagi.'}</p>}
+            <button type="submit" className="ggs-auth-form__submit" disabled={pending} data-testid="button-account-submit">
+              {pending ? 'Memproses…' : isRegister ? 'Buat akun' : 'Masuk'}
+              <ArrowRight size={16} aria-hidden="true" />
+            </button>
+            <p className="ggs-auth-form__footnote">
+              {isRegister ? 'Sudah punya akun?' : 'Belum punya akun?'}{' '}
+              <Link href={isRegister ? '/sign-in' : '/sign-up'}>{isRegister ? 'Masuk' : 'Daftar'}</Link>
+            </p>
+          </form>
         </div>
       </div>
     </main>
@@ -2656,48 +2636,25 @@ function BranchesPage({ site, siteQuery }: SharedProps) {
   );
 }
 
-function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductToCart }: SharedProps) {
-  const { isSignedIn, user } = useUser();
-  const { signOut } = useClerk();
-  const [profileType, setProfileType] = useState<'consumer' | 'employee'>('consumer');
-  const [profileMode, setProfileMode] = useState<'demo' | 'account'>('demo');
-  const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
-  const isRealAccountView = profileMode === 'account' && Boolean(isSignedIn) && profileType === 'consumer';
+function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductToCart, vouchers, vouchersQuery }: SharedProps) {
+  const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+  const sessionQuery = useGetGgsAccountSession({ query: { queryKey: getGetGgsAccountSessionQueryKey(), retry: false } });
+  const logout = useLogoutGgsAccount();
+  const account = sessionQuery.data as GgsAccount | undefined;
+  const sessionError = sessionQuery.error as { status?: number } | null;
+  const signedOut = sessionQuery.isError && sessionError?.status === 401;
+  const isAccountError = sessionQuery.isError && !signedOut;
   const featuredProducts = products.filter((product) => product.active).slice(0, 3);
   const getCartQuantity = (productId: number) =>
     cartItems.find((item) => item.productId === productId)?.quantity ?? 0;
 
-  const selectProfile = (nextType: 'consumer' | 'employee') => {
-    setProfileType(nextType);
-    setProfileMode('demo');
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        document
-          .getElementById(`panel-my-ggs-profile-${nextType}`)
-          ?.scrollIntoView({
-            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-            block: 'center',
-          });
-      });
-    });
-  };
-
-  const handleProfileTabKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    event.preventDefault();
-
-    const nextType = event.key === 'Home'
-      ? 'consumer'
-      : event.key === 'End'
-        ? 'employee'
-        : profileType === 'consumer'
-          ? 'employee'
-          : 'consumer';
-
-    selectProfile(nextType);
-    document.getElementById(`tab-my-ggs-profile-${nextType}`)?.focus();
-  };
-
+  const signOut = () => logout.mutate(undefined, {
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: getGetGgsAccountSessionQueryKey() });
+      setLocation('/');
+    },
+  });
   return (
     <div className="ggs-professional" data-testid="page-my-ggs">
       <div className="ggs-professional__page">
@@ -2708,111 +2665,45 @@ function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductTo
           </div>
         </header>
 
-        <section className="ggs-professional__workspace" aria-label="Profil My GGS">
-          <div
-            className="ggs-professional__tabs"
-            role="tablist"
-            aria-label="Pilih jenis profil"
-            onKeyDown={handleProfileTabKeyDown}
-            data-testid="group-my-ggs-profile-type"
-          >
-            <button
-              type="button"
-              className="ggs-professional__tab"
-              id="tab-my-ggs-profile-consumer"
-              role="tab"
-              aria-selected={profileType === 'consumer'}
-              aria-controls="panel-my-ggs-profile-consumer"
-              tabIndex={profileType === 'consumer' ? 0 : -1}
-              onClick={() => selectProfile('consumer')}
-              data-testid="button-my-ggs-profile-consumer"
-            >
-              <span className="ggs-professional__tab-icon" aria-hidden="true"><UserRound size={18} /></span>
-              <span className="ggs-professional__tab-label"><strong>Pengguna</strong></span>
-            </button>
-            <button
-              type="button"
-              className="ggs-professional__tab"
-              id="tab-my-ggs-profile-employee"
-              role="tab"
-              aria-selected={profileType === 'employee'}
-              aria-controls="panel-my-ggs-profile-employee"
-              tabIndex={profileType === 'employee' ? 0 : -1}
-              onClick={() => selectProfile('employee')}
-              data-testid="button-my-ggs-profile-employee"
-            >
-              <span className="ggs-professional__tab-icon" aria-hidden="true"><BriefcaseBusiness size={18} /></span>
-              <span className="ggs-professional__tab-label"><strong>Karyawan</strong></span>
-            </button>
-          </div>
-
-          <div
-            id="panel-my-ggs-profile-consumer"
-            className="ggs-professional__panel"
-            role="tabpanel"
-            aria-labelledby="tab-my-ggs-profile-consumer"
-            tabIndex={0}
-            hidden={profileType !== 'consumer'}
-            data-testid="panel-my-ggs-profile-consumer"
-          >
+        <section className="ggs-professional__workspace" aria-label="Akun My GGS">
+          {sessionQuery.isLoading ? (
+            <div className="ggs-account-loading" role="status" aria-label="Memuat akun"><span /><span /><span /></div>
+          ) : isAccountError ? (
+            <div className="ggs-account-session-error" role="alert">
+              <p>Akun belum dapat dimuat.</p>
+              <button type="button" onClick={() => void sessionQuery.refetch()}>Coba lagi</button>
+            </div>
+          ) : signedOut ? (
+            <section className="ggs-account-signed-out" data-testid="panel-my-ggs-signed-out">
+              <div className="ggs-account-signed-out__icon"><UserRound size={22} /></div>
+              <div><p className="ggs-professional__eyebrow">AKUN PELANGGAN</p><h2>Masuk ke My GGS</h2><p>Gunakan email atau WhatsApp dan kata sandi.</p></div>
+              <div className="ggs-account-signed-out__actions">
+                <Link href="/sign-in" className="ggs-professional__booking-link" data-testid="link-my-ggs-sign-in">Masuk <ArrowRight size={15} /></Link>
+                <Link href="/sign-up" className="ggs-account-text-button" data-testid="link-my-ggs-sign-up">Buat akun</Link>
+              </div>
+            </section>
+          ) : account ? (
+          <div className="ggs-professional__panel" data-testid="panel-my-ggs-account">
             <div className="ggs-account-dashboard" data-testid="profile-my-ggs-consumer">
               <section className="ggs-account-welcome">
                 <div className="ggs-account-avatar" aria-hidden="true">
-                  {isRealAccountView
-                    ? `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}` || 'G'
-                    : 'NP'}
+                  {account.name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase()}
                 </div>
                 <div className="ggs-account-welcome-copy">
-                  <span className="ggs-professional__demo-badge">{isRealAccountView ? 'AKUN' : 'DEMO'}</span>
-                  <h2>
-                    {isRealAccountView
-                      ? user?.firstName ? `Halo, ${user.firstName}` : 'Akun saya'
-                      : 'Nadia Putri'}
-                  </h2>
-                  <p>{isRealAccountView ? user?.primaryEmailAddress?.emailAddress : 'Pengguna GGS'}</p>
+                  <span className="ggs-professional__demo-badge">AKUN PELANGGAN</span>
+                  <h2>Halo, {account.name}</h2>
+                  <p>{account.identifier}</p>
                 </div>
                 <div className="ggs-account-actions">
-                  {isRealAccountView ? (
-                    <>
-                      <button
-                        type="button"
-                        className="ggs-account-text-button"
-                        onClick={() => { setProfileMode('demo'); setAccountSettingsOpen(false); }}
-                        data-testid="button-my-ggs-show-demo"
-                      >
-                        Lihat demo
-                      </button>
-                      <button
-                        type="button"
-                        className="ggs-account-text-button"
-                        onClick={() => void signOut({ redirectUrl: basePath || '/' })}
-                        data-testid="button-my-ggs-sign-out"
-                      >
-                        Keluar
-                      </button>
-                    </>
-                  ) : isSignedIn ? (
-                    <button
-                      type="button"
-                      className="ggs-account-text-button"
-                      onClick={() => { setProfileMode('account'); setAccountSettingsOpen(true); }}
-                      data-testid="button-my-ggs-real-account"
-                    >
-                      Akun saya
-                    </button>
-                  ) : (
-                    <Link href="/sign-in" className="ggs-account-text-button" data-testid="link-my-ggs-sign-in">
-                      Masuk
-                    </Link>
-                  )}
+                  <button type="button" className="ggs-account-text-button" onClick={signOut} disabled={logout.isPending} data-testid="button-my-ggs-sign-out">{logout.isPending ? 'Keluar…' : 'Keluar'}</button>
                 </div>
               </section>
 
               <section className="ggs-account-points" aria-label="Poin GGS">
                 <div className="ggs-account-points-mark" aria-hidden="true"><Sparkles size={19} /></div>
                 <div className="ggs-account-points-copy">
-                  <span>{isRealAccountView ? 'POIN GGS' : 'POIN CONTOH'}</span>
-                  <strong>{isRealAccountView ? 'Belum tersedia' : '1.250'}</strong>
+                  <span>POIN GGS</span>
+                  <strong>{new Intl.NumberFormat('id-ID').format(account.points)} poin</strong>
                 </div>
                 <Link href="/voucher" className="ggs-account-points-link" data-testid="link-my-ggs-vouchers">
                   Voucher <ArrowRight size={15} aria-hidden="true" />
@@ -2829,7 +2720,7 @@ function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductTo
                   <span>Keranjang</span>
                 </Link>
                 <Link href="/voucher" className="ggs-account-shortcut" data-testid="link-my-ggs-voucher-menu">
-                  <Copy size={18} aria-hidden="true" />
+                  <TicketPercent size={18} aria-hidden="true" />
                   <span>Voucher</span>
                 </Link>
                 <Link href="/book" className="ggs-account-shortcut" data-testid="link-my-ggs-booking">
@@ -2837,6 +2728,14 @@ function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductTo
                   <span>Booking</span>
                 </Link>
               </nav>
+
+              <section className="ggs-account-vouchers" aria-label="Voucher tersedia">
+                <div><TicketPercent size={18} aria-hidden="true" /><strong>Voucher</strong></div>
+                {vouchersQuery.isLoading ? <span role="status">Memuat voucher…</span> :
+                  vouchersQuery.isError ? <span role="alert">Voucher belum bisa dimuat. <button type="button" onClick={() => void vouchersQuery.refetch()}>Coba lagi</button></span> :
+                    <span>{vouchers.length ? `${vouchers.length} voucher tersedia` : 'Belum ada voucher tersedia'}</span>}
+                <Link href="/voucher">Lihat <ArrowRight size={14} /></Link>
+              </section>
 
               <section className="ggs-account-marketplace" aria-labelledby="my-ggs-products-title">
                 <div className="ggs-account-section-heading">
@@ -2888,54 +2787,9 @@ function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductTo
                 )}
               </section>
 
-              {isRealAccountView && (
-                <details
-                  className="ggs-account-settings"
-                  open={accountSettingsOpen}
-                  onToggle={(event) => setAccountSettingsOpen(event.currentTarget.open)}
-                  data-testid="my-ggs-account-settings"
-                >
-                  <summary>Pengaturan akun</summary>
-                  <UserProfile routing="hash" />
-                </details>
-              )}
             </div>
           </div>
-
-          <div
-            id="panel-my-ggs-profile-employee"
-            className="ggs-professional__panel ggs-professional__panel--employee"
-            role="tabpanel"
-            aria-labelledby="tab-my-ggs-profile-employee"
-            tabIndex={0}
-            hidden={profileType !== 'employee'}
-            data-testid="panel-my-ggs-profile-employee"
-          >
-            <section className="ggs-professional__consumer-intro" data-testid="profile-my-ggs-employee-demo">
-              <span className="ggs-professional__demo-badge">DATA DEMO</span>
-              <h2>Rani Pratama</h2>
-              <p className="ggs-professional__demo-role">Karyawan · Stylist</p>
-            </section>
-            <section className="ggs-professional__records" aria-label="Profil demo karyawan">
-              <div className="ggs-professional__records-heading">
-                <h3>Profil karyawan</h3>
-              </div>
-              <dl className="ggs-professional__demo-record-list">
-                <div className="ggs-professional__demo-record">
-                  <dt>Email</dt>
-                  <dd>karyawan.demo@example.com</dd>
-                </div>
-                <div className="ggs-professional__demo-record">
-                  <dt>Akses</dt>
-                  <dd>Demo saja</dd>
-                </div>
-                <div className="ggs-professional__demo-record">
-                  <dt>Agenda</dt>
-                  <dd>Jadwal contoh</dd>
-                </div>
-              </dl>
-            </section>
-          </div>
+          ) : null}
         </section>
       </div>
     </div>

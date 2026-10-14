@@ -119,6 +119,83 @@ export const CreateGgsAppointmentResponse = zod.object({
 
 
 /**
+ * @summary Create a GGS customer account
+ */
+export const registerGgsAccountBodyNameMin = 2;
+export const registerGgsAccountBodyNameMax = 120;
+
+export const registerGgsAccountBodyIdentifierMin = 6;
+export const registerGgsAccountBodyIdentifierMax = 254;
+
+export const registerGgsAccountBodyPasswordMin = 8;
+export const registerGgsAccountBodyPasswordMax = 128;
+
+
+
+export const RegisterGgsAccountBody = zod.object({
+  "name": zod.string().min(registerGgsAccountBodyNameMin).max(registerGgsAccountBodyNameMax),
+  "identifierType": zod.enum(['email', 'whatsapp']),
+  "identifier": zod.string().min(registerGgsAccountBodyIdentifierMin).max(registerGgsAccountBodyIdentifierMax),
+  "password": zod.string().min(registerGgsAccountBodyPasswordMin).max(registerGgsAccountBodyPasswordMax)
+})
+
+export const RegisterGgsAccountResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "identifierType": zod.enum(['email', 'whatsapp']),
+  "identifier": zod.string(),
+  "points": zod.number().int(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Sign in to a GGS customer account
+ */
+export const loginGgsAccountBodyIdentifierMin = 6;
+export const loginGgsAccountBodyIdentifierMax = 254;
+
+export const loginGgsAccountBodyPasswordMin = 8;
+export const loginGgsAccountBodyPasswordMax = 128;
+
+
+
+export const LoginGgsAccountBody = zod.object({
+  "identifierType": zod.enum(['email', 'whatsapp']),
+  "identifier": zod.string().min(loginGgsAccountBodyIdentifierMin).max(loginGgsAccountBodyIdentifierMax),
+  "password": zod.string().min(loginGgsAccountBodyPasswordMin).max(loginGgsAccountBodyPasswordMax)
+})
+
+export const LoginGgsAccountResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "identifierType": zod.enum(['email', 'whatsapp']),
+  "identifier": zod.string(),
+  "points": zod.number().int(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get the currently signed-in customer account
+ */
+export const GetGgsAccountSessionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "identifierType": zod.enum(['email', 'whatsapp']),
+  "identifier": zod.string(),
+  "points": zod.number().int(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Sign out of the current customer account
+ */
+export const LogoutGgsAccountResponse = zod.void()
+
+
+/**
  * @summary Get GGS CMS dashboard metrics
  */
 export const GetGgsAdminSummaryResponse = zod.object({

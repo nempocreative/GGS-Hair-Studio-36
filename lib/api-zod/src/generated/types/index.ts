@@ -6,6 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './ggsAccount';
+export * from './ggsAccountIdentifierType';
+export * from './ggsAccountLoginInput';
+export * from './ggsAccountLoginInputIdentifierType';
+export * from './ggsAccountRegistrationInput';
+export * from './ggsAccountRegistrationInputIdentifierType';
 export * from './ggsAdminSummary';
 export * from './ggsAppointment';
 export * from './ggsAppointmentInput';

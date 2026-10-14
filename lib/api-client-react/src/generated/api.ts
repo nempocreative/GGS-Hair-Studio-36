@@ -20,6 +20,9 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GgsAccount,
+  GgsAccountLoginInput,
+  GgsAccountRegistrationInput,
   GgsAdminSummary,
   GgsAppointment,
   GgsAppointmentInput,
@@ -535,6 +538,333 @@ export const useCreateGgsAppointment = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getCreateGgsAppointmentMutationOptions(options));
+    }
+
+export const getRegisterGgsAccountUrl = () => {
+
+
+
+
+  return `/api/ggs/account/register`
+}
+
+/**
+ * @summary Create a GGS customer account
+ */
+export const registerGgsAccount = async (ggsAccountRegistrationInput: GgsAccountRegistrationInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsAccount> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsAccount>(getRegisterGgsAccountUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsAccountRegistrationInput)
+  }
+);}
+
+
+
+
+
+export const getRegisterGgsAccountMutationKey = () => ['registerGgsAccount'] as const;
+
+export const getRegisterGgsAccountMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerGgsAccount>>, TError,RegisterGgsAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerGgsAccount>>, TError,RegisterGgsAccountMutationVariables, TContext> => {
+
+const mutationKey = getRegisterGgsAccountMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerGgsAccount>>, RegisterGgsAccountMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  registerGgsAccount(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegisterGgsAccountMutationResult = NonNullable<Awaited<ReturnType<typeof registerGgsAccount>>>
+    export type RegisterGgsAccountMutationBody = BodyType<GgsAccountRegistrationInput>
+    export type RegisterGgsAccountMutationError = ErrorType<void>
+    export type RegisterGgsAccountMutationVariables = {data: BodyType<GgsAccountRegistrationInput>}
+
+    /**
+ * @summary Create a GGS customer account
+ */
+export const useRegisterGgsAccount = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerGgsAccount>>, TError,RegisterGgsAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registerGgsAccount>>,
+        TError,
+        RegisterGgsAccountMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegisterGgsAccountMutationOptions(options));
+    }
+
+export const getLoginGgsAccountUrl = () => {
+
+
+
+
+  return `/api/ggs/account/login`
+}
+
+/**
+ * @summary Sign in to a GGS customer account
+ */
+export const loginGgsAccount = async (ggsAccountLoginInput: GgsAccountLoginInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsAccount> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsAccount>(getLoginGgsAccountUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsAccountLoginInput)
+  }
+);}
+
+
+
+
+
+export const getLoginGgsAccountMutationKey = () => ['loginGgsAccount'] as const;
+
+export const getLoginGgsAccountMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginGgsAccount>>, TError,LoginGgsAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof loginGgsAccount>>, TError,LoginGgsAccountMutationVariables, TContext> => {
+
+const mutationKey = getLoginGgsAccountMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginGgsAccount>>, LoginGgsAccountMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  loginGgsAccount(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoginGgsAccountMutationResult = NonNullable<Awaited<ReturnType<typeof loginGgsAccount>>>
+    export type LoginGgsAccountMutationBody = BodyType<GgsAccountLoginInput>
+    export type LoginGgsAccountMutationError = ErrorType<void>
+    export type LoginGgsAccountMutationVariables = {data: BodyType<GgsAccountLoginInput>}
+
+    /**
+ * @summary Sign in to a GGS customer account
+ */
+export const useLoginGgsAccount = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginGgsAccount>>, TError,LoginGgsAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof loginGgsAccount>>,
+        TError,
+        LoginGgsAccountMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLoginGgsAccountMutationOptions(options));
+    }
+
+export const getGetGgsAccountSessionUrl = () => {
+
+
+
+
+  return `/api/ggs/account/session`
+}
+
+/**
+ * @summary Get the currently signed-in customer account
+ */
+export const getGgsAccountSession = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsAccount> => {
+
+  return customFetch<GgsAccount>(getGetGgsAccountSessionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsAccountSessionQueryKey = () => {
+    return [
+    `/api/ggs/account/session`
+    ] as const;
+    }
+
+
+export const getGetGgsAccountSessionQueryOptions = <TData = Awaited<ReturnType<typeof getGgsAccountSession>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAccountSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsAccountSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsAccountSession>>> = ({ signal }) => getGgsAccountSession({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsAccountSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsAccountSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsAccountSession>>>
+export type GetGgsAccountSessionQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the currently signed-in customer account
+ */
+
+export function useGetGgsAccountSession<TData = Awaited<ReturnType<typeof getGgsAccountSession>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAccountSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsAccountSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getLogoutGgsAccountUrl = () => {
+
+
+
+
+  return `/api/ggs/account/logout`
+}
+
+/**
+ * @summary Sign out of the current customer account
+ */
+export const logoutGgsAccount = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getLogoutGgsAccountUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getLogoutGgsAccountMutationKey = () => ['logoutGgsAccount'] as const;
+
+export const getLogoutGgsAccountMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutGgsAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logoutGgsAccount>>, TError,void, TContext> => {
+
+const mutationKey = getLogoutGgsAccountMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutGgsAccount>>, void> = () => {
+
+
+          return  logoutGgsAccount(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutGgsAccountMutationResult = NonNullable<Awaited<ReturnType<typeof logoutGgsAccount>>>
+
+    export type LogoutGgsAccountMutationError = ErrorType<unknown>
+
+
+    /**
+ * @summary Sign out of the current customer account
+ */
+export const useLogoutGgsAccount = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutGgsAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof logoutGgsAccount>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutGgsAccountMutationOptions(options));
     }
 
 export const getGetGgsAdminSummaryUrl = () => {

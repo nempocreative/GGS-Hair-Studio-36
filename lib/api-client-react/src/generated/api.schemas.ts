@@ -9,6 +9,72 @@ export interface HealthStatus {
   status: string;
 }
 
+export type GgsAccountIdentifierType = typeof GgsAccountIdentifierType[keyof typeof GgsAccountIdentifierType];
+
+
+export const GgsAccountIdentifierType = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
+
+export interface GgsAccount {
+  id: string;
+  name: string;
+  identifierType: GgsAccountIdentifierType;
+  identifier: string;
+  points: number;
+  createdAt: string;
+}
+
+export type GgsAccountRegistrationInputIdentifierType = typeof GgsAccountRegistrationInputIdentifierType[keyof typeof GgsAccountRegistrationInputIdentifierType];
+
+
+export const GgsAccountRegistrationInputIdentifierType = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
+
+export interface GgsAccountRegistrationInput {
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  name: string;
+  identifierType: GgsAccountRegistrationInputIdentifierType;
+  /**
+     * @minLength 6
+     * @maxLength 254
+     */
+  identifier: string;
+  /**
+     * @minLength 8
+     * @maxLength 128
+     */
+  password: string;
+}
+
+export type GgsAccountLoginInputIdentifierType = typeof GgsAccountLoginInputIdentifierType[keyof typeof GgsAccountLoginInputIdentifierType];
+
+
+export const GgsAccountLoginInputIdentifierType = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
+
+export interface GgsAccountLoginInput {
+  identifierType: GgsAccountLoginInputIdentifierType;
+  /**
+     * @minLength 6
+     * @maxLength 254
+     */
+  identifier: string;
+  /**
+     * @minLength 8
+     * @maxLength 128
+     */
+  password: string;
+}
+
 export interface GgsSiteContent {
   brandName: string;
   tagline: string;
