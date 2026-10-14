@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { Link, Route, Switch, useLocation } from 'wouter';
 import useEmblaCarousel from 'embla-carousel-react';
 import {
@@ -6,6 +6,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bell,
+  BriefcaseBusiness,
   CalendarDays,
   Check,
   Clock3,
@@ -2497,22 +2498,100 @@ function BranchesPage({ site, siteQuery }: SharedProps) {
 }
 
 function MyGgsPage() {
+  const [profileType, setProfileType] = useState<'consumer' | 'employee'>('consumer');
+  const handleProfileTabKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+
+    const nextType = event.key === 'Home'
+      ? 'consumer'
+      : event.key === 'End'
+        ? 'employee'
+        : profileType === 'consumer'
+          ? 'employee'
+          : 'consumer';
+
+    setProfileType(nextType);
+    document.getElementById(`tab-my-ggs-profile-${nextType}`)?.focus();
+  };
+
   return (
-    <PageFrame kicker="GGS / MY GGS" title={<>My GGS,<br /><em>belum aktif.</em></>} intro="Tempat untuk melihat booking mendatang, riwayat kunjungan, voucher, dan preferensi gaya. Data tersebut belum terhubung." testId="page-my-ggs">
-      <section className="unavailable-panel myggs-empty" data-testid="status-my-ggs-unavailable">
-        <div className="empty-ornament"><UserRound size={25} /></div>
-        <span className="panel-index">MY GGS / DATA PRIBADI BELUM TERHUBUNG</span>
-        <h2>Riwayat kunjunganmu<br />belum bisa ditampilkan.</h2>
-        <p>Website ini belum memiliki akun pelanggan, riwayat booking, atau data member. Permintaan janji dikelola oleh tim studio dan belum tampil sebagai riwayat pribadi.</p>
-        <Link href="/book" className="clearer-primary-button" data-testid="link-my-ggs-book">Ajukan janji <ArrowRight size={16} /></Link>
-      </section>
-      <div className="myggs-record-grid">
-        {[
-          { label: 'Booking mendatang', value: 'Belum terhubung', note: 'Data booking akun belum tersedia' },
-          { label: 'Riwayat kunjungan', value: 'Belum terhubung', note: 'Data kunjungan pelanggan belum tersedia' },
-          { label: 'Voucher pribadi', value: 'Belum tersedia', note: 'Voucher pribadi belum terhubung' },
-          { label: 'Preferensi gaya', value: 'Belum disimpan', note: 'Website ini belum menyimpan data profil' },
-        ].map((item, index) => <article key={item.label} data-testid={`card-my-ggs-${index}`}><span>0{index + 1} / {item.label}</span><strong>{item.value}</strong><p>{item.note}</p></article>)}
+    <PageFrame
+      kicker="GGS / MY GGS"
+      title={<>My GGS,<br /><em>pilih profil.</em></>}
+      intro="Pilih Pengguna (Konsumen) atau Karyawan. Data profil dan riwayat belum terhubung."
+      testId="page-my-ggs"
+    >
+      <div className="myggs-profile-choice" role="tablist" aria-label="Pilih jenis profil" onKeyDown={handleProfileTabKeyDown} data-testid="group-my-ggs-profile-type">
+        <button
+          type="button"
+          className="myggs-profile-option"
+          id="tab-my-ggs-profile-consumer"
+          role="tab"
+          aria-selected={profileType === 'consumer'}
+          aria-controls="panel-my-ggs-profile-consumer"
+          tabIndex={profileType === 'consumer' ? 0 : -1}
+          onClick={() => setProfileType('consumer')}
+          data-testid="button-my-ggs-profile-consumer"
+        >
+          <span className="myggs-profile-option-icon" aria-hidden="true"><UserRound size={19} /></span>
+          <span className="myggs-profile-option-copy"><strong>Pengguna</strong><small>Konsumen</small></span>
+        </button>
+        <button
+          type="button"
+          className="myggs-profile-option"
+          id="tab-my-ggs-profile-employee"
+          role="tab"
+          aria-selected={profileType === 'employee'}
+          aria-controls="panel-my-ggs-profile-employee"
+          tabIndex={profileType === 'employee' ? 0 : -1}
+          onClick={() => setProfileType('employee')}
+          data-testid="button-my-ggs-profile-employee"
+        >
+          <span className="myggs-profile-option-icon" aria-hidden="true"><BriefcaseBusiness size={19} /></span>
+          <span className="myggs-profile-option-copy"><strong>Karyawan</strong><small>Tim GGS</small></span>
+        </button>
+      </div>
+      <div
+        id="panel-my-ggs-profile-consumer"
+        className="myggs-profile-panel"
+        role="tabpanel"
+        aria-labelledby="tab-my-ggs-profile-consumer"
+        tabIndex={0}
+        hidden={profileType !== 'consumer'}
+        data-testid="panel-my-ggs-profile-consumer"
+      >
+          <section className="unavailable-panel myggs-empty" data-testid="status-my-ggs-unavailable">
+            <div className="empty-ornament"><UserRound size={25} /></div>
+            <span className="panel-index">MY GGS / DATA PENGGUNA BELUM TERHUBUNG</span>
+            <h2>Riwayat kunjunganmu<br />belum bisa ditampilkan.</h2>
+            <p>Website ini belum memiliki akun pelanggan, riwayat booking, atau data member. Permintaan janji dikelola oleh tim studio dan belum tampil sebagai riwayat pribadi.</p>
+            <Link href="/book" className="clearer-primary-button" data-testid="link-my-ggs-book">Ajukan janji <ArrowRight size={16} /></Link>
+          </section>
+          <div className="myggs-record-grid">
+            {[
+              { label: 'Booking mendatang', value: 'Belum terhubung', note: 'Data booking akun belum tersedia' },
+              { label: 'Riwayat kunjungan', value: 'Belum terhubung', note: 'Data kunjungan pelanggan belum tersedia' },
+              { label: 'Voucher pribadi', value: 'Belum tersedia', note: 'Voucher pribadi belum terhubung' },
+              { label: 'Preferensi gaya', value: 'Belum disimpan', note: 'Website ini belum menyimpan data profil' },
+            ].map((item, index) => <article key={item.label} data-testid={`card-my-ggs-${index}`}><span>0{index + 1} / {item.label}</span><strong>{item.value}</strong><p>{item.note}</p></article>)}
+          </div>
+      </div>
+      <div
+        id="panel-my-ggs-profile-employee"
+        className="myggs-profile-panel"
+        role="tabpanel"
+        aria-labelledby="tab-my-ggs-profile-employee"
+        tabIndex={0}
+        hidden={profileType !== 'employee'}
+        data-testid="panel-my-ggs-profile-employee"
+      >
+        <section className="unavailable-panel myggs-empty" data-testid="status-my-ggs-employee-unavailable">
+          <div className="empty-ornament"><BriefcaseBusiness size={25} /></div>
+          <span className="panel-index">PROFIL KARYAWAN / BELUM TERHUBUNG</span>
+          <h2>Informasi karyawan<br />belum tersedia.</h2>
+          <p>Akun dan informasi karyawan belum tersedia di website pengunjung.</p>
+        </section>
       </div>
     </PageFrame>
   );

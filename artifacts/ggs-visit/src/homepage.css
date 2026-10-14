@@ -1357,6 +1357,18 @@
 .branch-contact-note { display: flex; gap: 25px; margin-top: 28px; border-top: 1px solid var(--clearer-line); padding-top: 17px; }
 .branch-contact-note span { color: var(--clearer-accent); font: 10px 'Space Mono', monospace; letter-spacing: .1em; }
 .branch-contact-note p { margin: 0; color: var(--clearer-muted); font-size: 13px; }
+.myggs-profile-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.myggs-profile-option { display: flex; min-height: 88px; align-items: center; gap: 14px; border: 1px solid var(--clearer-line); background: #f8f5ee; padding: 16px 18px; color: var(--clearer-ink); text-align: left; cursor: pointer; transition: border-color .2s, background .2s, color .2s; }
+.myggs-profile-option:hover { border-color: var(--clearer-accent); }
+.myggs-profile-option[aria-selected='true'] { border-color: #302d27; background: #302d27; color: #f2eee5; }
+.myggs-profile-option:focus-visible { outline: 2px solid var(--clearer-accent); outline-offset: 3px; }
+.myggs-profile-option-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border: 1px solid var(--clearer-line); color: var(--clearer-accent); }
+.myggs-profile-option[aria-selected='true'] .myggs-profile-option-icon { border-color: #e4a69b; color: #e4a69b; }
+.myggs-profile-option-copy { display: grid; gap: 4px; }
+.myggs-profile-option-copy strong { font-size: 14px; }
+.myggs-profile-option-copy small { color: var(--clearer-muted); font-size: 12px; }
+.myggs-profile-option[aria-selected='true'] .myggs-profile-option-copy small { color: #d0c9bb; }
+.myggs-profile-panel[hidden] { display: none; }
 .myggs-empty { background: #302d27; color: #f2eee5; }
 .myggs-empty .panel-index, .myggs-empty .empty-ornament { color: #e4a69b; border-color: #e4a69b; }
 .myggs-empty h2 { color: #f2eee5; }
@@ -1514,6 +1526,11 @@
   .myggs-record-grid article:nth-child(4) { border-top: 1px solid var(--clearer-line); }
   .myggs-record-grid article > span { font-size: 8px; }
   .myggs-record-grid article strong { margin-top: 13px; font-size: 21px; }
+  .myggs-profile-choice { gap: 8px; }
+  .myggs-profile-option { min-height: 82px; gap: 10px; padding: 12px; }
+  .myggs-profile-option-icon { width: 36px; height: 36px; }
+  .myggs-profile-option-copy strong { font-size: 13px; }
+  .myggs-profile-option-copy small { font-size: 11px; }
   .clearer-footer { padding: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
