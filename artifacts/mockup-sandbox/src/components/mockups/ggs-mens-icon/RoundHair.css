@@ -1,0 +1,23 @@
+.ggs-quick-menu-icon.ggs-mens-round {
+  overflow: visible;
+  isolation: isolate;
+}
+
+.ggs-round-hair-clip {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.ggs-round-hair-clip .ggs-mens-round-face {
+  z-index: 1;
+}
+
+.ggs-quick-menu-icon.ggs-mens-round .ggs-mens-hair-cap {
+  z-index: 2;
+  top: -41px;
+  width: 102px;
+  height: 102px;
+}

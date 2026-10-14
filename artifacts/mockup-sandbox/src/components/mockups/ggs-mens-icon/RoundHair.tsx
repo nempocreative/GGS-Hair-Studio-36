@@ -1,4 +1,5 @@
 import './_group.css';
+import './RoundHair.css';
 
 function MensGroomingFace() {
   return (
@@ -44,7 +45,9 @@ export function RoundHair() {
         onClick={(event) => event.preventDefault()}
       >
         <span className="ggs-quick-menu-icon ggs-mens-round" aria-hidden="true">
-          <MensGroomingFace />
+          <span className="ggs-round-hair-clip">
+            <MensGroomingFace />
+          </span>
           <img
             className="ggs-mens-hair-cap"
             src="/__mockup/images/ggs-mens-hair.png"
