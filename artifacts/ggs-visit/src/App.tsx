@@ -2657,9 +2657,16 @@ function BranchesPage({ site, siteQuery }: SharedProps) {
 }
 
 function MyGgsPage() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const [profileType, setProfileType] = useState<'consumer' | 'employee'>('consumer');
+  const [profileMode, setProfileMode] = useState<'demo' | 'account'>('demo');
+  const isRealAccountView = profileMode === 'account' && Boolean(isSignedIn) && profileType === 'consumer';
+
+  const selectProfile = (nextType: 'consumer' | 'employee') => {
+    setProfileType(nextType);
+    setProfileMode('demo');
+  };
 
   const handleProfileTabKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
@@ -2673,7 +2680,7 @@ function MyGgsPage() {
           ? 'employee'
           : 'consumer';
 
-    setProfileType(nextType);
+    selectProfile(nextType);
     document.getElementById(`tab-my-ggs-profile-${nextType}`)?.focus();
   };
 
@@ -2703,7 +2710,7 @@ function MyGgsPage() {
               aria-selected={profileType === 'consumer'}
               aria-controls="panel-my-ggs-profile-consumer"
               tabIndex={profileType === 'consumer' ? 0 : -1}
-              onClick={() => setProfileType('consumer')}
+              onClick={() => selectProfile('consumer')}
               data-testid="button-my-ggs-profile-consumer"
             >
               <span className="ggs-professional__tab-icon" aria-hidden="true"><UserRound size={18} /></span>
@@ -2717,7 +2724,7 @@ function MyGgsPage() {
               aria-selected={profileType === 'employee'}
               aria-controls="panel-my-ggs-profile-employee"
               tabIndex={profileType === 'employee' ? 0 : -1}
-              onClick={() => setProfileType('employee')}
+              onClick={() => selectProfile('employee')}
               data-testid="button-my-ggs-profile-employee"
             >
               <span className="ggs-professional__tab-icon" aria-hidden="true"><BriefcaseBusiness size={18} /></span>
@@ -2734,46 +2741,54 @@ function MyGgsPage() {
             hidden={profileType !== 'consumer'}
             data-testid="panel-my-ggs-profile-consumer"
           >
-            <section className="ggs-professional__consumer-intro" data-testid="status-my-ggs-unavailable">
-              <h2 role={!isLoaded ? 'status' : undefined}>
-                {!isLoaded
-                  ? 'Memuat akun…'
-                  : isSignedIn
-                    ? user?.firstName ? `Halo, ${user.firstName}.` : 'Profil akun'
-                    : 'Masuk ke My GGS'}
+            <section className="ggs-professional__consumer-intro" data-testid="profile-my-ggs-consumer">
+              <span className="ggs-professional__demo-badge">{isRealAccountView ? 'AKUN ASLI' : 'DATA DEMO'}</span>
+              <h2>
+                {isRealAccountView
+                  ? user?.firstName ? `Halo, ${user.firstName}.` : 'Profil akun'
+                  : 'Nadia Putri'}
               </h2>
-              {isLoaded && isSignedIn ? (
+              <p className="ggs-professional__demo-role">{isRealAccountView ? 'Pengguna' : 'Pengguna · Profil contoh'}</p>
+              {isRealAccountView ? (
+                <div className="ggs-professional__account-actions">
+                  <button
+                    type="button"
+                    className="ggs-professional__booking-link"
+                    onClick={() => setProfileMode('demo')}
+                    data-testid="button-my-ggs-show-demo"
+                  >
+                    Lihat demo
+                  </button>
+                  <button
+                    type="button"
+                    className="ggs-professional__signup-link"
+                    onClick={() => void signOut({ redirectUrl: basePath || '/' })}
+                    data-testid="button-my-ggs-sign-out"
+                  >
+                    Keluar
+                  </button>
+                </div>
+              ) : isSignedIn ? (
                 <button
                   type="button"
                   className="ggs-professional__booking-link"
-                  onClick={() => void signOut({ redirectUrl: basePath || '/' })}
-                  data-testid="button-my-ggs-sign-out"
+                  onClick={() => setProfileMode('account')}
+                  data-testid="button-my-ggs-real-account"
                 >
-                  <span>Keluar</span><ArrowRight size={17} aria-hidden="true" />
+                  Akun saya
                 </button>
-              ) : isLoaded ? (
-                <div className="ggs-professional__account-actions">
-                  <Link href="/sign-in" className="ggs-professional__booking-link" data-testid="link-my-ggs-sign-in">
-                    <span>Masuk</span><ArrowRight size={17} aria-hidden="true" />
-                  </Link>
-                  <Link href="/sign-up" className="ggs-professional__signup-link" data-testid="link-my-ggs-sign-up">
-                    Daftar
-                  </Link>
-                </div>
-              ) : null}
-              {isLoaded && !isSignedIn && (
-                <Link href="/book" className="ggs-professional__book-secondary" data-testid="link-my-ggs-book">
-                  Booking tanpa akun <ArrowRight size={15} aria-hidden="true" />
+              ) : (
+                <Link href="/sign-in" className="ggs-professional__booking-link" data-testid="link-my-ggs-sign-in">
+                  Masuk akun asli <ArrowRight size={17} aria-hidden="true" />
                 </Link>
               )}
             </section>
 
             <section className="ggs-professional__records" aria-label="Profil dan informasi akun">
-              {isLoaded && isSignedIn ? (
+              {isRealAccountView ? (
                 <>
                   <div className="ggs-professional__records-heading">
                     <h3>Profil akun</h3>
-                    <p>Riwayat janji belum tertaut.</p>
                   </div>
                   <div className="ggs-professional__user-profile" data-testid="my-ggs-account-settings">
                     <UserProfile routing="hash" />
@@ -2782,12 +2797,22 @@ function MyGgsPage() {
               ) : (
                 <>
                   <div className="ggs-professional__records-heading">
-                    <h3>Riwayat janji</h3>
+                    <h3>Profil pengguna</h3>
                   </div>
-                  <div className="ggs-professional__record-status" role="note">
-                    <CalendarDays size={18} aria-hidden="true" />
-                    <span>Belum tertaut</span>
-                  </div>
+                  <dl className="ggs-professional__demo-record-list">
+                    <div className="ggs-professional__demo-record">
+                      <dt>Email</dt>
+                      <dd>pengguna.demo@example.com</dd>
+                    </div>
+                    <div className="ggs-professional__demo-record">
+                      <dt>Layanan favorit</dt>
+                      <dd>Potong rambut</dd>
+                    </div>
+                    <div className="ggs-professional__demo-record">
+                      <dt>Booking</dt>
+                      <dd>Jadwal contoh</dd>
+                    </div>
+                  </dl>
                 </>
               )}
             </section>
@@ -2802,12 +2827,29 @@ function MyGgsPage() {
             hidden={profileType !== 'employee'}
             data-testid="panel-my-ggs-profile-employee"
           >
-            <section className="ggs-professional__employee-intro" data-testid="status-my-ggs-employee-unavailable">
-              <div className="ggs-professional__employee-symbol" aria-hidden="true"><BriefcaseBusiness size={21} /></div>
-              <div className="ggs-professional__employee-copy">
-                <h2>Akses karyawan belum tersedia.</h2>
-                <p>Hubungi pengelola GGS untuk akses.</p>
+            <section className="ggs-professional__consumer-intro" data-testid="profile-my-ggs-employee-demo">
+              <span className="ggs-professional__demo-badge">DATA DEMO</span>
+              <h2>Rani Pratama</h2>
+              <p className="ggs-professional__demo-role">Karyawan · Stylist</p>
+            </section>
+            <section className="ggs-professional__records" aria-label="Profil demo karyawan">
+              <div className="ggs-professional__records-heading">
+                <h3>Profil karyawan</h3>
               </div>
+              <dl className="ggs-professional__demo-record-list">
+                <div className="ggs-professional__demo-record">
+                  <dt>Email</dt>
+                  <dd>karyawan.demo@example.com</dd>
+                </div>
+                <div className="ggs-professional__demo-record">
+                  <dt>Akses</dt>
+                  <dd>Demo saja</dd>
+                </div>
+                <div className="ggs-professional__demo-record">
+                  <dt>Agenda</dt>
+                  <dd>Jadwal contoh</dd>
+                </div>
+              </dl>
             </section>
           </div>
         </section>

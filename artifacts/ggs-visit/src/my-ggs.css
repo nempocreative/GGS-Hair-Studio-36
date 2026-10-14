@@ -84,8 +84,10 @@
 }
 .ggs-professional__consumer-intro h2,
 .ggs-professional__employee-copy h2 { margin: 20px 0 0; font: 500 clamp(37px, 3.5vw, 47px)/.96 'Cormorant Garamond', serif; letter-spacing: -.035em; }
-.ggs-professional__consumer-intro h2 { margin: 0 0 25px; }
+.ggs-professional__consumer-intro h2 { margin: 14px 0 8px; }
 .ggs-professional__employee-copy > p { max-width: 410px; margin: 12px 0 0; color: var(--ggsp-muted); font-size: 13px; line-height: 1.6; }
+.ggs-professional__demo-badge { display: inline-flex; align-items: center; border: 1px solid rgb(146 61 54 / 35%); padding: 5px 8px; color: var(--ggsp-brick); font: 8px 'Space Mono', monospace; letter-spacing: .08em; }
+.ggs-professional__demo-role { margin: 0 0 19px; color: var(--ggsp-muted); font-size: 12px; }
 .ggs-professional .ggs-professional__booking-link {
   display: inline-flex;
   min-height: 47px;
@@ -109,17 +111,18 @@
 .ggs-professional__records-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--ggsp-line); padding-bottom: 13px; }
 .ggs-professional__records-heading h3 { margin: 0; font: 600 23px/1 'Cormorant Garamond', serif; }
 .ggs-professional__records-heading p { max-width: 170px; margin: 0; color: var(--ggsp-muted); font-size: 10px; line-height: 1.45; text-align: right; }
-.ggs-professional__record-status { display: flex; align-items: center; gap: 11px; padding: 18px 0 0; color: var(--ggsp-muted); font-size: 12px; }
-.ggs-professional__record-status svg { color: var(--ggsp-brick); }
+.ggs-professional__demo-record-list { margin: 0; }
+.ggs-professional__demo-record { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; border-bottom: 1px solid var(--ggsp-line); padding: 14px 0; }
+.ggs-professional__demo-record:last-child { border-bottom: 0; }
+.ggs-professional__demo-record dt { color: var(--ggsp-muted); font-size: 11px; }
+.ggs-professional__demo-record dd { margin: 0; color: var(--ggsp-ink); font-size: 12px; overflow-wrap: anywhere; text-align: right; }
 
-.ggs-professional__panel--employee { grid-template-columns: 1fr; min-height: 230px; background: radial-gradient(ellipse at 85% 110%, rgb(146 61 54 / 8%), transparent 32rem), var(--ggsp-paper-light); }
-.ggs-professional__employee-intro { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: clamp(22px, 4vw, 48px); padding: clamp(32px, 6vw, 66px); }
-.ggs-professional__employee-symbol { display: grid; width: 48px; height: 48px; place-items: center; border: 1px solid var(--ggsp-brick); color: var(--ggsp-brick); }
-.ggs-professional__employee-copy h2 { margin: 0; font-size: clamp(35px, 4vw, 49px); }
+.ggs-professional__panel--employee { grid-template-columns: minmax(0, .9fr) minmax(370px, 1.1fr); min-height: 290px; background: radial-gradient(ellipse at 85% 110%, rgb(146 61 54 / 8%), transparent 32rem), var(--ggsp-paper-light); }
 
 .ggs-professional__account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 .ggs-professional__signup-link,
 .ggs-professional__book-secondary { display: inline-flex; align-items: center; gap: 8px; color: var(--ggsp-brick); font-size: 12px; font-weight: 700; }
+.ggs-professional button.ggs-professional__signup-link { border: 0; background: transparent; padding: 0; cursor: pointer; }
 .ggs-professional__signup-link:hover,
 .ggs-professional__book-secondary:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ggs-professional__book-secondary { margin-top: 18px; color: var(--ggsp-muted); font-size: 11px; }
@@ -163,11 +166,10 @@
   .ggs-professional__records-heading { align-items: baseline; }
   .ggs-professional__records-heading h3 { font-size: 20px; }
   .ggs-professional__records-heading p { max-width: 150px; font-size: 9px; }
-  .ggs-professional__record-status { padding-top: 13px; }
-  .ggs-professional__employee-intro { grid-template-columns: 40px minmax(0, 1fr); gap: 17px; padding: 25px 22px; }
-  .ggs-professional__employee-symbol { width: 39px; height: 39px; }
-  .ggs-professional__employee-copy h2 { font-size: 36px; }
-  .ggs-professional__employee-copy > p { font-size: 12px; }
+  .ggs-professional__demo-record { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 10px; padding: 12px 0; }
+  .ggs-professional__demo-record dt,
+  .ggs-professional__demo-record dd { font-size: 10px; }
+  .ggs-professional__demo-role { margin-bottom: 16px; }
   .ggs-professional__panel:has(.ggs-professional__user-profile) .ggs-professional__records { padding: 23px 18px; }
   .ggs-professional__user-profile { margin-top: 16px; }
   .ggs-auth-page__header { width: calc(100% - 40px); min-height: 63px; }
