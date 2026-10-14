@@ -2666,6 +2666,16 @@ function MyGgsPage() {
   const selectProfile = (nextType: 'consumer' | 'employee') => {
     setProfileType(nextType);
     setProfileMode('demo');
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        document
+          .getElementById(`panel-my-ggs-profile-${nextType}`)
+          ?.scrollIntoView({
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+            block: 'center',
+          });
+      });
+    });
   };
 
   const handleProfileTabKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
