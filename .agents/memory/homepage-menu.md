@@ -75,6 +75,36 @@ Show the supplied Voucher avatar directly, without an added outer tile or shape.
 
 **How to apply:** Use the supplied Voucher image as-is on the homepage shortcut, preserving its transparency and adding no colored tile.
 
+Show the Cabang shortcut with the complete supplied person-and-building avatar, without an outer tile or shape.
+
+**Why:** The user corrected the first cutout: the person must remain, matching the other menu icons; only the outer tile is removed.
+
+**How to apply:** Preserve the full transparent portrait and building symbol for Cabang, and use the no-tile styling on its homepage shortcut.
+
+Show the Hair Journal shortcut with the supplied person-and-journal avatar, without an outer tile or shape.
+
+**Why:** The user requested a shape-free Hair Journal icon and supplied a portrait that should match the other person-centered menu icons.
+
+**How to apply:** Keep the person and journal symbol visible, preserve transparency, and use the no-tile styling on its homepage shortcut.
+
+Show the Our Team shortcut with the complete supplied person-and-group avatar, preserving both the person and group symbol without an outer tile.
+
+**Why:** The user clarified that the supplied icons should retain the person together with the foreground symbol.
+
+**How to apply:** Use the complete transparent avatar on the Our Team shortcut; do not isolate or crop away the person.
+
+Show Home Service with the supplied complete person-and-house-scissors avatar, preserving the person and symbols without an outer tile.
+
+**Why:** The user requested this icon and clarified that supplied icons should keep the person with the foreground symbol.
+
+**How to apply:** Use the transparent avatar on the Home Service shortcut, retaining the full person and house-scissors symbol.
+
+Keep every homepage shortcut icon at the Cabang reference size: 70px on desktop and 48px on mobile, preserving each image's proportions and complete artwork.
+
+**Why:** The user asked for all shortcut icons to be the same size as Cabang.
+
+**How to apply:** Use one shared icon frame and normalize transparent artwork to fill the same maximum dimension; never stretch or crop away people or symbols.
+
 Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
 **Why:** The user specifically clarified that the person icon's body should visually connect to its tile.

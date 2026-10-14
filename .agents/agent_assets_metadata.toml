@@ -1,0 +1,58 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "GMPpU17n4UfENBDOdlt1Z"
+uri = "file://attached_assets/ggs-branch-icon-no-shape.png"
+type = "image"
+title = "Ikon Cabang GGS"
+description = "Avatar lengkap dengan orang dan simbol gedung, latar transparan tanpa tile."
+logical_id = "7d0aaf48-5303-4a7f-a090-b47a73926009"
+content_hash = "sha256:38d039fdacfbf843fbfebf285e13b01f6d7e26b90ae1766f20e42ded8c35828c"
+size = 1233590
+mtime_ms = 1792002424238
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:59e0da7c-913a-4693-9a77-68c5b2308d33/7d0aaf48-5303-4a7f-a090-b47a73926009/23ac951d-276d-47de-ab8d-b7e32da52955"
+storage_version_token = "1792002544207265"
+content_type = "image/png"
+
+[[outputs]]
+id = "TPb7aGeqsKW7mvMipFRPM"
+uri = "file://attached_assets/hair-journal-avatar-no-shape.png"
+type = "image"
+title = "Ikon Hair Journal GGS"
+description = "Avatar lengkap dengan orang dan buku jurnal, latar transparan tanpa tile."
+logical_id = "37e24d38-91fa-4f50-8aa8-cff01f136117"
+content_hash = "sha256:ad041ad2157cc6eaa3d1d8d70b54c25b5403de02d469baff9e0470f8f9b55db7"
+size = 1589217
+mtime_ms = 1792002622274
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:59e0da7c-913a-4693-9a77-68c5b2308d33/37e24d38-91fa-4f50-8aa8-cff01f136117/6b098fce-9229-4173-a40b-275112c80473"
+storage_version_token = "1792002695619759"
+content_type = "image/png"
+
+[[outputs]]
+id = "8aqAa3V8yckyjvS9_MtKz"
+uri = "file://attached_assets/team-group-avatar.png"
+type = "image"
+title = "Ikon Team GGS"
+description = "Avatar orang lengkap dengan simbol grup, latar transparan."
+logical_id = "58c5f97c-41c7-411e-9c92-ab909853efd9"
+content_hash = "sha256:1908bcbe0f414f5a0d5c9b5d571618e99eeecacbb1cbca26cd1ef11590edff64"
+size = 1625783
+mtime_ms = 1792002937079
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:59e0da7c-913a-4693-9a77-68c5b2308d33/58c5f97c-41c7-411e-9c92-ab909853efd9/8777e39f-818b-4c03-a15b-b30668ec4955"
+storage_version_token = "1792003016667329"
+content_type = "image/png"
+
+[[outputs]]
+id = "CNGdOd5c8hUDNko5Z0TqV"
+uri = "file://attached_assets/home-service-avatar.png"
+type = "image"
+title = "Ikon Home Service GGS"
+description = "Avatar lengkap dengan orang dan simbol rumah plus gunting, latar transparan."
+logical_id = "76dcb537-5a9c-4a66-9175-03fe0d6b2c03"
+content_hash = "sha256:ccdd11622978a90f27cae89958dda61b3155b1ab8949ddab3678e51ac2c754d0"
+size = 1629137
+mtime_ms = 1792003107276
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:59e0da7c-913a-4693-9a77-68c5b2308d33/76dcb537-5a9c-4a66-9175-03fe0d6b2c03/9bf74342-c0be-4112-be67-f48846ded9d8"
+storage_version_token = "1792003184364242"
+content_type = "image/png"
