@@ -238,6 +238,52 @@ paths:
                   $ref: "#/components/schemas/GgsEmployeeBooking"
         "401":
           description: No active employee session
+  /ggs/employee/attendance/today:
+    get:
+      operationId: getGgsEmployeeAttendanceToday
+      tags: [ggs-employee]
+      summary: Get the signed-in employee's attendance status for today
+      responses:
+        "200":
+          description: Attendance status for the current Jakarta date
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeAttendanceStatus"
+        "401":
+          description: No active employee session
+  /ggs/employee/attendance/check-in:
+    post:
+      operationId: checkInGgsEmployeeAttendance
+      tags: [ggs-employee]
+      summary: Record the signed-in employee's check-in for today
+      responses:
+        "201":
+          description: Check-in recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeAttendanceStatus"
+        "401":
+          description: No active employee session
+        "409":
+          description: The employee already checked in today
+  /ggs/employee/attendance/check-out:
+    post:
+      operationId: checkOutGgsEmployeeAttendance
+      tags: [ggs-employee]
+      summary: Record the signed-in employee's check-out for today
+      responses:
+        "200":
+          description: Check-out recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeAttendanceStatus"
+        "401":
+          description: No active employee session
+        "409":
+          description: The employee must check in first or has already checked out
   /ggs/admin/employees:
     get:
       operationId: getGgsAdminEmployees
@@ -777,6 +823,26 @@ components:
         - appointmentTime
         - notes
         - status
+    GgsEmployeeAttendanceStatus:
+      type: object
+      properties:
+        attendanceDate:
+          type: string
+          pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        status:
+          type: string
+          enum: [not_started, checked_in, checked_out]
+        checkInAt:
+          type: ["string", "null"]
+          format: date-time
+        checkOutAt:
+          type: ["string", "null"]
+          format: date-time
+      required:
+        - attendanceDate
+        - status
+        - checkInAt
+        - checkOutAt
     GgsSiteContent:
       type: object
       properties:

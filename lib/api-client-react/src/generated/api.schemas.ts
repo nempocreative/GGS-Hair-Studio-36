@@ -156,6 +156,25 @@ export interface GgsEmployeeBooking {
   status: GgsEmployeeBookingStatus;
 }
 
+export type GgsEmployeeAttendanceStatusStatus = typeof GgsEmployeeAttendanceStatusStatus[keyof typeof GgsEmployeeAttendanceStatusStatus];
+
+
+export const GgsEmployeeAttendanceStatusStatus = {
+  not_started: 'not_started',
+  checked_in: 'checked_in',
+  checked_out: 'checked_out',
+} as const;
+
+export interface GgsEmployeeAttendanceStatus {
+  /** @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ */
+  attendanceDate: string;
+  status: GgsEmployeeAttendanceStatusStatus;
+  /** @nullable */
+  checkInAt: string | null;
+  /** @nullable */
+  checkOutAt: string | null;
+}
+
 export interface GgsSiteContent {
   brandName: string;
   tagline: string;

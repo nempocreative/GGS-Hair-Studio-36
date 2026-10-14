@@ -255,6 +255,48 @@ export const GetGgsEmployeeBookingsResponse = zod.array(GetGgsEmployeeBookingsRe
 
 
 /**
+ * @summary Get the signed-in employee's attendance status for today
+ */
+export const getGgsEmployeeAttendanceTodayResponseAttendanceDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const GetGgsEmployeeAttendanceTodayResponse = zod.object({
+  "attendanceDate": zod.string().regex(getGgsEmployeeAttendanceTodayResponseAttendanceDateRegExp),
+  "status": zod.enum(['not_started', 'checked_in', 'checked_out']),
+  "checkInAt": zod.coerce.date().nullable(),
+  "checkOutAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Record the signed-in employee's check-in for today
+ */
+export const checkInGgsEmployeeAttendanceResponseAttendanceDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const CheckInGgsEmployeeAttendanceResponse = zod.object({
+  "attendanceDate": zod.string().regex(checkInGgsEmployeeAttendanceResponseAttendanceDateRegExp),
+  "status": zod.enum(['not_started', 'checked_in', 'checked_out']),
+  "checkInAt": zod.coerce.date().nullable(),
+  "checkOutAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Record the signed-in employee's check-out for today
+ */
+export const checkOutGgsEmployeeAttendanceResponseAttendanceDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const CheckOutGgsEmployeeAttendanceResponse = zod.object({
+  "attendanceDate": zod.string().regex(checkOutGgsEmployeeAttendanceResponseAttendanceDateRegExp),
+  "status": zod.enum(['not_started', 'checked_in', 'checked_out']),
+  "checkInAt": zod.coerce.date().nullable(),
+  "checkOutAt": zod.coerce.date().nullable()
+})
+
+
+/**
  * @summary List GGS employee accounts
  */
 export const GetGgsAdminEmployeesResponseItem = zod.object({

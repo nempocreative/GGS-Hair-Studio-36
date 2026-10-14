@@ -30,6 +30,7 @@ import type {
   GgsEmployeeAccount,
   GgsEmployeeAccountInput,
   GgsEmployeeAccountUpdate,
+  GgsEmployeeAttendanceStatus,
   GgsEmployeeBooking,
   GgsEmployeeLoginInput,
   GgsProduct,
@@ -1187,6 +1188,231 @@ export function useGetGgsEmployeeBookings<TData = Awaited<ReturnType<typeof getG
 
 
 
+
+export const getGetGgsEmployeeAttendanceTodayUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/attendance/today`
+}
+
+/**
+ * @summary Get the signed-in employee's attendance status for today
+ */
+export const getGgsEmployeeAttendanceToday = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAttendanceStatus> => {
+
+  return customFetch<GgsEmployeeAttendanceStatus>(getGetGgsEmployeeAttendanceTodayUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeAttendanceTodayQueryKey = () => {
+    return [
+    `/api/ggs/employee/attendance/today`
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeAttendanceTodayQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeAttendanceToday>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeAttendanceToday>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeAttendanceTodayQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeAttendanceToday>>> = ({ signal }) => getGgsEmployeeAttendanceToday({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeAttendanceToday>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeAttendanceTodayQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeAttendanceToday>>>
+export type GetGgsEmployeeAttendanceTodayQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the signed-in employee's attendance status for today
+ */
+
+export function useGetGgsEmployeeAttendanceToday<TData = Awaited<ReturnType<typeof getGgsEmployeeAttendanceToday>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeAttendanceToday>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeAttendanceTodayQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCheckInGgsEmployeeAttendanceUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/attendance/check-in`
+}
+
+/**
+ * @summary Record the signed-in employee's check-in for today
+ */
+export const checkInGgsEmployeeAttendance = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAttendanceStatus> => {
+
+  return customFetch<GgsEmployeeAttendanceStatus>(getCheckInGgsEmployeeAttendanceUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckInGgsEmployeeAttendanceMutationKey = () => ['checkInGgsEmployeeAttendance'] as const;
+
+export const getCheckInGgsEmployeeAttendanceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, TError,void, TContext> => {
+
+const mutationKey = getCheckInGgsEmployeeAttendanceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, void> = () => {
+
+
+          return  checkInGgsEmployeeAttendance(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckInGgsEmployeeAttendanceMutationResult = NonNullable<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>>
+
+    export type CheckInGgsEmployeeAttendanceMutationError = ErrorType<void>
+
+
+    /**
+ * @summary Record the signed-in employee's check-in for today
+ */
+export const useCheckInGgsEmployeeAttendance = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkInGgsEmployeeAttendance>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCheckInGgsEmployeeAttendanceMutationOptions(options));
+    }
+
+export const getCheckOutGgsEmployeeAttendanceUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/attendance/check-out`
+}
+
+/**
+ * @summary Record the signed-in employee's check-out for today
+ */
+export const checkOutGgsEmployeeAttendance = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeAttendanceStatus> => {
+
+  return customFetch<GgsEmployeeAttendanceStatus>(getCheckOutGgsEmployeeAttendanceUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckOutGgsEmployeeAttendanceMutationKey = () => ['checkOutGgsEmployeeAttendance'] as const;
+
+export const getCheckOutGgsEmployeeAttendanceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, TError,void, TContext> => {
+
+const mutationKey = getCheckOutGgsEmployeeAttendanceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, void> = () => {
+
+
+          return  checkOutGgsEmployeeAttendance(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckOutGgsEmployeeAttendanceMutationResult = NonNullable<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>>
+
+    export type CheckOutGgsEmployeeAttendanceMutationError = ErrorType<void>
+
+
+    /**
+ * @summary Record the signed-in employee's check-out for today
+ */
+export const useCheckOutGgsEmployeeAttendance = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkOutGgsEmployeeAttendance>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCheckOutGgsEmployeeAttendanceMutationOptions(options));
+    }
 
 export const getGetGgsAdminEmployeesUrl = () => {
 

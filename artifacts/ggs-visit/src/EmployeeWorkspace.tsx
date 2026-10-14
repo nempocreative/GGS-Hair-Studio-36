@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, Clock3, Layou
 import { Link, useLocation } from 'wouter';
 import {
   getGetGgsEmployeeBookingsQueryKey,
+  getGetGgsEmployeeAttendanceTodayQueryKey,
   getGetGgsEmployeeSessionQueryKey,
   useGetGgsEmployeeBookings,
   useGetGgsEmployeeSession,
@@ -11,6 +12,7 @@ import {
   useLogoutGgsEmployee,
 } from '@workspace/api-client-react';
 import type { GgsEmployeeBooking, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
 function employeeErrorMessage(error: unknown): string {
@@ -175,6 +177,7 @@ export function EmployeeSignInPage() {
     };
     login.mutate(variables, {
       onSuccess: async () => {
+        queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceTodayQueryKey(), exact: true });
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeSessionQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeBookingsQueryKey() }),
@@ -362,6 +365,7 @@ export function EmployeeSchedulePage() {
     setLogoutError('');
     logout.mutate(undefined, {
       onSuccess: async () => {
+        queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceTodayQueryKey(), exact: true });
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeSessionQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeBookingsQueryKey() }),
@@ -572,6 +576,8 @@ export function EmployeeSchedulePage() {
               )}
             </section>
           </div>
+        ) : currentMenu.href === '/employee/attendance' ? (
+          <EmployeeAttendancePage employeeName={session.data?.name ?? 'Karyawan'} />
         ) : (
           <EmployeeModulePlaceholder item={currentMenu} />
         )}

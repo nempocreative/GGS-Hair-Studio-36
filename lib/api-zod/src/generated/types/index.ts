@@ -21,6 +21,8 @@ export * from './ggsAppointmentStatusUpdateStatus';
 export * from './ggsEmployeeAccount';
 export * from './ggsEmployeeAccountInput';
 export * from './ggsEmployeeAccountUpdate';
+export * from './ggsEmployeeAttendanceStatus';
+export * from './ggsEmployeeAttendanceStatusStatus';
 export * from './ggsEmployeeBooking';
 export * from './ggsEmployeeBookingStatus';
 export * from './ggsEmployeeLoginInput';

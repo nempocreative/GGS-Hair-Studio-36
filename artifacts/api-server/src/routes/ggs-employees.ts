@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { and, asc, eq, gt } from "drizzle-orm";
+import { and, asc, eq, gt, isNull } from "drizzle-orm";
 import {
   Router,
   type IRouter,
@@ -10,8 +10,11 @@ import {
   CreateGgsAdminEmployeeBody,
   CreateGgsAdminEmployeeResponse,
   GetGgsAdminEmployeesResponse,
+  GetGgsEmployeeAttendanceTodayResponse,
   GetGgsEmployeeBookingsResponse,
   GetGgsEmployeeSessionResponse,
+  CheckInGgsEmployeeAttendanceResponse,
+  CheckOutGgsEmployeeAttendanceResponse,
   LoginGgsEmployeeBody,
   LoginGgsEmployeeResponse,
   UpdateGgsAdminEmployeeBody,
@@ -22,6 +25,7 @@ import {
   db,
   ggsAppointmentsTable,
   ggsEmployeeAccountsTable,
+  ggsEmployeeAttendanceTable,
   ggsEmployeeSessionsTable,
 } from "@workspace/db";
 import {
@@ -69,6 +73,28 @@ function serializeEmployee(employee: EmployeeRecord) {
 
 function normalizeEmployeeId(employeeId: string) {
   return employeeId.trim().toUpperCase();
+}
+
+function jakartaAttendanceDate(date = new Date()) {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Jakarta",
+  }).format(date);
+}
+
+function serializeAttendance(
+  attendanceDate: string,
+  attendance?: typeof ggsEmployeeAttendanceTable.$inferSelect,
+) {
+  return {
+    attendanceDate,
+    status: !attendance
+      ? "not_started"
+      : attendance.checkOutAt
+        ? "checked_out"
+        : "checked_in",
+    checkInAt: attendance?.checkInAt.toISOString() ?? null,
+    checkOutAt: attendance?.checkOutAt?.toISOString() ?? null,
+  };
 }
 
 function attemptKeys(req: Request, employeeId: string) {
@@ -248,6 +274,128 @@ router.get("/ggs/employee/bookings", async (req, res): Promise<void> => {
 
   res.json(GetGgsEmployeeBookingsResponse.parse(appointments));
 });
+
+router.get(
+  "/ggs/employee/attendance/today",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const attendanceDate = jakartaAttendanceDate();
+    const [attendance] = await db
+      .select()
+      .from(ggsEmployeeAttendanceTable)
+      .where(
+        and(
+          eq(ggsEmployeeAttendanceTable.employeeId, employee.id),
+          eq(ggsEmployeeAttendanceTable.attendanceDate, attendanceDate),
+        ),
+      )
+      .limit(1);
+
+    res.json(
+      GetGgsEmployeeAttendanceTodayResponse.parse(
+        serializeAttendance(attendanceDate, attendance),
+      ),
+    );
+  },
+);
+
+router.post(
+  "/ggs/employee/attendance/check-in",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const attendanceDate = jakartaAttendanceDate();
+    const checkedInAt = new Date();
+    const [attendance] = await db
+      .insert(ggsEmployeeAttendanceTable)
+      .values({
+        employeeId: employee.id,
+        attendanceDate,
+        checkInAt: checkedInAt,
+      })
+      .onConflictDoNothing({
+        target: [
+          ggsEmployeeAttendanceTable.employeeId,
+          ggsEmployeeAttendanceTable.attendanceDate,
+        ],
+      })
+      .returning();
+
+    if (!attendance) {
+      res.status(409).json({ error: "Anda sudah absen masuk hari ini." });
+      return;
+    }
+
+    res.status(201).json(
+      CheckInGgsEmployeeAttendanceResponse.parse(
+        serializeAttendance(attendanceDate, attendance),
+      ),
+    );
+  },
+);
+
+router.post(
+  "/ggs/employee/attendance/check-out",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const attendanceDate = jakartaAttendanceDate();
+    const [existingAttendance] = await db
+      .select()
+      .from(ggsEmployeeAttendanceTable)
+      .where(
+        and(
+          eq(ggsEmployeeAttendanceTable.employeeId, employee.id),
+          eq(ggsEmployeeAttendanceTable.attendanceDate, attendanceDate),
+        ),
+      )
+      .limit(1);
+
+    if (!existingAttendance) {
+      res.status(409).json({ error: "Absen masuk terlebih dahulu." });
+      return;
+    }
+    if (existingAttendance.checkOutAt) {
+      res.status(409).json({ error: "Anda sudah absen pulang hari ini." });
+      return;
+    }
+
+    const [attendance] = await db
+      .update(ggsEmployeeAttendanceTable)
+      .set({ checkOutAt: new Date() })
+      .where(
+        and(
+          eq(ggsEmployeeAttendanceTable.id, existingAttendance.id),
+          isNull(ggsEmployeeAttendanceTable.checkOutAt),
+        ),
+      )
+      .returning();
+
+    if (!attendance) {
+      res.status(409).json({ error: "Absensi sudah diperbarui. Muat ulang halaman." });
+      return;
+    }
+
+    res.json(
+      CheckOutGgsEmployeeAttendanceResponse.parse(
+        serializeAttendance(attendanceDate, attendance),
+      ),
+    );
+  },
+);
 
 router.get(
   "/ggs/admin/employees",
