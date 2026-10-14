@@ -11,7 +11,7 @@ import {
   type GgsEmployeeAccountUpdate,
   type UpdateGgsAdminEmployeeMutationVariables,
 } from '@workspace/api-client-react';
-import { ArrowRight, Check, KeyRound, Pencil, Plus, ShieldAlert, UserRound, UsersRound, X } from 'lucide-react';
+import { ArrowRight, Check, KeyRound, Pencil, Plus, Search, ShieldAlert, UserRound, UsersRound, X } from 'lucide-react';
 
 type EditorMode = 'create' | 'edit' | 'password';
 
@@ -111,9 +111,8 @@ export default function EmployeesPage() {
     <div className="employees-page">
       <div className="employee-page-heading">
         <div>
-          <span className="eyebrow">AKSES TIM · KHUSUS PEMILIK</span>
-          <h1 className="font-display">Orang-orang<br /><em>di balik GGS.</em></h1>
-          <p>Kelola akun kerja studio dengan akses yang tetap berada di tangan Anda.</p>
+          <span className="eyebrow">PENGELOLAAN TIM</span>
+          <h1 className="font-display">Karyawan</h1>
         </div>
         <button
           className="button button-gold"
@@ -125,18 +124,9 @@ export default function EmployeesPage() {
           data-testid="button-add-employee"
         >
           <Plus size={16} />
-          Tambah akun karyawan
+          Tambah karyawan
         </button>
       </div>
-
-      <section className="employee-intro" aria-label="Pengelolaan akun karyawan">
-        <span className="employee-intro-mark"><UsersRound size={19} strokeWidth={1.5} /></span>
-        <div>
-          <span className="eyebrow">RUANG AKUN KARYAWAN</span>
-          <p>ID karyawan digunakan untuk masuk. Berikan kata sandi awal secara langsung kepada karyawan, bukan melalui catatan yang dibagikan.</p>
-        </div>
-        <span className="employee-owner-label"><ShieldAlert size={13} /> AKSES PEMILIK</span>
-      </section>
 
       {actionError && (
         <div className="employee-alert" role="alert" data-testid="error-employee-action">
@@ -150,19 +140,19 @@ export default function EmployeesPage() {
 
       <div className="employee-list-toolbar">
         <div className="employee-count">
-          <span className="eyebrow">DAFTAR AKUN</span>
-          <b data-testid="text-employee-count">{query.data?.length ?? '—'} <small>akun</small></b>
+          <b data-testid="text-employee-count">{search ? employees.length : query.data?.length ?? '—'}</b>
+          <span>{search ? `dari ${query.data?.length ?? 0} karyawan` : 'karyawan'}</span>
         </div>
         <label className="employee-search">
           <span className="sr-only">Cari berdasarkan nama atau ID karyawan</span>
+          <Search size={16} aria-hidden="true" />
           <input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Cari nama atau ID…"
+            placeholder="Cari nama atau ID"
             data-testid="input-employee-search"
           />
-          <span>/</span>
         </label>
       </div>
 
@@ -181,10 +171,10 @@ export default function EmployeesPage() {
       ) : query.isError ? (
         <div className="employee-query-error" role="alert" data-testid="error-employees-query">
           <span className="state-icon"><ShieldAlert size={20} /></span>
-          <h2 className="font-display">Daftar karyawan belum terbuka.</h2>
+          <h2 className="font-display">Tidak dapat memuat karyawan</h2>
           <p>{errorMessage(query.error)}</p>
           <button className="button button-outline" type="button" onClick={() => void query.refetch()} data-testid="button-retry-employees">
-            Coba lagi <ArrowRight size={14} />
+            Muat ulang <ArrowRight size={14} />
           </button>
         </div>
       ) : employees.length > 0 ? (
@@ -192,10 +182,10 @@ export default function EmployeesPage() {
           <table className="employee-table">
             <thead>
               <tr>
-                <th scope="col">KARYAWAN</th>
+                <th scope="col">NAMA</th>
                 <th scope="col">ID MASUK</th>
                 <th scope="col">STATUS</th>
-                <th scope="col">DIBUAT</th>
+                <th scope="col">DITAMBAHKAN</th>
                 <th scope="col"><span className="sr-only">Tindakan</span></th>
               </tr>
             </thead>
@@ -205,17 +195,18 @@ export default function EmployeesPage() {
                   <td>
                     <div className="employee-person-cell">
                       <span className="employee-avatar"><UserRound size={16} strokeWidth={1.4} /></span>
-                      <span><b data-testid={`text-employee-name-${employee.id}`}>{employee.name}</b><small>Anggota tim GGS</small></span>
+                      <span><b data-testid={`text-employee-name-${employee.id}`}>{employee.name}</b></span>
                     </div>
                   </td>
-                  <td><code className="employee-id">{employee.employeeId}</code></td>
+                  <td><span className="employee-mobile-label">ID MASUK</span><code className="employee-id">{employee.employeeId}</code></td>
                   <td>
+                    <span className="employee-mobile-label">STATUS</span>
                     <span className={`employee-status ${employee.active ? 'is-active' : 'is-inactive'}`} data-testid={`status-employee-${employee.id}`}>
                       <i />
                       {employee.active ? 'Aktif' : 'Nonaktif'}
                     </span>
                   </td>
-                  <td><span className="employee-date">{employeeDate(employee.createdAt)}</span></td>
+                  <td><span className="employee-mobile-label">DITAMBAHKAN</span><span className="employee-date">{employeeDate(employee.createdAt)}</span></td>
                   <td>
                     <div className="employee-actions">
                       <button
@@ -242,7 +233,7 @@ export default function EmployeesPage() {
                         data-testid={`button-reset-password-${employee.id}`}
                       >
                         <KeyRound size={14} />
-                        <span>Sandi</span>
+                        <span>Reset sandi</span>
                       </button>
                       <button
                         type="button"
@@ -264,9 +255,7 @@ export default function EmployeesPage() {
       ) : (
         <div className="employee-empty" data-testid="empty-employees">
           <span className="employee-empty-mark">{search ? <UsersRound size={20} /> : <UserRound size={20} />}</span>
-          <span className="eyebrow">{search ? 'TIDAK ADA HASIL' : 'AKUN TIM'}</span>
-          <h2 className="font-display">{search ? 'Tidak ada yang cocok.' : 'Mulai dengan satu akun.'}</h2>
-          <p>{search ? 'Coba kata kunci lain atau hapus pencarian.' : 'Buat akun masuk untuk orang yang membantu GGS terasa istimewa.'}</p>
+          <h2 className="font-display">{search ? 'Tidak ada hasil' : 'Belum ada karyawan'}</h2>
           {search ? (
             <button className="button button-outline" type="button" onClick={() => setSearch('')} data-testid="button-clear-employee-search">Hapus pencarian</button>
           ) : (
@@ -276,16 +265,11 @@ export default function EmployeesPage() {
               onClick={() => setEditor({ mode: 'create' })}
               data-testid="button-create-first-employee"
             >
-              <Plus size={15} /> Buat akun karyawan
+              <Plus size={15} /> Tambah karyawan
             </button>
           )}
         </div>
       )}
-
-      <footer className="employee-footnote">
-        <span className="eyebrow">CATATAN PRIVASI</span>
-        <span>Kata sandi tidak ditampilkan kembali. Gunakan atur ulang sandi bila karyawan memerlukan akses baru.</span>
-      </footer>
 
       {editor && (
         <EmployeeEditor
@@ -328,7 +312,7 @@ function EmployeeEditor({
   const [password, setPassword] = useState('');
   const creating = editor.mode === 'create';
   const editing = editor.mode === 'edit';
-  const heading = creating ? 'Buat akun.' : editing ? 'Perbarui data.' : 'Atur ulang sandi.';
+  const heading = creating ? 'Tambah karyawan' : editing ? 'Edit karyawan' : 'Atur ulang sandi';
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -370,7 +354,7 @@ function EmployeeEditor({
           {(creating || editing) && (
             <>
               <label className="field" htmlFor="employee-name">
-                <span className="field-head"><b>Nama karyawan</b><small>Nama yang dikenali tim</small></span>
+                  <span className="field-head"><b>Nama karyawan</b></span>
                 <input
                   id="employee-name"
                   required
@@ -425,7 +409,7 @@ function EmployeeEditor({
           )}
           <div className="employee-password-note">
             <KeyRound size={15} />
-            <span>Kata sandi disimpan dengan aman dan tidak akan ditampilkan kembali.</span>
+            <span>Sandi tidak dapat dilihat kembali.</span>
           </div>
           <div className="dialog-actions">
             <button className="button button-outline" type="button" onClick={onClose} disabled={saving} data-testid="button-cancel-employee">Batal</button>

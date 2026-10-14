@@ -5,3 +5,4 @@
 - [My GGS customer dashboard](my-ggs-account.md) — make the Pengguna profile a compact marketplace-style account home with points, product shopping, and useful account info.
 - [Transparent cutouts](transparent-cutouts.md) — check the PNG alpha channel first; a black preview background may be transparent rather than part of the image.
 - [Visitor site palette](visitor-site-palette.md) — keep the GGS visitor website's base palette pink and black, matching the shortcut menu.
+- [Employee CMS style](employee-cms-style.md) — keep employee management concise and professional, using standard Arial or Poppins typography.
