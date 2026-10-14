@@ -9,11 +9,11 @@ For the GGS visitor website, show four menu shortcuts per row and eight per slid
 
 **How to apply:** Preserve this layout, overflow behavior, navigation control, and background-free styling when adding or changing homepage shortcuts.
 
-Use illustrated people for homepage shortcuts with varied hairstyles, except for Men's Grooming and Women's Hair & Beauty, which use their supplied full hair-and-scissors images by themselves, without separate badges or colored tiles. Keep the other portraits in the existing colored rounded-square tiles and avoid cream-colored line details.
+Use illustrated people for homepage shortcuts with varied hairstyles, except for Men's Grooming and Women's Hair & Beauty, which use their supplied hair-and-scissors images by themselves, without separate badges or colored tiles. Keep the other portraits in the existing colored rounded-square tiles and avoid cream-colored line details.
 
-**Why:** The user explicitly chose full hair-and-scissors images as the entire Men's Grooming and Women's Hair & Beauty icons, without added icons or shapes behind them.
+**Why:** The user explicitly chose cutout hair-and-scissors images as the entire Men's Grooming and Women's Hair & Beauty icons, without added icons or shapes behind them, and later supplied a replacement Men's Grooming image.
 
-**How to apply:** Show the supplied Men's and Women's Grooming images as-is with no additional icon, background tile, or crop; vary illustrated hairstyles across the other shortcuts. Preserve their tile colors, the four-column/eight-per-slide layout, dot navigation, and background-free shortcut links.
+**How to apply:** Show the latest supplied Men's Grooming avatar and current Women's Grooming image as-is, with no additional icon, background tile, or crop; vary illustrated hairstyles across the other shortcuts. Preserve their tile colors, the four-column/eight-per-slide layout, dot navigation, and background-free shortcut links.
 
 Show the supplied Beranda home-avatar image directly, without an added colored tile or shape, matching the clean treatment used for Men's and Women's Grooming.
 
@@ -21,11 +21,11 @@ Show the supplied Beranda home-avatar image directly, without an added colored t
 
 **How to apply:** Use the supplied Beranda image as-is on the homepage shortcut; do not add a colored shape or tile behind it.
 
-Show the supplied Hair & Self Care skincare avatar directly, without an added outer tile or shape.
+Show the latest supplied Hair & Self Care avatar directly, without an added outer tile or shape.
 
 **Why:** The user explicitly asked not to put an outer shape behind the Hair & Self Care icon.
 
-**How to apply:** Use the supplied Hair & Self Care image as-is, with its transparent background and no added colored tile.
+**How to apply:** Use the latest supplied Hair & Self Care image as-is, with its transparent background and no added colored tile.
 
 Show the supplied Galeri Gaya avatar directly, without an added outer tile or shape, matching the other supplied cutout icons.
 
