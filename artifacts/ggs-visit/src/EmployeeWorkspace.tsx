@@ -87,7 +87,6 @@ export function EmployeeSignInPage() {
 
       <div className="employee-sign-in__layout">
         <section className="employee-sign-in__intro">
-          <p className="employee-kicker">AKSES INTERNAL GGS</p>
           <div className="employee-sign-in__ornament" aria-hidden="true">
             <span />
             <span />
@@ -153,7 +152,6 @@ export function EmployeeSignInPage() {
               <span>{login.isPending ? 'Memeriksa akses…' : 'Masuk ke jadwal'}</span>
               <ArrowRight size={16} aria-hidden="true" />
             </button>
-            <p className="employee-login-form__note">Akun karyawan dibuat dan dikelola oleh GGS. Pendaftaran mandiri tidak tersedia.</p>
           </form>
         </section>
       </div>

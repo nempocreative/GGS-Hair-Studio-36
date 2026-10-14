@@ -170,7 +170,6 @@ function AccountAuthPage({ mode }: { mode: 'in' | 'up' }) {
       </header>
       <div className="ggs-auth-page__content">
         <div className="ggs-auth-page__copy">
-          <p className="ggs-professional__eyebrow">GGS / MY GGS</p>
           <h1>{isRegister ? <>Buat akun<br /><em>GGS-mu.</em></> : <>Masuk ke<br /><em>My GGS.</em></>}</h1>
           <p>{isRegister ? 'Simpan poin dan akses kebutuhan kunjungan GGS.' : 'Akses poin, voucher, produk, dan booking.'}</p>
           <Link href="/" className="ggs-auth-page__back">
