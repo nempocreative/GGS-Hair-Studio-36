@@ -132,6 +132,56 @@
 .ggs-professional__user-profile { min-width: 0; margin-top: 20px; }
 .ggs-professional__user-profile > div { width: 100%; max-width: 100%; }
 
+.ggs-professional__panel:has(.ggs-account-dashboard) { display: block; }
+.ggs-account-dashboard { display: grid; gap: 22px; padding: clamp(20px, 3vw, 34px); }
+.ggs-account-welcome { display: flex; min-width: 0; align-items: center; gap: 14px; }
+.ggs-account-avatar { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: var(--ggsp-ink); color: var(--ggsp-paper-light); font: 600 15px 'DM Sans', sans-serif; }
+.ggs-account-welcome-copy { min-width: 0; }
+.ggs-account-welcome-copy .ggs-professional__demo-badge { padding: 3px 6px; font-size: 7px; }
+.ggs-account-welcome-copy h2 { margin: 5px 0 1px; font: 500 27px/.98 'Cormorant Garamond', serif; }
+.ggs-account-welcome-copy p { max-width: 100%; margin: 0; color: var(--ggsp-muted); font-size: 11px; overflow-wrap: anywhere; }
+.ggs-account-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 14px; margin-left: auto; }
+.ggs-professional .ggs-account-text-button { border: 0; background: transparent; padding: 5px 0; color: var(--ggsp-brick); font-size: 11px; font-weight: 700; text-decoration: none; cursor: pointer; }
+.ggs-professional .ggs-account-text-button:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+.ggs-account-points { display: flex; min-height: 76px; align-items: center; gap: 13px; border: 1px solid var(--ggsp-ink); background: var(--ggsp-ink); padding: 14px 18px; color: var(--ggsp-paper-light); }
+.ggs-account-points-mark { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid rgb(248 245 238 / 30%); color: #e2b59a; }
+.ggs-account-points-copy { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.ggs-account-points-copy span { color: #d8cec1; font: 8px 'Space Mono', monospace; letter-spacing: .1em; }
+.ggs-account-points-copy strong { font-size: 17px; font-weight: 700; }
+.ggs-account-points-link { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; color: #f0d0b9 !important; font-size: 11px; font-weight: 700; }
+.ggs-account-points-link:hover { text-decoration: underline !important; text-underline-offset: 4px; }
+
+.ggs-account-shortcuts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--ggsp-line); background: var(--ggsp-paper-light); }
+.ggs-account-shortcut { display: flex; min-width: 0; min-height: 62px; align-items: center; justify-content: center; gap: 9px; padding: 10px; color: var(--ggsp-ink) !important; font-size: 11px; font-weight: 600; }
+.ggs-account-shortcut + .ggs-account-shortcut { border-left: 1px solid var(--ggsp-line); }
+.ggs-account-shortcut svg { flex: 0 0 auto; color: var(--ggsp-brick); }
+.ggs-account-shortcut:hover { background: var(--ggsp-paper-shadow); }
+.ggs-account-cart-count { display: grid; width: 21px; height: 21px; flex: 0 0 auto; place-items: center; border: 1px solid var(--ggsp-line); border-radius: 50%; font-size: 10px; }
+
+.ggs-account-marketplace { min-width: 0; }
+.ggs-account-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.ggs-account-section-heading h3 { margin: 0; font: 600 24px/1 'Cormorant Garamond', serif; }
+.ggs-account-section-heading a { display: inline-flex; align-items: center; gap: 6px; color: var(--ggsp-brick) !important; font-size: 10px; font-weight: 700; }
+.ggs-account-section-heading a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.ggs-account-product-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ggs-account-product { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--ggsp-line); background: #fffdf8; }
+.ggs-account-product > img,
+.ggs-account-product-image-empty { width: 100%; aspect-ratio: 1.65 / 1; object-fit: cover; background: var(--ggsp-paper-shadow); }
+.ggs-account-product-image-empty { display: grid; place-items: center; color: var(--ggsp-brick); }
+.ggs-account-product-info { display: flex; min-width: 0; flex: 1; flex-direction: column; align-items: flex-start; gap: 4px; padding: 11px 12px 8px; }
+.ggs-account-product-info > span { max-width: 100%; color: var(--ggsp-muted); font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ggs-account-product-info h4 { display: -webkit-box; min-height: 34px; margin: 0; overflow: hidden; font-size: 11px; font-weight: 700; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.ggs-account-product-info > strong { margin-top: auto; color: var(--ggsp-brick); font-size: 12px; }
+.ggs-professional .ggs-account-add-button { display: flex; min-height: 36px; align-items: center; justify-content: center; margin: 0 11px 11px; border: 1px solid var(--ggsp-brick); background: transparent; padding: 0 10px; color: var(--ggsp-brick); font-size: 10px; font-weight: 700; cursor: pointer; }
+.ggs-professional .ggs-account-add-button:hover:not(:disabled) { background: var(--ggsp-brick); color: white; }
+.ggs-professional .ggs-account-add-button:disabled { border-color: var(--ggsp-line); color: var(--ggsp-muted); cursor: not-allowed; }
+.ggs-account-products-status { display: flex; min-height: 52px; align-items: center; gap: 12px; margin: 0; border: 1px solid var(--ggsp-line); padding: 12px; color: var(--ggsp-muted); font-size: 11px; }
+.ggs-professional .ggs-account-products-status button { border: 0; background: transparent; padding: 4px; color: var(--ggsp-brick); font-size: 11px; font-weight: 700; cursor: pointer; }
+.ggs-account-settings { border-top: 1px solid var(--ggsp-line); padding-top: 13px; }
+.ggs-account-settings summary { color: var(--ggsp-brick); font-size: 11px; font-weight: 700; cursor: pointer; }
+.ggs-account-settings > div { max-width: 100%; margin-top: 16px; }
+
 .ggs-auth-page { min-height: 100dvh; background: var(--ggsp-paper); color: var(--ggsp-ink); }
 .ggs-auth-page__header { display: flex; width: min(100% - 64px, 1180px); min-height: 76px; align-items: center; justify-content: space-between; margin: 0 auto; border-bottom: 1px solid var(--ggsp-line); }
 .ggs-auth-page__brand { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; letter-spacing: .08em; }
@@ -172,6 +222,21 @@
   .ggs-professional__demo-role { margin-bottom: 16px; }
   .ggs-professional__panel:has(.ggs-professional__user-profile) .ggs-professional__records { padding: 23px 18px; }
   .ggs-professional__user-profile { margin-top: 16px; }
+  .ggs-account-dashboard { gap: 17px; padding: 18px; }
+  .ggs-account-avatar { width: 42px; height: 42px; font-size: 13px; }
+  .ggs-account-welcome { gap: 10px; }
+  .ggs-account-welcome-copy h2 { font-size: 24px; }
+  .ggs-account-welcome-copy p { font-size: 10px; }
+  .ggs-account-actions { gap: 9px; }
+  .ggs-account-points { min-height: 68px; padding: 11px 13px; }
+  .ggs-account-points-mark { width: 33px; height: 33px; }
+  .ggs-account-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ggs-account-shortcut { min-height: 54px; justify-content: flex-start; padding-left: 15px; }
+  .ggs-account-shortcut:nth-child(3) { border-left: 0; border-top: 1px solid var(--ggsp-line); }
+  .ggs-account-shortcut:nth-child(4) { border-top: 1px solid var(--ggsp-line); }
+  .ggs-account-product-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .ggs-account-product-info { padding: 9px 9px 7px; }
+  .ggs-professional .ggs-account-add-button { min-height: 34px; margin: 0 9px 9px; }
   .ggs-auth-page__header { width: calc(100% - 40px); min-height: 63px; }
   .ggs-auth-page__content { width: calc(100% - 40px); min-height: calc(100dvh - 64px); grid-template-columns: 1fr; gap: 30px; padding: 34px 0 48px; }
   .ggs-auth-page__copy h1 { font-size: clamp(53px, 13vw, 70px); }

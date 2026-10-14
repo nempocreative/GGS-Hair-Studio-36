@@ -538,7 +538,7 @@ function VisitorWebsite() {
           <BranchesPage {...common} />
         </Route>
         <Route path="/my-ggs">
-          <MyGgsPage />
+          <MyGgsPage {...common} />
         </Route>
         <Route>
           <NotFound />
@@ -2656,12 +2656,16 @@ function BranchesPage({ site, siteQuery }: SharedProps) {
   );
 }
 
-function MyGgsPage() {
+function MyGgsPage({ products, productsQuery, cartItems, cartCount, addProductToCart }: SharedProps) {
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const [profileType, setProfileType] = useState<'consumer' | 'employee'>('consumer');
   const [profileMode, setProfileMode] = useState<'demo' | 'account'>('demo');
+  const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const isRealAccountView = profileMode === 'account' && Boolean(isSignedIn) && profileType === 'consumer';
+  const featuredProducts = products.filter((product) => product.active).slice(0, 3);
+  const getCartQuantity = (productId: number) =>
+    cartItems.find((item) => item.productId === productId)?.quantity ?? 0;
 
   const selectProfile = (nextType: 'consumer' | 'employee') => {
     setProfileType(nextType);
@@ -2751,81 +2755,151 @@ function MyGgsPage() {
             hidden={profileType !== 'consumer'}
             data-testid="panel-my-ggs-profile-consumer"
           >
-            <section className="ggs-professional__consumer-intro" data-testid="profile-my-ggs-consumer">
-              <span className="ggs-professional__demo-badge">{isRealAccountView ? 'AKUN ASLI' : 'DATA DEMO'}</span>
-              <h2>
-                {isRealAccountView
-                  ? user?.firstName ? `Halo, ${user.firstName}.` : 'Profil akun'
-                  : 'Nadia Putri'}
-              </h2>
-              <p className="ggs-professional__demo-role">{isRealAccountView ? 'Pengguna' : 'Pengguna · Profil contoh'}</p>
-              {isRealAccountView ? (
-                <div className="ggs-professional__account-actions">
-                  <button
-                    type="button"
-                    className="ggs-professional__booking-link"
-                    onClick={() => setProfileMode('demo')}
-                    data-testid="button-my-ggs-show-demo"
-                  >
-                    Lihat demo
-                  </button>
-                  <button
-                    type="button"
-                    className="ggs-professional__signup-link"
-                    onClick={() => void signOut({ redirectUrl: basePath || '/' })}
-                    data-testid="button-my-ggs-sign-out"
-                  >
-                    Keluar
-                  </button>
+            <div className="ggs-account-dashboard" data-testid="profile-my-ggs-consumer">
+              <section className="ggs-account-welcome">
+                <div className="ggs-account-avatar" aria-hidden="true">
+                  {isRealAccountView
+                    ? `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}` || 'G'
+                    : 'NP'}
                 </div>
-              ) : isSignedIn ? (
-                <button
-                  type="button"
-                  className="ggs-professional__booking-link"
-                  onClick={() => setProfileMode('account')}
-                  data-testid="button-my-ggs-real-account"
-                >
-                  Akun saya
-                </button>
-              ) : (
-                <Link href="/sign-in" className="ggs-professional__booking-link" data-testid="link-my-ggs-sign-in">
-                  Masuk akun asli <ArrowRight size={17} aria-hidden="true" />
-                </Link>
-              )}
-            </section>
+                <div className="ggs-account-welcome-copy">
+                  <span className="ggs-professional__demo-badge">{isRealAccountView ? 'AKUN' : 'DEMO'}</span>
+                  <h2>
+                    {isRealAccountView
+                      ? user?.firstName ? `Halo, ${user.firstName}` : 'Akun saya'
+                      : 'Nadia Putri'}
+                  </h2>
+                  <p>{isRealAccountView ? user?.primaryEmailAddress?.emailAddress : 'Pengguna GGS'}</p>
+                </div>
+                <div className="ggs-account-actions">
+                  {isRealAccountView ? (
+                    <>
+                      <button
+                        type="button"
+                        className="ggs-account-text-button"
+                        onClick={() => { setProfileMode('demo'); setAccountSettingsOpen(false); }}
+                        data-testid="button-my-ggs-show-demo"
+                      >
+                        Lihat demo
+                      </button>
+                      <button
+                        type="button"
+                        className="ggs-account-text-button"
+                        onClick={() => void signOut({ redirectUrl: basePath || '/' })}
+                        data-testid="button-my-ggs-sign-out"
+                      >
+                        Keluar
+                      </button>
+                    </>
+                  ) : isSignedIn ? (
+                    <button
+                      type="button"
+                      className="ggs-account-text-button"
+                      onClick={() => { setProfileMode('account'); setAccountSettingsOpen(true); }}
+                      data-testid="button-my-ggs-real-account"
+                    >
+                      Akun saya
+                    </button>
+                  ) : (
+                    <Link href="/sign-in" className="ggs-account-text-button" data-testid="link-my-ggs-sign-in">
+                      Masuk
+                    </Link>
+                  )}
+                </div>
+              </section>
 
-            <section className="ggs-professional__records" aria-label="Profil dan informasi akun">
-              {isRealAccountView ? (
-                <>
-                  <div className="ggs-professional__records-heading">
-                    <h3>Profil akun</h3>
+              <section className="ggs-account-points" aria-label="Poin GGS">
+                <div className="ggs-account-points-mark" aria-hidden="true"><Sparkles size={19} /></div>
+                <div className="ggs-account-points-copy">
+                  <span>{isRealAccountView ? 'POIN GGS' : 'POIN CONTOH'}</span>
+                  <strong>{isRealAccountView ? 'Belum tersedia' : '1.250'}</strong>
+                </div>
+                <Link href="/voucher" className="ggs-account-points-link" data-testid="link-my-ggs-vouchers">
+                  Voucher <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              </section>
+
+              <nav className="ggs-account-shortcuts" aria-label="Menu akun">
+                <Link href="/products" className="ggs-account-shortcut" data-testid="link-my-ggs-shop">
+                  <ShoppingBag size={18} aria-hidden="true" />
+                  <span>Belanja</span>
+                </Link>
+                <Link href="/products" className="ggs-account-shortcut" data-testid="link-my-ggs-cart">
+                  <span className="ggs-account-cart-count">{cartCount}</span>
+                  <span>Keranjang</span>
+                </Link>
+                <Link href="/voucher" className="ggs-account-shortcut" data-testid="link-my-ggs-voucher-menu">
+                  <Copy size={18} aria-hidden="true" />
+                  <span>Voucher</span>
+                </Link>
+                <Link href="/book" className="ggs-account-shortcut" data-testid="link-my-ggs-booking">
+                  <CalendarDays size={18} aria-hidden="true" />
+                  <span>Booking</span>
+                </Link>
+              </nav>
+
+              <section className="ggs-account-marketplace" aria-labelledby="my-ggs-products-title">
+                <div className="ggs-account-section-heading">
+                  <h3 id="my-ggs-products-title">Produk pilihan</h3>
+                  <Link href="/products" data-testid="link-my-ggs-all-products">
+                    Semua produk <ArrowRight size={14} aria-hidden="true" />
+                  </Link>
+                </div>
+                {productsQuery.isLoading ? (
+                  <p className="ggs-account-products-status" role="status">Memuat produk…</p>
+                ) : productsQuery.isError ? (
+                  <div className="ggs-account-products-status" role="alert">
+                    <span>Produk belum bisa dimuat.</span>
+                    <button type="button" onClick={() => productsQuery.refetch()}>Coba lagi</button>
                   </div>
-                  <div className="ggs-professional__user-profile" data-testid="my-ggs-account-settings">
-                    <UserProfile routing="hash" />
+                ) : featuredProducts.length ? (
+                  <div className="ggs-account-product-list" data-testid="list-my-ggs-products">
+                    {featuredProducts.map((product) => {
+                      const inCart = getCartQuantity(product.id);
+                      const unavailable = product.stock < 1 || inCart >= product.stock;
+                      return (
+                        <article className="ggs-account-product" key={product.id} data-testid={`card-my-ggs-product-${product.id}`}>
+                          {product.imageUrl ? (
+                            <img src={product.imageUrl} alt={product.name} loading="lazy" />
+                          ) : (
+                            <div className="ggs-account-product-image-empty" aria-hidden="true"><ShoppingBag size={19} /></div>
+                          )}
+                          <div className="ggs-account-product-info">
+                            <span>{product.category}</span>
+                            <h4>{product.name}</h4>
+                            <strong>{money(product.price)}</strong>
+                          </div>
+                          <button
+                            type="button"
+                            className="ggs-account-add-button"
+                            disabled={unavailable}
+                            onClick={() => addProductToCart(product)}
+                            aria-label={`Tambah ${product.name} ke keranjang`}
+                            data-testid={`button-my-ggs-add-product-${product.id}`}
+                          >
+                            {product.stock < 1 ? 'Habis' : inCart ? `+ ${inCart}` : 'Tambah'}
+                          </button>
+                        </article>
+                      );
+                    })}
                   </div>
-                </>
-              ) : (
-                <>
-                  <div className="ggs-professional__records-heading">
-                    <h3>Profil pengguna</h3>
-                  </div>
-                  <dl className="ggs-professional__demo-record-list">
-                    <div className="ggs-professional__demo-record">
-                      <dt>Email</dt>
-                      <dd>pengguna.demo@example.com</dd>
-                    </div>
-                    <div className="ggs-professional__demo-record">
-                      <dt>Layanan favorit</dt>
-                      <dd>Potong rambut</dd>
-                    </div>
-                    <div className="ggs-professional__demo-record">
-                      <dt>Booking</dt>
-                      <dd>Jadwal contoh</dd>
-                    </div>
-                  </dl>
-                </>
+                ) : (
+                  <p className="ggs-account-products-status">Belum ada produk.</p>
+                )}
+              </section>
+
+              {isRealAccountView && (
+                <details
+                  className="ggs-account-settings"
+                  open={accountSettingsOpen}
+                  onToggle={(event) => setAccountSettingsOpen(event.currentTarget.open)}
+                  data-testid="my-ggs-account-settings"
+                >
+                  <summary>Pengaturan akun</summary>
+                  <UserProfile routing="hash" />
+                </details>
               )}
-            </section>
+            </div>
           </div>
 
           <div

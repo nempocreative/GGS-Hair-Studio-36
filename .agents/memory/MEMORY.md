@@ -2,3 +2,4 @@
 - [Homepage menu](homepage-menu.md) — keep the GGS quick menu to four columns, eight items per slide, dot navigation, and no category boxes.
 - [Site number density](site-number-density.md) — avoid decorative numeric clutter; keep only numbers that carry useful visitor information.
 - [Voucher ticket style](voucher-ticket-style.md) — GGS voucher cards should feel like tactile printed tickets, not glossy or AI-like effects.
+- [My GGS customer dashboard](my-ggs-account.md) — make the Pengguna profile a compact marketplace-style account home with points, product shopping, and useful account info.
