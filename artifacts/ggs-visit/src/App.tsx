@@ -1152,7 +1152,21 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                   data-testid={`link-home-menu-${item.href === '/' ? 'home' : item.href.slice(1)}`}
                 >
                   <span className={`ggs-quick-menu-icon ${item.tone}`}>
-                    <HairModelMenuIcon className="ggs-quick-menu-avatar" hairstyle={item.hairstyle} />
+                    {item.href === '/mens-grooming' ? (
+                      <>
+                        <img
+                          className="ggs-quick-menu-avatar ggs-quick-menu-avatar-photo"
+                          src={`${import.meta.env.BASE_URL}menu-icons/mens-grooming-cutout.webp`}
+                          alt=""
+                          aria-hidden="true"
+                        />
+                        <span className="ggs-menu-mens-scissors-badge" aria-hidden="true">
+                          <Scissors className="ggs-menu-mens-scissors-icon" />
+                        </span>
+                      </>
+                    ) : (
+                      <HairModelMenuIcon className="ggs-quick-menu-avatar" hairstyle={item.hairstyle} />
+                    )}
                   </span>
                   <span>{item.label}</span>
                 </Link>

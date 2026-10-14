@@ -40,7 +40,7 @@ export function RoundHair() {
         <span className="ggs-quick-menu-icon ggs-mens-round" aria-hidden="true">
           <img
             className="ggs-mens-hair-cap"
-            src="/__mockup/images/ggs-mens-hair.png"
+            src="/__mockup/images/mens-grooming-cutout.webp"
             alt=""
             draggable={false}
           />

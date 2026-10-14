@@ -9,11 +9,11 @@ For the GGS visitor website, show four menu shortcuts per row and eight per slid
 
 **How to apply:** Preserve this layout, overflow behavior, navigation control, and background-free styling when adding or changing homepage shortcuts.
 
-Use illustrated people for every homepage shortcut, with varied hairstyles rather than category symbols or photo portraits. Keep the portraits in the existing colored rounded-square tiles and avoid cream-colored line details.
+Use illustrated people for homepage shortcuts with varied hairstyles, except for Men's Grooming, which uses the approved blank-face hairstyle cutout with a centered scissors icon. Keep the other portraits in the existing colored rounded-square tiles and avoid cream-colored line details.
 
-**Why:** The user clarified that every homepage menu item should use a person illustration, replacing the earlier distinction between portrait and symbol shortcuts.
+**Why:** The user explicitly chose a supplied photorealistic cutout and scissors overlay for the Men's Grooming shortcut while preserving the illustrated style for the rest of the menu.
 
-**How to apply:** Vary the illustrated hairstyles across shortcuts; preserve each tile's color, the four-column/eight-per-slide layout, dot navigation, and background-free shortcut links.
+**How to apply:** Keep the Men's Grooming hair cutout and scissors together in its colored tile; vary illustrated hairstyles across the other shortcuts. Preserve each tile's color, the four-column/eight-per-slide layout, dot navigation, and background-free shortcut links.
 
 Make each illustrated person's shoulders and torso reach the bottom of the colored tile so the portrait looks attached to the shape, not suspended inside it. Keep the portrait slightly inset at the top so the head has comfortable breathing room.
 
