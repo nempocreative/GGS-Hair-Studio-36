@@ -1771,6 +1771,7 @@
 .ggs-quick-menu-item.ggs-menu-home .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-style-gallery .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-booking .ggs-quick-menu-icon,
+.ggs-quick-menu-item.ggs-menu-membership .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-self-care .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-mens .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-womens .ggs-quick-menu-icon {
@@ -1797,6 +1798,8 @@
 .ggs-quick-menu-item.ggs-menu-style-gallery:focus-visible .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-booking:hover .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-booking:focus-visible .ggs-quick-menu-icon,
+.ggs-quick-menu-item.ggs-menu-membership:hover .ggs-quick-menu-icon,
+.ggs-quick-menu-item.ggs-menu-membership:focus-visible .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-self-care:hover .ggs-quick-menu-icon,
 .ggs-quick-menu-item.ggs-menu-self-care:focus-visible .ggs-quick-menu-icon { box-shadow: none; }
 .quick-tone-rose { --quick-icon-edge: #74352e; background: linear-gradient(145deg, #d89a8e 0%, #bd7167 52%, #913f37 100%); }
