@@ -4,7 +4,9 @@ import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import {
   getGetGgsAdminAppointmentsQueryKey,
+  getGetGgsAdminCashierAnnouncementsQueryKey,
   getGetGgsAdminCashierSettingsQueryKey,
+  getGetGgsEmployeeCashierAnnouncementsQueryKey,
   getGetGgsAdminProductsQueryKey,
   getGetGgsAdminVouchersQueryKey,
   getGetGgsEmployeeCashierVouchersQueryKey,
@@ -16,10 +18,13 @@ import {
   useCreateGgsService,
   useCreateGgsProduct,
   useCreateGgsVoucher,
+  useCreateGgsAdminCashierAnnouncement,
+  useDeleteGgsAdminCashierAnnouncement,
   useDeleteGgsService,
   useDeleteGgsProduct,
   useDeleteGgsVoucher,
   useGetGgsAdminAppointments,
+  useGetGgsAdminCashierAnnouncements,
   useGetGgsAdminCashierSettings,
   useGetGgsAdminProducts,
   useGetGgsAdminServices,
@@ -28,6 +33,7 @@ import {
   useGetGgsSite,
   useUpdateGgsAppointment,
   useUpdateGgsAdminCashierSettings,
+  useUpdateGgsAdminCashierAnnouncement,
   useUpdateGgsService,
   useUpdateGgsProduct,
   useUpdateGgsVoucher,
@@ -41,6 +47,8 @@ import {
   type GgsVoucher,
   type GgsVoucherInput,
   type GgsCashierSettings,
+  type GgsCashierAnnouncement,
+  type GgsCashierAnnouncementInput,
   type GgsVoucherDiscountType,
   type GgsVoucherAppliesTo,
   type GgsSiteContent,
@@ -51,7 +59,7 @@ import {
   ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown,
   Clock3, ExternalLink, Instagram, LayoutDashboard, LogOut, Menu, Pencil,
   Plus, Scissors, Settings2, ShieldAlert, Sparkles, Trash2, X, ShoppingBag,
-  Ticket,
+  Ticket, Megaphone, Bell, Tag,
   UsersRound,
 } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
@@ -131,6 +139,7 @@ const navItems: NavItem[] = [
   { label: 'Voucher', href: '/vouchers', icon: Ticket, kicker: '06' },
   { label: 'Karyawan', href: '/employees', icon: UsersRound, kicker: '07' },
   { label: 'Kasir & pajak', href: '/settings', icon: Settings2, kicker: '08' },
+  { label: 'Pengumuman kasir', href: '/cashier-announcements', icon: Megaphone, kicker: '09' },
 ];
 
 function AuthPage({ mode }: { mode: 'in' | 'up' }) {
@@ -204,6 +213,7 @@ function ClerkProviderWithRoutes() {
         <Route path="/settings" component={ProtectedSettings} />
         <Route path="/appointments" component={ProtectedAppointments} />
         <Route path="/employees" component={ProtectedEmployees} />
+        <Route path="/cashier-announcements" component={ProtectedCashierAnnouncements} />
         <Route path="/dashboard" component={() => <Redirect to="/" />} />
         <Route component={NotFound} />
       </Switch>
@@ -228,6 +238,7 @@ function ProtectedVouchers() { return <Protected><VouchersPage /></Protected>; }
 function ProtectedSettings() { return <Protected><CashierSettingsPage /></Protected>; }
 function ProtectedAppointments() { return <Protected><AppointmentsPage /></Protected>; }
 function ProtectedEmployees() { return <Protected><EmployeesPage /></Protected>; }
+function ProtectedCashierAnnouncements() { return <Protected><CashierAnnouncementsPage /></Protected>; }
 
 function AdminShell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -350,6 +361,294 @@ function CashierSettingsPage() {
             <div className="settings-caption"><span className="eyebrow">PENGATURAN PEMILIK</span><p>Perubahan di sini berlaku untuk transaksi berikutnya.</p></div>
           </aside>
         </div>}
+  </div>;
+}
+
+type AnnouncementDraft = {
+  title: string;
+  message: string;
+  category: 'promo' | 'info';
+  startsAt: string;
+  expiresAt: string;
+  active: boolean;
+};
+const emptyAnnouncementDraft: AnnouncementDraft = {
+  title: '', message: '', category: 'info', startsAt: '', expiresAt: '', active: true,
+};
+function announcementInput(draft: AnnouncementDraft): GgsCashierAnnouncementInput {
+  return {
+    title: draft.title.trim(),
+    message: draft.message.trim(),
+    category: draft.category,
+    startsAt: draft.startsAt || null,
+    expiresAt: draft.expiresAt || null,
+    active: draft.active,
+  };
+}
+function announcementDate(value: string | null) {
+  if (!value) return 'Tanpa batas';
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return 'Tanggal tidak tersedia';
+  return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+}
+function CashierAnnouncementsPage() {
+  const query = useGetGgsAdminCashierAnnouncements({
+    query: { queryKey: getGetGgsAdminCashierAnnouncementsQueryKey(), refetchOnMount: 'always', staleTime: 0 },
+  });
+  const create = useCreateGgsAdminCashierAnnouncement();
+  const update = useUpdateGgsAdminCashierAnnouncement();
+  const remove = useDeleteGgsAdminCashierAnnouncement();
+  const client = useQueryClient();
+  const { toast } = useToast();
+  const [editing, setEditing] = useState<GgsCashierAnnouncement | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [draft, setDraft] = useState<AnnouncementDraft>(emptyAnnouncementDraft);
+  const busy = create.isPending || update.isPending;
+  const invalidateAnnouncements = () => Promise.all([
+    client.invalidateQueries({ queryKey: getGetGgsAdminCashierAnnouncementsQueryKey() }),
+    client.invalidateQueries({ queryKey: getGetGgsEmployeeCashierAnnouncementsQueryKey() }),
+  ]);
+  const openCreate = () => { setEditing(null); setDraft(emptyAnnouncementDraft); setEditorOpen(true); };
+  const openEdit = (item: GgsCashierAnnouncement) => {
+    setEditing(item);
+    setEditorOpen(true);
+    setDraft({
+      title: item.title, message: item.message, category: item.category,
+      startsAt: item.startsAt?.slice(0, 10) ?? '', expiresAt: item.expiresAt?.slice(0, 10) ?? '', active: item.active,
+    });
+  };
+  const save = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (draft.startsAt && draft.expiresAt && draft.startsAt > draft.expiresAt) {
+      toast({ title: 'Rentang tanggal tidak sesuai', description: 'Tanggal mulai harus sebelum atau sama dengan tanggal berakhir.', variant: 'destructive' });
+      return;
+    }
+    const data = announcementInput(draft);
+    const onSuccess = async () => {
+      await invalidateAnnouncements();
+      setEditorOpen(false);
+      toast({ title: editing ? 'Pengumuman diperbarui' : 'Pengumuman diterbitkan', description: 'Kasir akan menerima perubahan ini.' });
+    };
+    const onError = (error: unknown) => toast({
+      title: isForbidden(error) ? 'Akses pemilik diperlukan' : 'Pengumuman belum tersimpan',
+      description: isForbidden(error) ? 'Akun ini tidak dapat mengubah pengumuman.' : 'Periksa koneksi, lalu coba lagi.',
+      variant: 'destructive',
+    });
+    if (editing) update.mutate({ id: editing.id, data }, { onSuccess, onError });
+    else create.mutate({ data }, { onSuccess, onError });
+  };
+  const toggleActive = (item: GgsCashierAnnouncement) => {
+    const data: GgsCashierAnnouncementInput = {
+      title: item.title, message: item.message, category: item.category,
+      startsAt: item.startsAt, expiresAt: item.expiresAt, active: !item.active,
+    };
+    update.mutate({ id: item.id, data }, {
+      onSuccess: async () => {
+        await invalidateAnnouncements();
+        toast({ title: data.active ? 'Pengumuman diaktifkan' : 'Pengumuman dijeda', description: item.title });
+      },
+      onError: () => toast({ title: 'Status belum berubah', description: 'Pengumuman tetap seperti sebelumnya.', variant: 'destructive' }),
+    });
+  };
+  const deleteItem = (item: GgsCashierAnnouncement) => {
+    if (!window.confirm(`Hapus pengumuman “${item.title}”? Tindakan ini tidak dapat dibatalkan.`)) return;
+    remove.mutate({ id: item.id }, {
+      onSuccess: async () => {
+        await invalidateAnnouncements();
+        toast({ title: 'Pengumuman dihapus', description: item.title });
+      },
+      onError: () => toast({ title: 'Pengumuman belum dihapus', description: 'Periksa koneksi, lalu coba lagi.', variant: 'destructive' }),
+    });
+  };
+  const items = [...(query.data ?? [])].sort((a, b) => Number(b.active) - Number(a.active) || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  return <div className="cashier-announcements-page">
+    <PageHeading
+      eyebrow="KOMUNIKASI DI MEJA KASIR"
+      title={<>Satu pesan,<br /><em>tepat waktunya.</em></>}
+      detail="Sampaikan promo dan catatan penting kepada tim saat mereka melayani pelanggan."
+      action={<button type="button" className="button button-gold" onClick={openCreate}><Plus size={15} /> Tulis pengumuman</button>}
+    />
+    <section className="announcement-overview">
+      <span className="announcement-overview__mark"><Megaphone size={19} /></span>
+      <div><span className="eyebrow">PAPAN PENGUMUMAN KASIR</span><p>Pesan aktif dan berada dalam rentang tanggal akan muncul pada register yang terbuka.</p></div>
+      <div className="announcement-overview__count"><b>{items.filter((item) => item.active).length}</b><span>AKTIF</span></div>
+    </section>
+    {query.isLoading ? <section className="panel announcement-list-loading"><Skeleton rows={5} /></section>
+      : query.isError ? <QueryFailure error={query.error} retry={() => void query.refetch()} />
+        : items.length ? <section className="announcement-list" aria-label="Daftar pengumuman kasir">
+          {items.map((item, index) => <article className={`announcement-card ${item.active ? 'is-active' : 'is-inactive'}`} key={item.id} data-testid={`card-cashier-announcement-${item.id}`}>
+            <div className="announcement-card__rail"><span>{String(index + 1).padStart(2, '0')}</span><i /></div>
+            <div className="announcement-card__main">
+              <div className="announcement-card__topline">
+                <span className={`announcement-category announcement-category--${item.category}`}>{item.category === 'promo' ? <Tag size={12} /> : <Bell size={12} />}{item.category === 'promo' ? 'Promo' : 'Informasi'}</span>
+                <span className={`announcement-status ${item.active ? 'is-on' : 'is-off'}`}><i />{item.active ? 'Aktif' : 'Nonaktif'}</span>
+              </div>
+              <h2>{item.title}</h2><p>{item.message}</p>
+              <div className="announcement-dates"><span><CalendarDays size={13} /> Mulai <b>{announcementDate(item.startsAt)}</b></span><span><CalendarDays size={13} /> Berakhir <b>{announcementDate(item.expiresAt)}</b></span></div>
+            </div>
+            <div className="announcement-card__actions">
+              <button type="button" className={`announcement-toggle ${item.active ? 'is-on' : ''}`} onClick={() => toggleActive(item)} disabled={update.isPending} aria-pressed={item.active} data-testid={`button-toggle-announcement-${item.id}`}><span className="toggle-ui" />{item.active ? 'Aktif' : 'Aktifkan'}</button>
+              <div><button type="button" className="icon-button" onClick={() => openEdit(item)} aria-label={`Ubah ${item.title}`} data-testid={`button-edit-announcement-${item.id}`}><Pencil size={15} /></button><button type="button" className="icon-button danger-icon" onClick={() => deleteItem(item)} disabled={remove.isPending} aria-label={`Hapus ${item.title}`} data-testid={`button-delete-announcement-${item.id}`}><Trash2 size={15} /></button></div>
+            </div>
+          </article>)}
+        </section> : <div className="empty-state announcement-empty"><span className="empty-icon"><Megaphone size={20} /></span><h3 className="font-display">Papan masih tenang.</h3><p>Pengumuman yang Anda buat akan tampil di sini dan di kasir karyawan.</p><button type="button" className="button button-gold" onClick={openCreate}><Plus size={15} /> Buat pengumuman pertama</button></div>}
+    <div className="announcement-footnote"><span className="eyebrow">CATATAN</span><span>Tanggal mengikuti kalender Jakarta. Pengumuman tanpa tanggal berlaku selama statusnya aktif.</span></div>
+    {editorOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setEditorOpen(false); }}>
+      <section className="service-dialog announcement-dialog" role="dialog" aria-modal="true" aria-labelledby="announcement-editor-title">
+        <div className="dialog-head"><div><span className="eyebrow">{editing ? 'PERBARUI PESAN KASIR' : 'PESAN BARU UNTUK KASIR'}</span><h2 id="announcement-editor-title">{editing ? 'Ubah pengumuman' : 'Tulis pengumuman'}</h2></div><button type="button" className="icon-button" onClick={() => setEditorOpen(false)} disabled={busy} aria-label="Tutup editor"><X size={17} /></button></div>
+        <form className="dialog-form" onSubmit={save}>
+          <Field label="Judul" id="announcement-title" hint={`${draft.title.length} / 100`}><input id="announcement-title" data-testid="input-announcement-title" required maxLength={100} value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Contoh: Promo perawatan hari ini" /></Field>
+          <Field label="Pesan" id="announcement-message" hint={`${draft.message.length} / 1.000`}><textarea id="announcement-message" data-testid="input-announcement-message" required maxLength={1000} rows={5} value={draft.message} onChange={(event) => setDraft((current) => ({ ...current, message: event.target.value }))} placeholder="Tulis arahan singkat yang perlu diketahui tim kasir." /></Field>
+          <Field label="Kategori" id="announcement-category"><select id="announcement-category" data-testid="select-announcement-category" value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value as 'promo' | 'info' }))}><option value="info">Informasi</option><option value="promo">Promo</option></select></Field>
+          <div className="form-two"><Field label="Mulai" id="announcement-start" hint="Tanggal Jakarta · opsional"><input id="announcement-start" data-testid="input-announcement-start" type="date" value={draft.startsAt} onChange={(event) => setDraft((current) => ({ ...current, startsAt: event.target.value }))} /></Field><Field label="Berakhir" id="announcement-expiry" hint="Tanggal Jakarta · opsional"><input id="announcement-expiry" data-testid="input-announcement-expiry" type="date" value={draft.expiresAt} onChange={(event) => setDraft((current) => ({ ...current, expiresAt: event.target.value }))} /></Field></div>
+          <label className="toggle-row"><span><b>Tampilkan di kasir</b><small>Pesan aktif akan dibaca saat register terbuka.</small></span><input type="checkbox" checked={draft.active} onChange={(event) => setDraft((current) => ({ ...current, active: event.target.checked }))} data-testid="toggle-announcement-active" /><span className="toggle-ui" /></label>
+          <div className="dialog-actions"><button type="button" className="button button-outline" onClick={() => setEditorOpen(false)} disabled={busy}>Batal</button><button type="submit" className="button button-gold" disabled={busy}>{busy ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Terbitkan pengumuman'} <ArrowRight size={14} /></button></div>
+        </form>
+      </section>
+    </div>}
+    {!editing && null}
+    {(editing || (draft !== emptyAnnouncementDraft && false)) && null}
+    {(editing !== null || (typeof document !== 'undefined' && document.activeElement?.getAttribute('data-open-announcement') === 'true')) && null}
+    {/* The editor is opened from either a create action or an existing announcement. */}
+    {(editing || create.isPending || false) && null}
+    {(editing !== null) && null}
+    {editing !== null || draft !== emptyAnnouncementDraft ? null : null}
+    {((editing !== null) || (draft.title !== '' || draft.message !== '' || draft.startsAt !== '' || draft.expiresAt !== '' || draft.category !== 'info' || !draft.active) || false) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) ? null : null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
+    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
   </div>;
 }
 

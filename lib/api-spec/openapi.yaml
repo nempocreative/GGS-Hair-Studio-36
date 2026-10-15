@@ -290,6 +290,24 @@ paths:
           description: No active employee session
         "403":
           description: Cashier register is locked
+  /ggs/employee/cashier/announcements:
+    get:
+      operationId: getGgsEmployeeCashierAnnouncements
+      tags: [ggs-employee]
+      summary: List current announcements for the active cashier register
+      responses:
+        "200":
+          description: Active announcements currently visible to cashiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsCashierAnnouncement"
+        "401":
+          description: No active employee session
+        "403":
+          description: Cashier register is locked
   /ggs/employee/cashier/transactions:
     get:
       operationId: getGgsEmployeeCashierTransactions
@@ -827,6 +845,82 @@ paths:
                 $ref: "#/components/schemas/GgsCashierSettings"
         "400":
           description: Invalid cashier tax settings
+  /ggs/admin/cashier-announcements:
+    get:
+      operationId: getGgsAdminCashierAnnouncements
+      tags: [ggs-admin]
+      summary: List cashier announcements in GGS CMS
+      responses:
+        "200":
+          description: All cashier announcements, including inactive and scheduled entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsCashierAnnouncement"
+    post:
+      operationId: createGgsAdminCashierAnnouncement
+      tags: [ggs-admin]
+      summary: Create a cashier announcement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsCashierAnnouncementInput"
+      responses:
+        "201":
+          description: Created cashier announcement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsCashierAnnouncement"
+        "400":
+          description: Invalid cashier announcement details
+  /ggs/admin/cashier-announcements/{id}:
+    patch:
+      operationId: updateGgsAdminCashierAnnouncement
+      tags: [ggs-admin]
+      summary: Update a cashier announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsCashierAnnouncementInput"
+      responses:
+        "200":
+          description: Updated cashier announcement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsCashierAnnouncement"
+        "400":
+          description: Invalid cashier announcement details
+        "404":
+          description: Cashier announcement not found
+    delete:
+      operationId: deleteGgsAdminCashierAnnouncement
+      tags: [ggs-admin]
+      summary: Delete a cashier announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Cashier announcement deleted
+        "404":
+          description: Cashier announcement not found
   /ggs/admin/vouchers/{id}:
     patch:
       operationId: updateGgsVoucher
@@ -1082,6 +1176,66 @@ components:
     GgsVoucherAppliesTo:
       type: string
       enum: [services, all_items]
+    GgsCashierAnnouncementCategory:
+      type: string
+      enum: [promo, info]
+    GgsCashierAnnouncement:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        message:
+          type: string
+        category:
+          $ref: "#/components/schemas/GgsCashierAnnouncementCategory"
+        startsAt:
+          type: ["string", "null"]
+          format: date
+        expiresAt:
+          type: ["string", "null"]
+          format: date
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - message
+        - category
+        - startsAt
+        - expiresAt
+        - active
+        - createdAt
+        - updatedAt
+    GgsCashierAnnouncementInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        category:
+          $ref: "#/components/schemas/GgsCashierAnnouncementCategory"
+        startsAt:
+          type: ["string", "null"]
+          format: date
+        expiresAt:
+          type: ["string", "null"]
+          format: date
+        active:
+          type: boolean
+      required: [title, message, category, startsAt, expiresAt, active]
     GgsEmployeeCashierVoucher:
       type: object
       properties:

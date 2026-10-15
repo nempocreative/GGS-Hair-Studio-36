@@ -19,6 +19,7 @@
 
 export * from "./ggs";
 export * from "./ggs-cashier";
+export * from "./ggs-cashier-announcements";
 export * from "./ggs-cashier-settings";
 export * from "./ggs-accounts";
 export * from "./ggs-employee-attendance";

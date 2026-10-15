@@ -171,6 +171,47 @@ export const GgsVoucherAppliesTo = {
   all_items: 'all_items',
 } as const;
 
+export type GgsCashierAnnouncementCategory = typeof GgsCashierAnnouncementCategory[keyof typeof GgsCashierAnnouncementCategory];
+
+
+export const GgsCashierAnnouncementCategory = {
+  promo: 'promo',
+  info: 'info',
+} as const;
+
+export interface GgsCashierAnnouncement {
+  id: number;
+  title: string;
+  message: string;
+  category: GgsCashierAnnouncementCategory;
+  /** @nullable */
+  startsAt: string | null;
+  /** @nullable */
+  expiresAt: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GgsCashierAnnouncementInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  message: string;
+  category: GgsCashierAnnouncementCategory;
+  /** @nullable */
+  startsAt: string | null;
+  /** @nullable */
+  expiresAt: string | null;
+  active: boolean;
+}
+
 export interface GgsEmployeeCashierVoucher {
   id: number;
   name: string;

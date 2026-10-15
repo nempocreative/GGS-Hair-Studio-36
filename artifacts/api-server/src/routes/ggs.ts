@@ -2,6 +2,7 @@ import {
   and,
   asc,
   count,
+  desc,
   eq,
   gte,
   isNotNull,
@@ -13,6 +14,8 @@ import {
 } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import {
+  CreateGgsAdminCashierAnnouncementBody,
+  CreateGgsAdminCashierAnnouncementResponse,
   CreateGgsAppointmentBody,
   CreateGgsAppointmentResponse,
   CreateGgsProductBody,
@@ -23,8 +26,12 @@ import {
   CreateGgsVoucherResponse,
   DeleteGgsServiceParams,
   DeleteGgsProductParams,
+  DeleteGgsAdminCashierAnnouncementParams,
   DeleteGgsVoucherParams,
+  DeleteGgsAdminCashierAnnouncementResponse,
+  GetGgsAdminCashierAnnouncementsResponse,
   GetGgsAdminProductsResponse,
+  GetGgsAdminCashierSettingsResponse,
   GetGgsAdminAppointmentsResponse,
   GetGgsAdminServicesResponse,
   GetGgsAdminVouchersResponse,
@@ -44,18 +51,26 @@ import {
   UpdateGgsProductResponse,
   UpdateGgsSiteBody,
   UpdateGgsSiteResponse,
+  UpdateGgsAdminCashierAnnouncementBody,
+  UpdateGgsAdminCashierAnnouncementParams,
+  UpdateGgsAdminCashierAnnouncementResponse,
   UpdateGgsVoucherBody,
   UpdateGgsVoucherParams,
   UpdateGgsVoucherResponse,
+  UpdateGgsAdminCashierSettingsBody,
+  UpdateGgsAdminCashierSettingsResponse,
 } from "@workspace/api-zod";
 import {
   db,
+  ggsCashierAnnouncementsTable,
+  ggsCashierSettingsTable,
   ggsAppointmentsTable,
   ggsProductsTable,
   ggsServicesTable,
   ggsSiteContentTable,
   ggsVouchersTable,
 } from "@workspace/db";
+import { getGgsCashierSettings } from "../lib/ggs-cashier-settings";
 import { requireGgsOwner } from "../middlewares/requireGgsOwner";
 
 const router: IRouter = Router();
@@ -450,8 +465,62 @@ function serializeVoucher(voucher: typeof ggsVouchersTable.$inferSelect) {
     code: voucher.code,
     startsAt: voucher.startsAt,
     expiresAt: voucher.expiresAt,
+    discountType: voucher.discountType,
+    discountValue: voucher.discountValue,
+    appliesTo: voucher.appliesTo,
     active: voucher.active,
   };
+}
+
+function serializeCashierAnnouncement(
+  announcement: typeof ggsCashierAnnouncementsTable.$inferSelect,
+) {
+  return {
+    id: announcement.id,
+    title: announcement.title,
+    message: announcement.message,
+    category: announcement.category,
+    startsAt: announcement.startsAt,
+    expiresAt: announcement.expiresAt,
+    active: announcement.active,
+    createdAt: announcement.createdAt.toISOString(),
+    updatedAt: announcement.updatedAt.toISOString(),
+  };
+}
+
+function normalizeCashierAnnouncementInput(input: {
+  title: string;
+  message: string;
+  category: "promo" | "info";
+  startsAt: string | Date | null;
+  expiresAt: string | Date | null;
+  active: boolean;
+}) {
+  const calendarDate = (value: string | Date | null) =>
+    value instanceof Date ? value.toISOString().slice(0, 10) : value;
+  const normalized = {
+    ...input,
+    title: input.title.trim(),
+    message: input.message.trim(),
+    startsAt: calendarDate(input.startsAt),
+    expiresAt: calendarDate(input.expiresAt),
+  };
+
+  if (!normalized.title || !normalized.message) {
+    return {
+      error: "Judul dan isi informasi harus diisi.",
+    } as const;
+  }
+  if (
+    normalized.startsAt &&
+    normalized.expiresAt &&
+    normalized.startsAt > normalized.expiresAt
+  ) {
+    return {
+      error: "Tanggal akhir harus sama atau setelah tanggal mulai.",
+    } as const;
+  }
+  return { data: normalized } as const;
 }
 
 function todayInJakarta(): string {
@@ -466,6 +535,9 @@ function normalizeVoucherInput(input: {
   code: string | null;
   startsAt: string | Date | null;
   expiresAt: string | Date | null;
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  appliesTo: "services" | "all_items";
   active: boolean;
 }) {
   const calendarDate = (value: string | Date | null) =>
@@ -484,6 +556,22 @@ function normalizeVoucherInput(input: {
   }
   if (normalized.active && !normalized.code) {
     return { error: "Isi kode sebelum mengaktifkan voucher." } as const;
+  }
+  if (
+    !Number.isSafeInteger(normalized.discountValue) ||
+    normalized.discountValue < 0 ||
+    normalized.discountValue > 2_147_483_647 ||
+    (normalized.discountType === "percent" && normalized.discountValue > 100)
+  ) {
+    return {
+      error:
+        normalized.discountType === "percent"
+          ? "Nilai diskon persentase harus berupa bilangan bulat antara 0 dan 100%."
+          : "Nilai diskon harus berupa bilangan bulat yang valid.",
+    } as const;
+  }
+  if (normalized.active && normalized.discountValue === 0) {
+    return { error: "Isi nilai diskon sebelum mengaktifkan voucher." } as const;
   }
   if (
     normalized.startsAt &&
@@ -648,6 +736,151 @@ router.post("/ggs/appointments", async (req, res): Promise<void> => {
 });
 
 router.use("/ggs/admin", requireGgsOwner);
+
+router.get(
+  "/ggs/admin/cashier-announcements",
+  async (_req, res): Promise<void> => {
+    const announcements = await db
+      .select()
+      .from(ggsCashierAnnouncementsTable)
+      .orderBy(desc(ggsCashierAnnouncementsTable.updatedAt));
+    const parsedAnnouncements = GetGgsAdminCashierAnnouncementsResponse.parse(
+      announcements.map(serializeCashierAnnouncement),
+    );
+    res.json(
+      parsedAnnouncements.map((announcement, index) => ({
+        ...announcement,
+        startsAt: announcements[index].startsAt,
+        expiresAt: announcements[index].expiresAt,
+      })),
+    );
+  },
+);
+
+router.post(
+  "/ggs/admin/cashier-announcements",
+  async (req, res): Promise<void> => {
+    const parsed = CreateGgsAdminCashierAnnouncementBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const normalized = normalizeCashierAnnouncementInput(parsed.data);
+    if (!normalized.data) {
+      res.status(400).json({ error: normalized.error });
+      return;
+    }
+    const [announcement] = await db
+      .insert(ggsCashierAnnouncementsTable)
+      .values(normalized.data)
+      .returning();
+    const response = CreateGgsAdminCashierAnnouncementResponse.parse(
+      serializeCashierAnnouncement(announcement),
+    );
+    res.status(201).json({
+      ...response,
+      startsAt: announcement.startsAt,
+      expiresAt: announcement.expiresAt,
+    });
+  },
+);
+
+router.patch(
+  "/ggs/admin/cashier-announcements/:id",
+  async (req, res): Promise<void> => {
+    const params = UpdateGgsAdminCashierAnnouncementParams.safeParse(
+      req.params,
+    );
+    if (!params.success) {
+      res.status(400).json({ error: params.error.message });
+      return;
+    }
+    const parsed = UpdateGgsAdminCashierAnnouncementBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const normalized = normalizeCashierAnnouncementInput(parsed.data);
+    if (!normalized.data) {
+      res.status(400).json({ error: normalized.error });
+      return;
+    }
+    const [announcement] = await db
+      .update(ggsCashierAnnouncementsTable)
+      .set({ ...normalized.data, updatedAt: new Date() })
+      .where(eq(ggsCashierAnnouncementsTable.id, params.data.id))
+      .returning();
+    if (!announcement) {
+      res.status(404).json({ error: "Informasi kasir tidak ditemukan." });
+      return;
+    }
+    const response = UpdateGgsAdminCashierAnnouncementResponse.parse(
+      serializeCashierAnnouncement(announcement),
+    );
+    res.json({
+      ...response,
+      startsAt: announcement.startsAt,
+      expiresAt: announcement.expiresAt,
+    });
+  },
+);
+
+router.delete(
+  "/ggs/admin/cashier-announcements/:id",
+  async (req, res): Promise<void> => {
+    const params = DeleteGgsAdminCashierAnnouncementParams.safeParse(
+      req.params,
+    );
+    if (!params.success) {
+      res.status(400).json({ error: params.error.message });
+      return;
+    }
+    const [announcement] = await db
+      .delete(ggsCashierAnnouncementsTable)
+      .where(eq(ggsCashierAnnouncementsTable.id, params.data.id))
+      .returning({ id: ggsCashierAnnouncementsTable.id });
+    if (!announcement) {
+      res.status(404).json({ error: "Informasi kasir tidak ditemukan." });
+      return;
+    }
+    DeleteGgsAdminCashierAnnouncementResponse.parse(undefined);
+    res.sendStatus(204);
+  },
+);
+
+router.get("/ggs/admin/cashier-settings", async (_req, res): Promise<void> => {
+  const settings = await getGgsCashierSettings();
+  res.json(
+    GetGgsAdminCashierSettingsResponse.parse({
+      taxRate: settings.taxRate,
+      updatedAt: settings.updatedAt.toISOString(),
+    }),
+  );
+});
+
+router.patch("/ggs/admin/cashier-settings", async (req, res): Promise<void> => {
+  const parsed = UpdateGgsAdminCashierSettingsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  await getGgsCashierSettings();
+  const [settings] = await db
+    .update(ggsCashierSettingsTable)
+    .set({ taxRate: parsed.data.taxRate, updatedAt: new Date() })
+    .where(eq(ggsCashierSettingsTable.id, 1))
+    .returning();
+  if (!settings) {
+    res.status(500).json({ error: "Pengaturan kasir belum dapat disimpan." });
+    return;
+  }
+  res.json(
+    UpdateGgsAdminCashierSettingsResponse.parse({
+      taxRate: settings.taxRate,
+      updatedAt: settings.updatedAt.toISOString(),
+    }),
+  );
+});
 
 router.get("/ggs/admin/summary", async (_req, res): Promise<void> => {
   await ensureInitialContent();

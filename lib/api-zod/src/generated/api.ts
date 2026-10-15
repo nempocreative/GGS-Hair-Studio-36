@@ -296,6 +296,23 @@ export const GetGgsEmployeeCashierVouchersResponse = zod.array(GetGgsEmployeeCas
 
 
 /**
+ * @summary List current announcements for the active cashier register
+ */
+export const GetGgsEmployeeCashierAnnouncementsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "category": zod.enum(['promo', 'info']),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetGgsEmployeeCashierAnnouncementsResponse = zod.array(GetGgsEmployeeCashierAnnouncementsResponseItem)
+
+
+/**
  * @summary List and summarize cashier transactions for the active register
  */
 export const getGgsEmployeeCashierTransactionsQuerySearchMax = 120;
@@ -1066,6 +1083,99 @@ export const UpdateGgsAdminCashierSettingsResponse = zod.object({
   "taxRate": zod.number().int().min(updateGgsAdminCashierSettingsResponseTaxRateMin).max(updateGgsAdminCashierSettingsResponseTaxRateMax),
   "updatedAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary List cashier announcements in GGS CMS
+ */
+export const GetGgsAdminCashierAnnouncementsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "category": zod.enum(['promo', 'info']),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetGgsAdminCashierAnnouncementsResponse = zod.array(GetGgsAdminCashierAnnouncementsResponseItem)
+
+
+/**
+ * @summary Create a cashier announcement
+ */
+export const createGgsAdminCashierAnnouncementBodyTitleMax = 100;
+
+export const createGgsAdminCashierAnnouncementBodyMessageMax = 1000;
+
+
+
+export const CreateGgsAdminCashierAnnouncementBody = zod.object({
+  "title": zod.string().min(1).max(createGgsAdminCashierAnnouncementBodyTitleMax),
+  "message": zod.string().min(1).max(createGgsAdminCashierAnnouncementBodyMessageMax),
+  "category": zod.enum(['promo', 'info']),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean()
+})
+
+export const CreateGgsAdminCashierAnnouncementResponse = zod.object({
+  "id": zod.number().int(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "category": zod.enum(['promo', 'info']),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a cashier announcement
+ */
+export const UpdateGgsAdminCashierAnnouncementParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateGgsAdminCashierAnnouncementBodyTitleMax = 100;
+
+export const updateGgsAdminCashierAnnouncementBodyMessageMax = 1000;
+
+
+
+export const UpdateGgsAdminCashierAnnouncementBody = zod.object({
+  "title": zod.string().min(1).max(updateGgsAdminCashierAnnouncementBodyTitleMax),
+  "message": zod.string().min(1).max(updateGgsAdminCashierAnnouncementBodyMessageMax),
+  "category": zod.enum(['promo', 'info']),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean()
+})
+
+export const UpdateGgsAdminCashierAnnouncementResponse = zod.object({
+  "id": zod.number().int(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "category": zod.enum(['promo', 'info']),
+  "startsAt": zod.coerce.date().nullable(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a cashier announcement
+ */
+export const DeleteGgsAdminCashierAnnouncementParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteGgsAdminCashierAnnouncementResponse = zod.void()
 
 
 /**

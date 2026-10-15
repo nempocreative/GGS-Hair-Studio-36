@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, CreditCard, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, CreditCard, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound, X, Megaphone } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import {
   getGetGgsEmployeeBookingsQueryKey,
@@ -9,6 +9,7 @@ import {
   getGetGgsEmployeeCashierSessionQueryKey,
   getGetGgsEmployeeCashierVouchersQueryKey,
   getGetGgsEmployeeCashierTransactionsQueryKey,
+  getGetGgsEmployeeCashierAnnouncementsQueryKey,
   getGetGgsPublicProductsQueryKey,
   getGetGgsPublicServicesQueryKey,
   getGetGgsEmployeeSessionQueryKey,
@@ -16,6 +17,7 @@ import {
   useGetGgsEmployeeCashierSession,
   useGetGgsEmployeeCashierVouchers,
   useGetGgsEmployeeCashierTransactions,
+  useGetGgsEmployeeCashierAnnouncements,
   useGetGgsPublicProducts,
   useGetGgsPublicServices,
   useCreateGgsEmployeeCashierTransaction,
@@ -26,7 +28,7 @@ import {
   useLogoutGgsEmployee,
   useUnlockGgsEmployeeCashier,
 } from '@workspace/api-client-react';
-import type { GetGgsEmployeeCashierTransactionsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import type { GetGgsEmployeeCashierTransactionsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsCashierAnnouncement, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
 import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
@@ -146,6 +148,15 @@ function EmployeeCashierPage() {
     },
   });
   const isCashierActive = Boolean(cashierSession.data?.active && cashierSession.data.register);
+  const announcementsQuery = useGetGgsEmployeeCashierAnnouncements({
+    query: {
+      queryKey: getGetGgsEmployeeCashierAnnouncementsQueryKey(),
+      enabled: isCashierActive,
+      retry: false,
+      refetchInterval: 30_000,
+      refetchOnWindowFocus: true,
+    },
+  });
   const servicesQuery = useGetGgsPublicServices({
     query: { queryKey: getGetGgsPublicServicesQueryKey(), retry: false, enabled: isCashierActive },
   });
@@ -413,6 +424,8 @@ function EmployeeCashierPage() {
               </button>
             </div>
           </div>
+
+          <CashierAnnouncementStrip query={announcementsQuery} announcements={announcementsQuery.data ?? []} />
 
           <section className="cashier-day-summary" aria-label="Rekap pemasukan register" data-testid="summary-cashier-today">
             <div className="cashier-day-summary__intro"><span>REKAP REGISTER</span><strong>{transactionsQuery.data?.fromDate || transactionsQuery.data?.toDate ? `${transactionsQuery.data?.fromDate || 'Awal'} — ${transactionsQuery.data?.toDate || 'Hari ini'}` : 'Seluruh riwayat'}</strong></div>
@@ -874,6 +887,56 @@ export function EmployeeSignInPage() {
         <span>INTERNAL / STAFF ONLY</span>
       </footer>
     </main>
+  );
+}
+
+function CashierAnnouncementStrip({
+  query,
+  announcements,
+}: {
+  query: ReturnType<typeof useGetGgsEmployeeCashierAnnouncements>;
+  announcements: GgsCashierAnnouncement[];
+}) {
+  const formatRange = (item: GgsCashierAnnouncement) => {
+    if (!item.startsAt && !item.expiresAt) return 'Tanpa batas tanggal';
+    if (item.startsAt && item.expiresAt) return `${displayDate(item.startsAt, { day: 'numeric', month: 'short' })} – ${displayDate(item.expiresAt, { day: 'numeric', month: 'short' })}`;
+    return item.startsAt
+      ? `Mulai ${displayDate(item.startsAt, { day: 'numeric', month: 'short' })}`
+      : `Sampai ${displayDate(item.expiresAt!, { day: 'numeric', month: 'short' })}`;
+  };
+  return (
+    <section className="cashier-announcements" aria-labelledby="cashier-announcements-title" data-testid="cashier-announcements">
+      <div className="cashier-announcements__heading">
+        <span className="cashier-announcements__icon"><Megaphone size={17} aria-hidden="true" /></span>
+        <div><span>INFO UNTUK REGISTER</span><h2 id="cashier-announcements-title">Pengumuman studio</h2></div>
+        <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching} aria-label="Perbarui pengumuman kasir" data-testid="button-refresh-cashier-announcements">
+          <RefreshCw size={14} className={query.isFetching ? 'is-spinning' : ''} aria-hidden="true" />
+          <span>{query.isFetching ? 'Memperbarui' : 'Perbarui'}</span>
+        </button>
+      </div>
+      {query.isLoading ? (
+        <div className="cashier-announcements__skeleton" role="status" aria-label="Memuat pengumuman"><i /><i /></div>
+      ) : query.isError ? (
+        <div className="cashier-announcements__state cashier-announcements__state--error" role="alert">
+          <div><strong>Pengumuman belum dapat dimuat.</strong><span>Periksa koneksi lalu coba lagi.</span></div>
+          <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching} data-testid="button-retry-cashier-announcements">{query.isFetching ? 'Memuat…' : 'Coba lagi'}</button>
+        </div>
+      ) : announcements.length ? (
+        <div className="cashier-announcements__list">
+          {announcements.map((item) => <article className={`cashier-announcement cashier-announcement--${item.category}`} key={item.id} data-testid={`announcement-cashier-${item.id}`}>
+            <span className="cashier-announcement__marker" aria-hidden="true" />
+            <div className="cashier-announcement__copy">
+              <div className="cashier-announcement__meta"><span>{item.category === 'promo' ? 'PROMO' : 'INFORMASI'}</span><small>{formatRange(item)}</small></div>
+              <h3>{item.title}</h3><p>{item.message}</p>
+            </div>
+          </article>)}
+        </div>
+      ) : (
+        <div className="cashier-announcements__empty" data-testid="empty-cashier-announcements">
+          <span>Belum ada pengumuman aktif.</span><small>Info baru dari studio akan tampil di sini.</small>
+        </div>
+      )}
+    </section>
   );
 }
 

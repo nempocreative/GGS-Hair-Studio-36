@@ -10,9 +10,12 @@ import {
   gt,
   ilike,
   inArray,
+  isNotNull,
   isNull,
   lt,
+  lte,
   or,
+  sql,
   sum,
 } from "drizzle-orm";
 import {
@@ -34,6 +37,8 @@ import {
   CreateGgsEmployeeAttendanceChallengeResponse,
   GetGgsEmployeeCashierTransactionsResponse,
   GetGgsEmployeeCashierTransactionsQueryParams,
+  GetGgsEmployeeCashierAnnouncementsResponse,
+  GetGgsEmployeeCashierVouchersResponse,
   GetGgsEmployeeAttendanceHistoryResponse,
   GetGgsAdminEmployeesResponse,
   GetGgsEmployeeAttendanceTodayResponse,
@@ -56,6 +61,8 @@ import {
 import {
   db,
   ggsAppointmentsTable,
+  ggsCashierAnnouncementsTable,
+  ggsCashierSettingsTable,
   ggsCashierTransactionItemsTable,
   ggsCashierTransactionsTable,
   ggsEmployeeAccountsTable,
@@ -65,12 +72,14 @@ import {
   ggsEmployeeSessionsTable,
   ggsProductsTable,
   ggsServicesTable,
+  ggsVouchersTable,
 } from "@workspace/db";
 import {
   hashPassword,
   hashSessionToken,
   verifyPassword,
 } from "../lib/account-security";
+import { getGgsCashierSettings } from "../lib/ggs-cashier-settings";
 import { requireGgsOwner } from "../middlewares/requireGgsOwner";
 
 const router: IRouter = Router();
@@ -378,6 +387,13 @@ function serializeCashierTransaction(
     cancelledAt: transaction.cancelledAt?.toISOString() ?? null,
     cancelledByEmployeeName: transaction.cancelledByEmployeeName,
     subtotal: transaction.subtotal,
+    discountAmount: transaction.discountAmount,
+    voucherCode: transaction.voucherCode,
+    voucherName: transaction.voucherName,
+    taxRate: transaction.taxRate,
+    taxAmount: transaction.taxAmount,
+    totalAmount:
+      transaction.subtotal - transaction.discountAmount + transaction.taxAmount,
     amountReceived: transaction.amountReceived,
     changeAmount: transaction.changeAmount,
     createdAt: transaction.createdAt.toISOString(),
@@ -474,6 +490,7 @@ router.get(
       return;
     }
 
+    const cashierSettings = await getGgsCashierSettings();
     const token = req.cookies?.[employeeCookieName];
     const [session] =
       typeof token === "string"
@@ -506,6 +523,7 @@ router.get(
         active,
         register: active ? session?.cashierRegister : null,
         expiresAt: active ? session?.cashierExpiresAt : null,
+        taxRate: cashierSettings.taxRate,
       }),
     );
   },
@@ -613,6 +631,95 @@ router.post(
 );
 
 router.get(
+  "/ggs/employee/cashier/vouchers",
+  async (req, res): Promise<void> => {
+    const cashier = await requireActiveCashier(req, res);
+    if (!cashier) return;
+
+    const today = jakartaAttendanceDate();
+    const vouchers = await db
+      .select()
+      .from(ggsVouchersTable)
+      .where(
+        and(
+          eq(ggsVouchersTable.active, true),
+          isNotNull(ggsVouchersTable.code),
+          sql`btrim(${ggsVouchersTable.code}) <> ''`,
+          gt(ggsVouchersTable.discountValue, 0),
+          or(isNull(ggsVouchersTable.startsAt), lte(ggsVouchersTable.startsAt, today)),
+          or(isNull(ggsVouchersTable.expiresAt), gte(ggsVouchersTable.expiresAt, today)),
+        ),
+      )
+      .orderBy(asc(ggsVouchersTable.name));
+
+    res.json(
+      GetGgsEmployeeCashierVouchersResponse.parse(
+        vouchers.map((voucher) => ({
+          id: voucher.id,
+          name: voucher.name,
+          value: voucher.value,
+          code: voucher.code!,
+          discountType: voucher.discountType,
+          discountValue: voucher.discountValue,
+          appliesTo: voucher.appliesTo,
+          expiresAt: voucher.expiresAt,
+        })),
+      ),
+    );
+  },
+);
+
+router.get(
+  "/ggs/employee/cashier/announcements",
+  async (req, res): Promise<void> => {
+    const cashier = await requireActiveCashier(req, res);
+    if (!cashier) return;
+
+    const today = jakartaAttendanceDate();
+    const announcements = await db
+      .select()
+      .from(ggsCashierAnnouncementsTable)
+      .where(
+        and(
+          eq(ggsCashierAnnouncementsTable.active, true),
+          or(
+            isNull(ggsCashierAnnouncementsTable.startsAt),
+            lte(ggsCashierAnnouncementsTable.startsAt, today),
+          ),
+          or(
+            isNull(ggsCashierAnnouncementsTable.expiresAt),
+            gte(ggsCashierAnnouncementsTable.expiresAt, today),
+          ),
+        ),
+      )
+      .orderBy(desc(ggsCashierAnnouncementsTable.updatedAt))
+      .limit(10);
+
+    const parsedAnnouncements =
+      GetGgsEmployeeCashierAnnouncementsResponse.parse(
+        announcements.map((announcement) => ({
+          id: announcement.id,
+          title: announcement.title,
+          message: announcement.message,
+          category: announcement.category,
+          startsAt: announcement.startsAt,
+          expiresAt: announcement.expiresAt,
+          active: announcement.active,
+          createdAt: announcement.createdAt.toISOString(),
+          updatedAt: announcement.updatedAt.toISOString(),
+        })),
+      );
+    res.json(
+      parsedAnnouncements.map((announcement, index) => ({
+        ...announcement,
+        startsAt: announcements[index].startsAt,
+        expiresAt: announcements[index].expiresAt,
+      })),
+    );
+  },
+);
+
+router.get(
   "/ggs/employee/cashier/transactions",
   async (req, res): Promise<void> => {
     const cashier = await requireActiveCashier(req, res);
@@ -664,14 +771,24 @@ router.get(
     const [incomeTotals] = await db
       .select({
         transactionCount: count(),
-        totalCollected: sum(ggsCashierTransactionsTable.subtotal),
+        totalCollected: sum(sql<number>`
+          ${ggsCashierTransactionsTable.subtotal}
+          - ${ggsCashierTransactionsTable.discountAmount}
+          + ${ggsCashierTransactionsTable.taxAmount}
+        `),
+        totalTaxCollected: sum(ggsCashierTransactionsTable.taxAmount),
+        totalDiscountGiven: sum(ggsCashierTransactionsTable.discountAmount),
       })
       .from(ggsCashierTransactionsTable)
       .where(completedCondition);
     const [cancelledTotals] = await db
       .select({
         transactionCount: count(),
-        totalCollected: sum(ggsCashierTransactionsTable.subtotal),
+        totalCollected: sum(sql<number>`
+          ${ggsCashierTransactionsTable.subtotal}
+          - ${ggsCashierTransactionsTable.discountAmount}
+          + ${ggsCashierTransactionsTable.taxAmount}
+        `),
       })
       .from(ggsCashierTransactionsTable)
       .where(cancelledCondition);
@@ -679,7 +796,11 @@ router.get(
       .select({
         paymentMethod: ggsCashierTransactionsTable.paymentMethod,
         transactionCount: count(),
-        totalCollected: sum(ggsCashierTransactionsTable.subtotal),
+        totalCollected: sum(sql<number>`
+          ${ggsCashierTransactionsTable.subtotal}
+          - ${ggsCashierTransactionsTable.discountAmount}
+          + ${ggsCashierTransactionsTable.taxAmount}
+        `),
       })
       .from(ggsCashierTransactionsTable)
       .where(completedCondition)
@@ -754,6 +875,8 @@ router.get(
         transactionCount: Number(incomeTotals?.transactionCount ?? 0),
         cancelledTotal: Number(cancelledTotals?.totalCollected ?? 0),
         cancelledTransactionCount: Number(cancelledTotals?.transactionCount ?? 0),
+        totalTaxCollected: Number(incomeTotals?.totalTaxCollected ?? 0),
+        totalDiscountGiven: Number(incomeTotals?.totalDiscountGiven ?? 0),
         paymentMethods: paymentMethods.map((method) => ({
           paymentMethod: method.paymentMethod,
           transactionCount: Number(method.transactionCount),
@@ -814,6 +937,51 @@ router.post(
 
     try {
       const transaction = await db.transaction(async (tx) => {
+        await tx
+          .insert(ggsCashierSettingsTable)
+          .values({ id: 1 })
+          .onConflictDoNothing();
+        const [cashierSettings] = await tx
+          .select()
+          .from(ggsCashierSettingsTable)
+          .where(eq(ggsCashierSettingsTable.id, 1))
+          .limit(1);
+        if (!cashierSettings) {
+          throw new Error("GGS cashier settings could not be initialized.");
+        }
+
+        const voucherCode = parsed.data.voucherCode?.trim().toUpperCase() || null;
+        let appliedVoucher: typeof ggsVouchersTable.$inferSelect | null = null;
+        if (voucherCode) {
+          const today = jakartaAttendanceDate();
+          const [voucher] = await tx
+            .select()
+            .from(ggsVouchersTable)
+            .where(
+              and(
+                eq(ggsVouchersTable.code, voucherCode),
+                eq(ggsVouchersTable.active, true),
+                gt(ggsVouchersTable.discountValue, 0),
+                or(
+                  isNull(ggsVouchersTable.startsAt),
+                  lte(ggsVouchersTable.startsAt, today),
+                ),
+                or(
+                  isNull(ggsVouchersTable.expiresAt),
+                  gte(ggsVouchersTable.expiresAt, today),
+                ),
+              ),
+            )
+            .limit(1);
+          if (!voucher) {
+            throw new CashierPaymentFailure(
+              "Kode voucher tidak aktif atau sudah di luar masa berlaku.",
+              400,
+            );
+          }
+          appliedVoucher = voucher;
+        }
+
         const services = serviceIds.length
           ? await tx
               .select()
@@ -877,9 +1045,41 @@ router.post(
           (total, item) => total + item.lineTotal,
           0,
         );
+        const discountBase = appliedVoucher
+          ? appliedVoucher.appliesTo === "services"
+            ? pricedItems
+                .filter((item) => item.itemType === "service")
+                .reduce((total, item) => total + item.lineTotal, 0)
+            : pricedItems.reduce((total, item) => total + item.lineTotal, 0)
+          : 0;
+        if (appliedVoucher && discountBase === 0) {
+          throw new CashierPaymentFailure(
+            appliedVoucher.appliesTo === "services"
+              ? "Voucher ini hanya berlaku untuk layanan."
+              : "Voucher ini tidak berlaku untuk item dalam transaksi.",
+            400,
+          );
+        }
+        const discountAmount = appliedVoucher
+          ? Math.min(
+              discountBase,
+              appliedVoucher.discountType === "percent"
+                ? Math.round(
+                    (discountBase * appliedVoucher.discountValue) / 100,
+                  )
+                : appliedVoucher.discountValue,
+            )
+          : 0;
+        const taxRate = cashierSettings.taxRate;
+        const taxAmount = Math.round(
+          ((subtotal - discountAmount) * taxRate) / 100,
+        );
+        const totalAmount = subtotal - discountAmount + taxAmount;
         if (
           !Number.isSafeInteger(subtotal) ||
           subtotal > 2_147_483_647 ||
+          !Number.isSafeInteger(totalAmount) ||
+          totalAmount > 2_147_483_647 ||
           parsed.data.amountReceived > 2_147_483_647
         ) {
           throw new CashierPaymentFailure(
@@ -889,7 +1089,7 @@ router.post(
         }
         if (
           parsed.data.paymentMethod === "cash" &&
-          parsed.data.amountReceived < subtotal
+          parsed.data.amountReceived < totalAmount
         ) {
           throw new CashierPaymentFailure(
             "Uang yang diterima belum mencukupi total pembayaran.",
@@ -898,7 +1098,7 @@ router.post(
         }
         if (
           parsed.data.paymentMethod !== "cash" &&
-          parsed.data.amountReceived !== subtotal
+          parsed.data.amountReceived !== totalAmount
         ) {
           throw new CashierPaymentFailure(
             "Untuk pembayaran non-tunai, jumlah yang diterima harus sama dengan total.",
@@ -927,10 +1127,15 @@ router.post(
             customerName: parsed.data.customerName?.trim() ?? "",
             paymentMethod: parsed.data.paymentMethod,
             subtotal,
+            discountAmount,
+            voucherCode: appliedVoucher?.code ?? null,
+            voucherName: appliedVoucher?.name ?? null,
+            taxRate,
+            taxAmount,
             amountReceived: parsed.data.amountReceived,
             changeAmount:
               parsed.data.paymentMethod === "cash"
-                ? parsed.data.amountReceived - subtotal
+                ? parsed.data.amountReceived - totalAmount
                 : 0,
           })
           .returning();

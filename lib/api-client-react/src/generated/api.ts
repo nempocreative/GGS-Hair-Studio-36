@@ -28,6 +28,8 @@ import type {
   GgsAppointment,
   GgsAppointmentInput,
   GgsAppointmentStatusUpdate,
+  GgsCashierAnnouncement,
+  GgsCashierAnnouncementInput,
   GgsCashierSettings,
   GgsCashierSettingsInput,
   GgsEmployeeAccount,
@@ -1430,6 +1432,83 @@ export function useGetGgsEmployeeCashierVouchers<TData = Awaited<ReturnType<type
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetGgsEmployeeCashierVouchersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGgsEmployeeCashierAnnouncementsUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/cashier/announcements`
+}
+
+/**
+ * @summary List current announcements for the active cashier register
+ */
+export const getGgsEmployeeCashierAnnouncements = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsCashierAnnouncement[]> => {
+
+  return customFetch<GgsCashierAnnouncement[]>(getGetGgsEmployeeCashierAnnouncementsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeCashierAnnouncementsQueryKey = () => {
+    return [
+    `/api/ggs/employee/cashier/announcements`
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeCashierAnnouncementsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeCashierAnnouncements>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierAnnouncements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeCashierAnnouncementsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeCashierAnnouncements>>> = ({ signal }) => getGgsEmployeeCashierAnnouncements({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierAnnouncements>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeCashierAnnouncementsQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeCashierAnnouncements>>>
+export type GetGgsEmployeeCashierAnnouncementsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List current announcements for the active cashier register
+ */
+
+export function useGetGgsEmployeeCashierAnnouncements<TData = Awaited<ReturnType<typeof getGgsEmployeeCashierAnnouncements>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierAnnouncements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeCashierAnnouncementsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -3601,6 +3680,334 @@ export const useUpdateGgsAdminCashierSettings = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdateGgsAdminCashierSettingsMutationOptions(options));
+    }
+
+export const getGetGgsAdminCashierAnnouncementsUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/cashier-announcements`
+}
+
+/**
+ * @summary List cashier announcements in GGS CMS
+ */
+export const getGgsAdminCashierAnnouncements = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsCashierAnnouncement[]> => {
+
+  return customFetch<GgsCashierAnnouncement[]>(getGetGgsAdminCashierAnnouncementsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsAdminCashierAnnouncementsQueryKey = () => {
+    return [
+    `/api/ggs/admin/cashier-announcements`
+    ] as const;
+    }
+
+
+export const getGetGgsAdminCashierAnnouncementsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsAdminCashierAnnouncements>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminCashierAnnouncements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsAdminCashierAnnouncementsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsAdminCashierAnnouncements>>> = ({ signal }) => getGgsAdminCashierAnnouncements({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminCashierAnnouncements>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsAdminCashierAnnouncementsQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsAdminCashierAnnouncements>>>
+export type GetGgsAdminCashierAnnouncementsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List cashier announcements in GGS CMS
+ */
+
+export function useGetGgsAdminCashierAnnouncements<TData = Awaited<ReturnType<typeof getGgsAdminCashierAnnouncements>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminCashierAnnouncements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsAdminCashierAnnouncementsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateGgsAdminCashierAnnouncementUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/cashier-announcements`
+}
+
+/**
+ * @summary Create a cashier announcement
+ */
+export const createGgsAdminCashierAnnouncement = async (ggsCashierAnnouncementInput: GgsCashierAnnouncementInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsCashierAnnouncement> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsCashierAnnouncement>(getCreateGgsAdminCashierAnnouncementUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsCashierAnnouncementInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGgsAdminCashierAnnouncementMutationKey = () => ['createGgsAdminCashierAnnouncement'] as const;
+
+export const getCreateGgsAdminCashierAnnouncementMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminCashierAnnouncement>>, TError,CreateGgsAdminCashierAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminCashierAnnouncement>>, TError,CreateGgsAdminCashierAnnouncementMutationVariables, TContext> => {
+
+const mutationKey = getCreateGgsAdminCashierAnnouncementMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGgsAdminCashierAnnouncement>>, CreateGgsAdminCashierAnnouncementMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGgsAdminCashierAnnouncement(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGgsAdminCashierAnnouncementMutationResult = NonNullable<Awaited<ReturnType<typeof createGgsAdminCashierAnnouncement>>>
+    export type CreateGgsAdminCashierAnnouncementMutationBody = BodyType<GgsCashierAnnouncementInput>
+    export type CreateGgsAdminCashierAnnouncementMutationError = ErrorType<void>
+    export type CreateGgsAdminCashierAnnouncementMutationVariables = {data: BodyType<GgsCashierAnnouncementInput>}
+
+    /**
+ * @summary Create a cashier announcement
+ */
+export const useCreateGgsAdminCashierAnnouncement = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminCashierAnnouncement>>, TError,CreateGgsAdminCashierAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGgsAdminCashierAnnouncement>>,
+        TError,
+        CreateGgsAdminCashierAnnouncementMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGgsAdminCashierAnnouncementMutationOptions(options));
+    }
+
+export const getUpdateGgsAdminCashierAnnouncementUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/cashier-announcements/${id}`
+}
+
+/**
+ * @summary Update a cashier announcement
+ */
+export const updateGgsAdminCashierAnnouncement = async (id: number,
+    ggsCashierAnnouncementInput: GgsCashierAnnouncementInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsCashierAnnouncement> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsCashierAnnouncement>(getUpdateGgsAdminCashierAnnouncementUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsCashierAnnouncementInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateGgsAdminCashierAnnouncementMutationKey = () => ['updateGgsAdminCashierAnnouncement'] as const;
+
+export const getUpdateGgsAdminCashierAnnouncementMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminCashierAnnouncement>>, TError,UpdateGgsAdminCashierAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminCashierAnnouncement>>, TError,UpdateGgsAdminCashierAnnouncementMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGgsAdminCashierAnnouncementMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGgsAdminCashierAnnouncement>>, UpdateGgsAdminCashierAnnouncementMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateGgsAdminCashierAnnouncement(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGgsAdminCashierAnnouncementMutationResult = NonNullable<Awaited<ReturnType<typeof updateGgsAdminCashierAnnouncement>>>
+    export type UpdateGgsAdminCashierAnnouncementMutationBody = BodyType<GgsCashierAnnouncementInput>
+    export type UpdateGgsAdminCashierAnnouncementMutationError = ErrorType<void>
+    export type UpdateGgsAdminCashierAnnouncementMutationVariables = {id: number;data: BodyType<GgsCashierAnnouncementInput>}
+
+    /**
+ * @summary Update a cashier announcement
+ */
+export const useUpdateGgsAdminCashierAnnouncement = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminCashierAnnouncement>>, TError,UpdateGgsAdminCashierAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGgsAdminCashierAnnouncement>>,
+        TError,
+        UpdateGgsAdminCashierAnnouncementMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGgsAdminCashierAnnouncementMutationOptions(options));
+    }
+
+export const getDeleteGgsAdminCashierAnnouncementUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/cashier-announcements/${id}`
+}
+
+/**
+ * @summary Delete a cashier announcement
+ */
+export const deleteGgsAdminCashierAnnouncement = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteGgsAdminCashierAnnouncementUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteGgsAdminCashierAnnouncementMutationKey = () => ['deleteGgsAdminCashierAnnouncement'] as const;
+
+export const getDeleteGgsAdminCashierAnnouncementMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGgsAdminCashierAnnouncement>>, TError,DeleteGgsAdminCashierAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGgsAdminCashierAnnouncement>>, TError,DeleteGgsAdminCashierAnnouncementMutationVariables, TContext> => {
+
+const mutationKey = getDeleteGgsAdminCashierAnnouncementMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGgsAdminCashierAnnouncement>>, DeleteGgsAdminCashierAnnouncementMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteGgsAdminCashierAnnouncement(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGgsAdminCashierAnnouncementMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGgsAdminCashierAnnouncement>>>
+
+    export type DeleteGgsAdminCashierAnnouncementMutationError = ErrorType<void>
+    export type DeleteGgsAdminCashierAnnouncementMutationVariables = {id: number}
+
+    /**
+ * @summary Delete a cashier announcement
+ */
+export const useDeleteGgsAdminCashierAnnouncement = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGgsAdminCashierAnnouncement>>, TError,DeleteGgsAdminCashierAnnouncementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGgsAdminCashierAnnouncement>>,
+        TError,
+        DeleteGgsAdminCashierAnnouncementMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteGgsAdminCashierAnnouncementMutationOptions(options));
     }
 
 export const getUpdateGgsVoucherUrl = (id: number,) => {

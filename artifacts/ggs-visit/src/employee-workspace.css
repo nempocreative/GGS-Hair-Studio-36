@@ -1205,6 +1205,221 @@
   font-size: 16px;
 }
 
+/* Shift-ready internal notices, kept above the transaction tools. */
+.cashier-announcements {
+  margin: 0 0 18px;
+  border: 1px solid var(--cashier-line);
+  background: var(--cashier-panel);
+  color: var(--cashier-ink);
+}
+
+.cashier-announcements__heading {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  gap: 11px;
+  border-bottom: 1px solid var(--cashier-line);
+  padding: 10px 14px;
+}
+
+.cashier-announcements__icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  background: var(--cashier-soft);
+  color: var(--cashier-berry);
+}
+
+.cashier-announcements__heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.cashier-announcements__heading > div > span {
+  color: var(--cashier-muted);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+
+.cashier-announcements__heading h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cashier-announcements__heading button {
+  display: inline-flex;
+  min-height: 31px;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  border: 1px solid var(--cashier-line);
+  background: transparent;
+  padding: 0 9px;
+  color: var(--cashier-muted);
+  font-size: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cashier-announcements__heading button:hover:not(:disabled) {
+  border-color: var(--cashier-berry);
+  background: var(--cashier-soft);
+  color: var(--cashier-berry-deep);
+}
+
+.cashier-announcements__heading button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.cashier-announcements__heading button svg.is-spinning {
+  animation: employee-spin .9s linear infinite;
+}
+
+.cashier-announcements__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cashier-announcement {
+  display: grid;
+  grid-template-columns: 3px minmax(0, 1fr);
+  gap: 11px;
+  padding: 14px 16px;
+}
+
+.cashier-announcement + .cashier-announcement {
+  border-left: 1px solid var(--cashier-line);
+}
+
+.cashier-announcement__marker {
+  width: 3px;
+  min-height: 100%;
+  background: var(--cashier-berry);
+}
+
+.cashier-announcement--info .cashier-announcement__marker {
+  background: #66856e;
+}
+
+.cashier-announcement__copy {
+  min-width: 0;
+}
+
+.cashier-announcement__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cashier-announcement__meta > span {
+  color: var(--cashier-berry);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .13em;
+}
+
+.cashier-announcement--info .cashier-announcement__meta > span {
+  color: #4f7158;
+}
+
+.cashier-announcement__meta small {
+  color: var(--cashier-muted);
+  font-size: 8px;
+}
+
+.cashier-announcement__copy h3 {
+  margin: 7px 0 4px;
+  color: var(--cashier-ink);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.cashier-announcement__copy p {
+  margin: 0;
+  color: var(--cashier-muted);
+  font-size: 9px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.cashier-announcements__empty,
+.cashier-announcements__state {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+}
+
+.cashier-announcements__empty {
+  color: var(--cashier-ink);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cashier-announcements__empty small {
+  color: var(--cashier-muted);
+  font-size: 9px;
+  font-weight: 400;
+}
+
+.cashier-announcements__state > div {
+  display: grid;
+  gap: 4px;
+}
+
+.cashier-announcements__state strong {
+  font-size: 10px;
+}
+
+.cashier-announcements__state span {
+  color: var(--cashier-muted);
+  font-size: 9px;
+}
+
+.cashier-announcements__state button {
+  min-height: 32px;
+  border: 1px solid var(--cashier-line);
+  background: transparent;
+  padding: 0 10px;
+  color: var(--cashier-berry-deep);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cashier-announcements__state button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.cashier-announcements__state--error {
+  background: #fff8f7;
+}
+
+.cashier-announcements__skeleton {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.cashier-announcements__skeleton i {
+  display: block;
+  height: 54px;
+  background: linear-gradient(100deg, #f3e7e9 20%, #fff 50%, #f3e7e9 80%);
+  background-size: 220% 100%;
+  animation: employee-shimmer 1.5s ease-in-out infinite;
+}
+
 /* Reception cashier — a focused, high-contrast point-of-sale surface. */
 .employee-cashier {
   --cashier-ink: #2c2027;
@@ -2185,6 +2400,21 @@
 }
 
 @media (max-width: 760px) {
+  .cashier-announcements__list,
+  .cashier-announcements__skeleton {
+    grid-template-columns: 1fr;
+  }
+
+  .cashier-announcement + .cashier-announcement {
+    border-top: 1px solid var(--cashier-line);
+    border-left: 0;
+  }
+
+  .cashier-announcements__empty {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
   .cashier-workspace {
     width: calc(100% - 40px);
     padding-top: 0;
