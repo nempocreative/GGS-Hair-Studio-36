@@ -391,9 +391,9 @@ router.post(
     }
 
     const secret = process.env[cashierPasswordEnvKeys[parsed.data.register]];
-    if (!secret || secret.length !== 8) {
+    if (!secret || secret.length < 8 || secret.length > 128) {
       res.status(503).json({
-        error: "Kata sandi kasir harus dikonfigurasi tepat 8 karakter.",
+        error: "Kata sandi kasir harus terdiri dari 8 sampai 128 karakter.",
       });
       return;
     }

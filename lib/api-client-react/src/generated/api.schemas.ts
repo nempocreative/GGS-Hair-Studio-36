@@ -113,9 +113,8 @@ export interface GgsEmployeeCashierSession {
 export interface GgsEmployeeCashierAccessInput {
   register: GgsEmployeeCashierRegister;
   /**
-     * Cashier password must be exactly 8 characters.
      * @minLength 8
-     * @maxLength 8
+     * @maxLength 128
      */
   password: string;
 }
