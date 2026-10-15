@@ -1,0 +1,349 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
+
+.ggs-cashier-preview {
+  --cashier-ink: #2c2027;
+  --cashier-muted: #786b71;
+  --cashier-paper: #f8f3f2;
+  --cashier-panel: #fffdfb;
+  --cashier-line: #e8dcde;
+  --cashier-berry: #a42f5c;
+  --cashier-berry-deep: #79203f;
+  --cashier-soft: #f7e9ee;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: 30px max(24px, calc((100vw - 1240px) / 2)) 52px;
+  background: var(--cashier-paper);
+  color: var(--cashier-ink);
+  font: 400 12px/1.45 "DM Sans", sans-serif;
+}
+
+.ggs-cashier-preview *,
+.ggs-cashier-preview *::before,
+.ggs-cashier-preview *::after { box-sizing: border-box; }
+.ggs-cashier-preview button,
+.ggs-cashier-preview input,
+.ggs-cashier-preview select { font: inherit; }
+.ggs-cashier-preview button { cursor: pointer; }
+.ggs-cashier-preview svg { flex: 0 0 auto; }
+.ggs-cashier-preview .employee-kicker,
+.ggs-cashier-preview .cashier-section-heading > div > span,
+.ggs-cashier-preview .cashier-day-summary__intro > span,
+.ggs-cashier-preview .cashier-day-summary__metric > span,
+.ggs-cashier-preview .cashier-workspace__register > div > span,
+.ggs-cashier-preview .cashier-method-recap__label {
+  font: 700 9px/1.3 "Space Mono", monospace;
+  letter-spacing: .1em;
+}
+.ggs-cashier-preview .employee-kicker { margin: 0 0 8px; color: var(--cashier-berry); }
+.ggs-cashier-preview .employee-cashier__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+.ggs-cashier-preview .employee-cashier__heading h1 {
+  margin: 0 0 6px;
+  font-size: 39px;
+  line-height: 1;
+  letter-spacing: -.055em;
+}
+.ggs-cashier-preview .employee-cashier__heading h1 em { color: var(--cashier-berry); font-style: normal; }
+.ggs-cashier-preview .employee-cashier__heading p:last-child { margin: 0; color: var(--cashier-muted); }
+.ggs-cashier-preview .employee-cashier__secure-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--cashier-line);
+  background: var(--cashier-panel);
+  padding: 9px 11px;
+  font-size: 10px;
+}
+.ggs-cashier-preview .employee-cashier__secure-label svg { color: var(--cashier-berry); }
+.ggs-cashier-preview .cashier-workspace { width: 100%; }
+.ggs-cashier-preview .cashier-workspace__bar {
+  display: flex;
+  min-height: 59px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  border: 1px solid var(--cashier-line);
+  background: var(--cashier-panel);
+  padding: 10px 14px;
+}
+.ggs-cashier-preview .cashier-workspace__register { display: flex; align-items: center; gap: 11px; }
+.ggs-cashier-preview .cashier-workspace__register-mark,
+.ggs-cashier-preview .cashier-announcements__icon,
+.ggs-cashier-preview .cashier-item__type,
+.ggs-cashier-preview .cashier-empty__icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  background: var(--cashier-soft);
+  color: var(--cashier-berry);
+}
+.ggs-cashier-preview .cashier-workspace__register > div { display: grid; gap: 3px; }
+.ggs-cashier-preview .cashier-workspace__register > div > span { color: var(--cashier-muted); }
+.ggs-cashier-preview .cashier-workspace__register strong { font-size: 13px; }
+.ggs-cashier-preview .cashier-workspace__register > small { color: var(--cashier-muted); font-size: 9px; }
+.ggs-cashier-preview .employee-cashier__lock-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--cashier-line);
+  background: transparent;
+  padding: 0 10px;
+  color: var(--cashier-muted);
+  font-size: 10px;
+}
+.ggs-cashier-preview .cashier-announcements,
+.ggs-cashier-preview .cashier-history,
+.ggs-cashier-preview .cashier-catalog,
+.ggs-cashier-preview .cashier-checkout {
+  min-width: 0;
+  border: 1px solid var(--cashier-line);
+  background: var(--cashier-panel);
+}
+.ggs-cashier-preview .cashier-announcements { margin-bottom: 14px; }
+.ggs-cashier-preview .cashier-announcements__heading {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--cashier-line);
+  padding: 8px 12px;
+}
+.ggs-cashier-preview .cashier-announcements__icon { width: 30px; height: 30px; }
+.ggs-cashier-preview .cashier-announcements__heading > div > span,
+.ggs-cashier-preview .cashier-announcement__meta > span {
+  color: var(--cashier-muted);
+  font: 700 8px "Space Mono", monospace;
+  letter-spacing: .1em;
+}
+.ggs-cashier-preview .cashier-announcements__heading h2 { margin: 3px 0 0; font-size: 12px; }
+.ggs-cashier-preview .cashier-announcements__heading button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  border: 1px solid var(--cashier-line);
+  background: transparent;
+  padding: 7px 9px;
+  color: var(--cashier-muted);
+  font-size: 9px;
+}
+.ggs-cashier-preview .cashier-announcements__list { display: grid; grid-template-columns: 1fr 1fr; }
+.ggs-cashier-preview .cashier-announcement { display: grid; grid-template-columns: 3px 1fr; gap: 10px; padding: 11px 13px; }
+.ggs-cashier-preview .cashier-announcement + .cashier-announcement { border-left: 1px solid var(--cashier-line); }
+.ggs-cashier-preview .cashier-announcement__marker { background: var(--cashier-berry); }
+.ggs-cashier-preview .cashier-announcement--info .cashier-announcement__marker { background: #627e68; }
+.ggs-cashier-preview .cashier-announcement__meta { display: flex; justify-content: space-between; gap: 8px; }
+.ggs-cashier-preview .cashier-announcement--info .cashier-announcement__meta > span { color: #526d58; }
+.ggs-cashier-preview .cashier-announcement__meta small { color: var(--cashier-muted); font-size: 8px; }
+.ggs-cashier-preview .cashier-announcement__copy h3 { margin: 5px 0 2px; font-size: 11px; }
+.ggs-cashier-preview .cashier-announcement__copy p { margin: 0; color: var(--cashier-muted); font-size: 9px; }
+.ggs-cashier-preview .cashier-day-summary {
+  display: grid;
+  grid-template-columns: minmax(145px, 1fr) minmax(190px, 1.3fr) minmax(130px, .8fr) minmax(150px, .9fr) 36px;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  background: #382931;
+  padding: 15px 17px;
+  color: #fff9f7;
+}
+.ggs-cashier-preview .cashier-day-summary__intro,
+.ggs-cashier-preview .cashier-day-summary__metric { display: grid; gap: 5px; }
+.ggs-cashier-preview .cashier-day-summary__intro > span,
+.ggs-cashier-preview .cashier-day-summary__metric > span { color: #d7c1ca; }
+.ggs-cashier-preview .cashier-day-summary__intro > strong { font-size: 12px; }
+.ggs-cashier-preview .cashier-day-summary__metric strong { font-size: 19px; font-variant-numeric: tabular-nums; }
+.ggs-cashier-preview .cashier-day-summary__metric--cancelled strong { font-size: 12px; }
+.ggs-cashier-preview .cashier-day-summary__refresh {
+  display: grid; width: 34px; height: 34px; place-items: center;
+  border: 1px solid #ffffff55; background: transparent; color: white;
+}
+.ggs-cashier-preview .cashier-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(345px, .82fr); align-items: start; gap: 14px; }
+.ggs-cashier-preview .cashier-catalog,
+.ggs-cashier-preview .cashier-checkout { padding: 18px; }
+.ggs-cashier-preview .cashier-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 10px; }
+.ggs-cashier-preview .cashier-section-heading > div > span { color: var(--cashier-muted); }
+.ggs-cashier-preview .cashier-section-heading h2 { margin: 4px 0 0; font-size: 19px; letter-spacing: -.04em; }
+.ggs-cashier-preview .cashier-section-heading > small,
+.ggs-cashier-preview .cashier-checkout__count { color: var(--cashier-muted); font-size: 9px; }
+.ggs-cashier-preview .cashier-catalog__tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 15px 0 11px; }
+.ggs-cashier-preview .cashier-tabs { display: flex; gap: 3px; background: #f4eded; padding: 3px; }
+.ggs-cashier-preview .cashier-tabs button,
+.ggs-cashier-preview .cashier-payment-method button {
+  display: inline-flex; min-height: 34px; align-items: center; justify-content: center; gap: 6px;
+  border: 0; background: transparent; padding: 0 10px; color: var(--cashier-muted); font-size: 9px;
+}
+.ggs-cashier-preview .cashier-tabs button.is-active { background: var(--cashier-panel); color: var(--cashier-berry-deep); }
+.ggs-cashier-preview .cashier-search,
+.ggs-cashier-preview .cashier-history__search {
+  display: flex; min-height: 37px; align-items: center; gap: 7px;
+  border: 1px solid var(--cashier-line); padding: 0 9px; color: var(--cashier-muted);
+}
+.ggs-cashier-preview .cashier-search { width: min(220px, 48%); }
+.ggs-cashier-preview .cashier-search input,
+.ggs-cashier-preview .cashier-history__search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 10px; }
+.ggs-cashier-preview .cashier-catalog__list { border-top: 1px solid var(--cashier-line); }
+.ggs-cashier-preview .cashier-item { display: grid; min-height: 64px; grid-template-columns: 32px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; border-bottom: 1px solid var(--cashier-line); padding: 9px 2px; }
+.ggs-cashier-preview .cashier-item__type { width: 30px; height: 30px; }
+.ggs-cashier-preview .cashier-item__copy { display: grid; min-width: 0; gap: 3px; }
+.ggs-cashier-preview .cashier-item__copy strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.ggs-cashier-preview .cashier-item__copy span { color: var(--cashier-muted); font-size: 8px; }
+.ggs-cashier-preview .cashier-item__price { font-size: 9px; white-space: nowrap; }
+.ggs-cashier-preview .cashier-item__add { display: inline-flex; min-height: 31px; align-items: center; gap: 4px; border: 1px solid #dbbec9; background: transparent; padding: 0 8px; color: var(--cashier-berry-deep); font-size: 8px; }
+.ggs-cashier-preview .cashier-item__add.is-added { background: #edf5ef; color: #376549; }
+.ggs-cashier-preview .cashier-checkout { position: sticky; top: 12px; }
+.ggs-cashier-preview .cashier-field { display: grid; grid-template-columns: 1fr auto; gap: 6px; margin: 15px 0 12px; font-size: 9px; font-weight: 700; }
+.ggs-cashier-preview .cashier-field > span { color: var(--cashier-muted); font-size: 8px; font-weight: 400; }
+.ggs-cashier-preview .cashier-field input,
+.ggs-cashier-preview .cashier-field select { width: 100%; min-height: 37px; grid-column: 1/-1; border: 1px solid var(--cashier-line); background: white; padding: 0 9px; font-size: 10px; }
+.ggs-cashier-preview .cashier-cart { border-top: 1px solid var(--cashier-line); }
+.ggs-cashier-preview .cashier-cart-line { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 5px 7px; border-bottom: 1px solid var(--cashier-line); padding: 9px 0; }
+.ggs-cashier-preview .cashier-cart-line__copy { display: grid; gap: 3px; }
+.ggs-cashier-preview .cashier-cart-line__copy strong { font-size: 9px; }
+.ggs-cashier-preview .cashier-cart-line__copy span { color: var(--cashier-muted); font-size: 8px; }
+.ggs-cashier-preview .cashier-quantity { display: flex; align-items: center; gap: 2px; }
+.ggs-cashier-preview .cashier-quantity button { display: grid; width: 25px; height: 25px; place-items: center; border: 1px solid var(--cashier-line); background: transparent; font-size: 11px; }
+.ggs-cashier-preview .cashier-quantity > span { min-width: 19px; text-align: center; font-size: 9px; }
+.ggs-cashier-preview .cashier-quantity .cashier-quantity__remove { margin-left: 3px; border-color: transparent; color: #987b85; }
+.ggs-cashier-preview .cashier-cart-line__total { grid-column: 1 / -1; justify-self: end; font-size: 9px; }
+.ggs-cashier-preview .cashier-breakdown { display: grid; gap: 8px; border-top: 1px solid var(--cashier-line); padding: 12px 0; }
+.ggs-cashier-preview .cashier-breakdown > div { display: flex; justify-content: space-between; gap: 8px; font-size: 9px; }
+.ggs-cashier-preview .cashier-breakdown > div > span { color: var(--cashier-muted); }
+.ggs-cashier-preview .cashier-breakdown__total { border-top: 1px solid var(--cashier-line); padding-top: 10px; font-size: 11px !important; font-weight: 700; }
+.ggs-cashier-preview .cashier-breakdown__total strong { font-size: 16px; }
+.ggs-cashier-preview .cashier-payment-method { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; margin: 8px 0 0; border: 0; padding: 0; }
+.ggs-cashier-preview .cashier-payment-method legend { margin-bottom: 7px; font-size: 9px; font-weight: 700; }
+.ggs-cashier-preview .cashier-payment-method button { display: grid; min-height: 48px; align-content: center; justify-items: center; gap: 4px; border: 1px solid var(--cashier-line); font-size: 8px; }
+.ggs-cashier-preview .cashier-payment-method button.is-selected { border-color: var(--cashier-berry); background: var(--cashier-soft); color: var(--cashier-berry-deep); }
+.ggs-cashier-preview .cashier-field--amount { margin-top: 11px; }
+.ggs-cashier-preview .cashier-change { display: flex; grid-column: 1/-1; justify-content: space-between; border: 1px solid #d7e7dc; background: #f1f7f2; padding: 8px; color: #41614b !important; }
+.ggs-cashier-preview .cashier-amount-shortcuts { display: flex; gap: 6px; margin: -4px 0 10px; }
+.ggs-cashier-preview .cashier-amount-shortcuts button { display: grid; min-width: 0; flex: 1; gap: 4px; border: 1px solid var(--cashier-line); background: white; padding: 7px; text-align: left; }
+.ggs-cashier-preview .cashier-amount-shortcuts span { color: var(--cashier-muted); font-size: 7px; }
+.ggs-cashier-preview .cashier-amount-shortcuts strong { font-size: 8px; }
+.ggs-cashier-preview .cashier-submit { display: flex; width: 100%; min-height: 43px; align-items: center; justify-content: space-between; border: 0; background: var(--cashier-berry); padding: 0 12px; color: white; font-size: 9px; font-weight: 700; }
+.ggs-cashier-preview .cashier-checkout__footnote { margin: 8px 0 0; color: var(--cashier-muted); font-size: 8px; }
+.ggs-cashier-preview .cashier-history { margin-top: 14px; }
+.ggs-cashier-preview .cashier-history__top { padding: 15px; }
+.ggs-cashier-preview .cashier-history__filters { display: flex; align-items: end; gap: 7px; margin-top: 13px; }
+.ggs-cashier-preview .cashier-history__search { flex: 1; }
+.ggs-cashier-preview .cashier-history__filter { display: grid; gap: 4px; color: var(--cashier-muted); font-size: 8px; }
+.ggs-cashier-preview .cashier-history__filter input,
+.ggs-cashier-preview .cashier-history__filter select { max-width: 120px; min-height: 34px; border: 1px solid var(--cashier-line); background: white; padding: 0 7px; font-size: 9px; }
+.ggs-cashier-preview .cashier-method-recap { display: flex; align-items: center; gap: 18px; background: #faf5f4; padding: 10px 15px; }
+.ggs-cashier-preview .cashier-method-recap__label { color: var(--cashier-muted); white-space: nowrap; }
+.ggs-cashier-preview .cashier-method-recap__item { display: flex; flex: 1; justify-content: space-between; gap: 7px; font-size: 8px; }
+.ggs-cashier-preview .cashier-method-recap__item small { display: block; color: var(--cashier-muted); font-size: 7px; }
+.ggs-cashier-preview .cashier-method-recap__item strong { font-size: 8px; }
+.ggs-cashier-preview .cashier-history__table { width: 100%; border-collapse: collapse; text-align: left; }
+.ggs-cashier-preview .cashier-history__table th { background: #f6efed; padding: 9px 10px; color: var(--cashier-muted); font: 700 7px "Space Mono", monospace; }
+.ggs-cashier-preview .cashier-history__table td { border-top: 1px solid var(--cashier-line); padding: 9px 10px; font-size: 8px; }
+.ggs-cashier-preview .cashier-history__table td:first-child strong,
+.ggs-cashier-preview .cashier-history__table td:nth-child(2) strong { display: block; font-size: 8px; }
+.ggs-cashier-preview .cashier-history__table td span { display: block; margin-top: 3px; color: var(--cashier-muted); font-size: 7px; }
+.ggs-cashier-preview .cashier-history__status { display: inline-block; border: 1px solid #c7d9cc; background: #edf5ef; padding: 3px 6px; color: #356348; font-size: 7px; }
+.ggs-cashier-preview .cashier-history__status--cancelled { border-color: #e4c0c7; background: #f8eaed; color: #883d4c; }
+.ggs-cashier-preview .cashier-history__detail { border: 0; background: transparent; color: var(--cashier-berry-deep); font-size: 8px; font-weight: 700; }
+.ggs-cashier-preview .cashier-history__pagination { display: flex; min-height: 42px; align-items: center; justify-content: space-between; border-top: 1px solid var(--cashier-line); padding: 0 12px; color: var(--cashier-muted); font-size: 8px; }
+.ggs-cashier-preview .cashier-history__pagination > div { display: flex; gap: 4px; }
+.ggs-cashier-preview .cashier-history__pagination button { display: grid; width: 27px; height: 27px; place-items: center; border: 1px solid var(--cashier-line); background: white; }
+
+/* Current = source CSS proportions. Proposed = calmer task-first hierarchy. */
+.ggs-current { max-width: 1440px; margin: auto; }
+.ggs-current .cashier-history { margin-bottom: 14px; }
+.ggs-professional {
+  --cashier-ink: #241c20;
+  --cashier-muted: #71666b;
+  --cashier-paper: #f4efed;
+  --cashier-panel: #fffdfa;
+  --cashier-line: #ded4d3;
+  --cashier-berry: #a62f5d;
+  --cashier-berry-deep: #76203f;
+  --cashier-soft: #f5e8ec;
+  max-width: 1440px;
+  margin: auto;
+  padding-top: 25px;
+}
+.ggs-professional .cashier-workspace { display: flex; flex-direction: column; gap: 12px; }
+.ggs-professional .cashier-workspace__bar,
+.ggs-professional .cashier-announcements,
+.ggs-professional .cashier-day-summary,
+.ggs-professional .cashier-layout,
+.ggs-professional .cashier-history { margin: 0; }
+.ggs-professional .cashier-workspace__bar { order: 0; min-height: 55px; padding: 8px 12px; }
+.ggs-professional .cashier-announcements { order: 1; }
+.ggs-professional .cashier-announcements__heading { min-height: 45px; }
+.ggs-professional .cashier-announcements__heading button { padding: 6px 8px; }
+.ggs-professional .cashier-announcements__list { grid-template-columns: 1fr 1fr; }
+.ggs-professional .cashier-announcement { padding: 8px 11px; }
+.ggs-professional .cashier-announcement__copy h3 { font-size: 9px; }
+.ggs-professional .cashier-day-summary { order: 2; grid-template-columns: minmax(140px,1fr) minmax(190px,1.3fr) minmax(125px,.8fr) minmax(145px,.9fr) 34px; background: #30242a; padding: 13px 15px; }
+.ggs-professional .cashier-day-summary__metric strong { font-size: 18px; }
+.ggs-professional .cashier-layout { order: 3; grid-template-columns: minmax(0,1.18fr) minmax(360px,.88fr); gap: 12px; }
+.ggs-professional .cashier-catalog,
+.ggs-professional .cashier-checkout { padding: 16px; }
+.ggs-professional .cashier-checkout { position: sticky; top: 10px; box-shadow: 0 3px 12px #3021270d; }
+.ggs-professional .cashier-history { order: 4; }
+.ggs-professional .cashier-history__top { padding: 13px 15px 11px; }
+.ggs-professional .cashier-method-recap { padding: 8px 15px; }
+.ggs-professional .cashier-item { min-height: 59px; }
+.ggs-professional .cashier-item__add { min-height: 32px; }
+.ggs-professional .cashier-submit { background: var(--cashier-berry); }
+.ggs-professional .cashier-breakdown__total { border-top: 1px solid var(--cashier-line); }
+.ggs-professional .employee-cashier__heading h1 { font-size: 35px; }
+.ggs-professional .employee-cashier__heading h1 em { font-style: normal; }
+.ggs-professional :is(button,input,select):focus-visible { outline: 2px solid var(--cashier-berry); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .ggs-cashier-preview { padding: 22px 20px 36px; }
+  .ggs-cashier-preview .cashier-layout { grid-template-columns: minmax(0,1.1fr) minmax(310px,.9fr); }
+  .ggs-cashier-preview .cashier-day-summary { grid-template-columns: 1fr 1fr 32px; }
+  .ggs-cashier-preview .cashier-day-summary__intro { grid-column: 1 / -1; }
+  .ggs-professional .cashier-layout { grid-template-columns: minmax(0,1fr) minmax(310px,.9fr); }
+}
+@media (max-width: 680px) {
+  .ggs-cashier-preview { padding: 20px 14px 30px; }
+  .ggs-cashier-preview .employee-cashier__heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .ggs-cashier-preview .employee-cashier__heading h1 { font-size: 32px; }
+  .ggs-cashier-preview .cashier-workspace__bar { align-items: flex-start; }
+  .ggs-cashier-preview .cashier-workspace__register { flex-wrap: wrap; }
+  .ggs-cashier-preview .cashier-workspace__register > small { width: 100%; margin-left: 44px; }
+  .ggs-cashier-preview .cashier-announcements__list { grid-template-columns: 1fr; }
+  .ggs-cashier-preview .cashier-announcement + .cashier-announcement { border-top: 1px solid var(--cashier-line); border-left: 0; }
+  .ggs-cashier-preview .cashier-layout,
+  .ggs-professional .cashier-layout { grid-template-columns: 1fr; }
+  .ggs-cashier-preview .cashier-checkout { position: static; }
+  .ggs-professional .cashier-layout { order: 2; }
+  .ggs-professional .cashier-day-summary {
+    order: 3;
+    position: relative;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-right: 50px;
+  }
+  .ggs-professional .cashier-day-summary__intro { grid-column: 1 / -1; padding-right: 30px; }
+  .ggs-professional .cashier-day-summary__refresh { position: absolute; top: 12px; right: 12px; }
+  .ggs-professional .cashier-day-summary__metric { min-width: 0; }
+  .ggs-professional .cashier-day-summary__metric--cancelled strong { font-size: 12px; overflow-wrap: anywhere; }
+  .ggs-cashier-preview .cashier-catalog__tools { align-items: stretch; flex-direction: column; }
+  .ggs-cashier-preview .cashier-search { width: 100%; }
+  .ggs-cashier-preview .cashier-item { grid-template-columns: 30px minmax(0,1fr) auto; }
+  .ggs-cashier-preview .cashier-item__price { grid-column: 2; grid-row: 2; justify-self: start; }
+  .ggs-cashier-preview .cashier-item__add { grid-column: 3; grid-row: 1 / span 2; }
+  .ggs-cashier-preview .cashier-history__filters { display: grid; grid-template-columns: 1fr 1fr; }
+  .ggs-cashier-preview .cashier-history__search { grid-column: 1 / -1; }
+  .ggs-cashier-preview .cashier-history__filter input,
+  .ggs-cashier-preview .cashier-history__filter select { max-width: none; width: 100%; }
+  .ggs-cashier-preview .cashier-method-recap { flex-wrap: wrap; gap: 8px 12px; }
+  .ggs-cashier-preview .cashier-method-recap__label { width: 100%; }
+  .ggs-cashier-preview .cashier-history__table-wrap { overflow-x: auto; }
+  .ggs-cashier-preview .cashier-history__table { min-width: 620px; }
+  .ggs-current .cashier-history { margin-bottom: 12px; }
+}

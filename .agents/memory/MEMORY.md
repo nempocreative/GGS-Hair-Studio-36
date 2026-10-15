@@ -6,3 +6,5 @@
 - [Transparent cutouts](transparent-cutouts.md) — check the PNG alpha channel first; a black preview background may be transparent rather than part of the image.
 - [Visitor site palette](visitor-site-palette.md) — keep the GGS visitor website's base palette pink and black, matching the shortcut menu.
 - [Employee CMS style](employee-cms-style.md) — target the `/employee` workspace in `ggs-visit`; keep copy concise and use Arial or Poppins.
+- [Cashier announcement dates](cashier-announcement-dates.md) — interpret announcement start and end values as Jakarta calendar dates, with the end date inclusive.
+- [Cashier password stability](cashier-password.md) — switching employee accounts must not change the configured cashier password.

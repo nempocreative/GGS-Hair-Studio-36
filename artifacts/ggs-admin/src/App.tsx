@@ -387,9 +387,9 @@ function announcementInput(draft: AnnouncementDraft): GgsCashierAnnouncementInpu
 }
 function announcementDate(value: string | null) {
   if (!value) return 'Tanpa batas';
-  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  const date = new Date(`${value.slice(0, 10)}T00:00:00+07:00`);
   if (Number.isNaN(date.getTime())) return 'Tanggal tidak tersedia';
-  return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }).format(date);
 }
 function CashierAnnouncementsPage() {
   const query = useGetGgsAdminCashierAnnouncements({
@@ -500,7 +500,7 @@ function CashierAnnouncementsPage() {
           <Field label="Judul" id="announcement-title" hint={`${draft.title.length} / 100`}><input id="announcement-title" data-testid="input-announcement-title" required maxLength={100} value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Contoh: Promo perawatan hari ini" /></Field>
           <Field label="Pesan" id="announcement-message" hint={`${draft.message.length} / 1.000`}><textarea id="announcement-message" data-testid="input-announcement-message" required maxLength={1000} rows={5} value={draft.message} onChange={(event) => setDraft((current) => ({ ...current, message: event.target.value }))} placeholder="Tulis arahan singkat yang perlu diketahui tim kasir." /></Field>
           <Field label="Kategori" id="announcement-category"><select id="announcement-category" data-testid="select-announcement-category" value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value as 'promo' | 'info' }))}><option value="info">Informasi</option><option value="promo">Promo</option></select></Field>
-          <div className="form-two"><Field label="Mulai" id="announcement-start" hint="Tanggal Jakarta · opsional"><input id="announcement-start" data-testid="input-announcement-start" type="date" value={draft.startsAt} onChange={(event) => setDraft((current) => ({ ...current, startsAt: event.target.value }))} /></Field><Field label="Berakhir" id="announcement-expiry" hint="Tanggal Jakarta · opsional"><input id="announcement-expiry" data-testid="input-announcement-expiry" type="date" value={draft.expiresAt} onChange={(event) => setDraft((current) => ({ ...current, expiresAt: event.target.value }))} /></Field></div>
+          <div className="form-two"><Field label="Mulai" id="announcement-start" hint="Tanggal Jakarta · opsional"><input id="announcement-start" data-testid="input-announcement-start" type="date" max={draft.expiresAt || undefined} value={draft.startsAt} onChange={(event) => setDraft((current) => ({ ...current, startsAt: event.target.value }))} /></Field><Field label="Berakhir" id="announcement-expiry" hint="Termasuk sampai akhir tanggal ini"><input id="announcement-expiry" data-testid="input-announcement-expiry" type="date" min={draft.startsAt || undefined} value={draft.expiresAt} onChange={(event) => setDraft((current) => ({ ...current, expiresAt: event.target.value }))} /></Field></div>
           <label className="toggle-row"><span><b>Tampilkan di kasir</b><small>Pesan aktif akan dibaca saat register terbuka.</small></span><input type="checkbox" checked={draft.active} onChange={(event) => setDraft((current) => ({ ...current, active: event.target.checked }))} data-testid="toggle-announcement-active" /><span className="toggle-ui" /></label>
           <div className="dialog-actions"><button type="button" className="button button-outline" onClick={() => setEditorOpen(false)} disabled={busy}>Batal</button><button type="submit" className="button button-gold" disabled={busy}>{busy ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Terbitkan pengumuman'} <ArrowRight size={14} /></button></div>
         </form>
@@ -509,13 +509,10 @@ function CashierAnnouncementsPage() {
     {!editing && null}
     {(editing || (draft !== emptyAnnouncementDraft && false)) && null}
     {(editing !== null || (typeof document !== 'undefined' && document.activeElement?.getAttribute('data-open-announcement') === 'true')) && null}
-    {/* The editor is opened from either a create action or an existing announcement. */}
     {(editing || create.isPending || false) && null}
     {(editing !== null) && null}
     {editing !== null || draft !== emptyAnnouncementDraft ? null : null}
     {((editing !== null) || (draft.title !== '' || draft.message !== '' || draft.startsAt !== '' || draft.expiresAt !== '' || draft.category !== 'info' || !draft.active) || false) && null}
-    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
-    {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) ? null : null}
     {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
     {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}
     {(editing !== null || draft.title || draft.message || draft.startsAt || draft.expiresAt || draft.category !== 'info' || !draft.active) && null}

@@ -44,7 +44,7 @@ function employeeErrorMessage(error: unknown): string {
 }
 
 function displayDate(value: string, options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }): string {
-  const parsed = new Date(`${value.slice(0, 10)}T00:00:00`);
+  const parsed = new Date(`${value.slice(0, 10)}T00:00:00+07:00`);
   if (Number.isNaN(parsed.getTime())) return value;
   return new Intl.DateTimeFormat('id-ID', { ...options, timeZone: 'Asia/Jakarta' }).format(parsed);
 }
@@ -390,9 +390,9 @@ function EmployeeCashierPage() {
         <div>
           <p className="employee-kicker">{hasActiveAccess ? 'PEMBAYARAN RESEPSIONIS' : 'AKSES KASIR'}</p>
           <h1>{hasActiveAccess ? <>Meja <em>kasir.</em></> : <>Kasir <em>GGS.</em></>}</h1>
-          <p>{hasActiveAccess ? 'Pilih layanan atau produk, periksa total, lalu konfirmasi pembayaran.' : 'Pilih unit kasir, lalu masukkan kata sandi khusus unit tersebut.'}</p>
+          {!hasActiveAccess && <p>Pilih unit kasir dan masukkan kata sandi unit.</p>}
         </div>
-        <span className="employee-cashier__secure-label"><LockKeyhole size={15} aria-hidden="true" /> {hasActiveAccess ? activeRegister?.label : 'Akses terlindungi'}</span>
+        {!hasActiveAccess && <span className="employee-cashier__secure-label"><LockKeyhole size={15} aria-hidden="true" /> Akses terlindungi</span>}
       </header>
 
       {cashierSession.isLoading ? (
@@ -414,7 +414,7 @@ function EmployeeCashierPage() {
           <div className="cashier-workspace__bar">
             <div className="cashier-workspace__register">
               <span className="cashier-workspace__register-mark"><Store size={17} aria-hidden="true" /></span>
-              <div><span>REGISTER AKTIF</span><strong id="employee-cashier-active-title">{activeRegister.label}</strong></div>
+              <div><span>REGISTER</span><strong id="employee-cashier-active-title">{activeRegister.label}</strong></div>
               {cashierSession.data?.expiresAt && <small>Sesi berakhir {new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(new Date(cashierSession.data.expiresAt))} · Pajak {taxRate}%</small>}
             </div>
             <div className="cashier-workspace__bar-actions">
@@ -440,7 +440,7 @@ function EmployeeCashierPage() {
           <section className="cashier-history" aria-labelledby="cashier-history-title">
             <div className="cashier-history__top">
               <div className="cashier-section-heading">
-                <div><span>RIWAYAT REGISTER AKTIF</span><h2 id="cashier-history-title">Transaksi &amp; pemasukan</h2></div>
+                <div><span>CATATAN KASIR</span><h2 id="cashier-history-title">Riwayat transaksi</h2></div>
                 <span className="cashier-history__count">{transactionsQuery.data ? `${transactionsQuery.data.matchedTransactionCount} hasil` : 'Riwayat lengkap'}</span>
               </div>
               <div className="cashier-history__filters">
@@ -478,7 +478,7 @@ function EmployeeCashierPage() {
 
           <div className="cashier-layout">
             <section className="cashier-catalog" aria-label="Katalog layanan dan produk">
-              <div className="cashier-section-heading"><div><span>LANGKAH 01</span><h2>Pilih item</h2></div><small>Harga katalog</small></div>
+              <div className="cashier-section-heading"><div><span>KATALOG</span><h2>Pilih item</h2></div><small>Harga katalog</small></div>
               <div className="cashier-catalog__tools">
                 <div className="cashier-tabs" role="tablist" aria-label="Jenis katalog">
                   <button type="button" role="tab" aria-selected={catalogTab === 'service'} className={catalogTab === 'service' ? 'is-active' : ''} onClick={() => setCatalogTab('service')} data-testid="tab-cashier-services"><Scissors size={15} aria-hidden="true" /> Layanan</button>
@@ -512,7 +512,7 @@ function EmployeeCashierPage() {
             </section>
 
             <aside className="cashier-checkout" aria-label="Rincian pembayaran">
-              <div className="cashier-section-heading"><div><span>LANGKAH 02</span><h2>Rincian</h2></div><span className="cashier-checkout__count">{cart.reduce((count, item) => count + item.quantity, 0)} item</span></div>
+              <div className="cashier-section-heading"><div><span>PEMBAYARAN</span><h2>Rincian pesanan</h2></div><span className="cashier-checkout__count">{cart.reduce((count, item) => count + item.quantity, 0)} item</span></div>
               <label className="cashier-field">Nama pelanggan <span>Opsional</span><input type="text" maxLength={120} value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Contoh: Nadia" data-testid="input-cashier-customer-name" /></label>
               <div className="cashier-cart" aria-live="polite">
                 {cart.length ? cart.map((line) => {
