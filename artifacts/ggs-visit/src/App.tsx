@@ -18,9 +18,7 @@ import {
   MessageCircle,
   MapPin,
   Minus,
-  Pause,
   Phone,
-  Play,
   Plus,
   ShoppingBag,
   Scissors,
@@ -966,10 +964,10 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
 
   useEffect(() => {
     const mobileQuery = window.matchMedia('(max-width: 680px)');
-    const tabletQuery = window.matchMedia('(max-width: 900px)');
+    const tabletQuery = window.matchMedia('(max-width: 900px), (max-width: 1180px) and (orientation: portrait)');
     const updateVisibleSlides = () => {
-      setMensSlidesPerView(mobileQuery.matches ? 1 : tabletQuery.matches ? 2 : 4);
-      setWomenSlidesPerView(mobileQuery.matches ? 1 : tabletQuery.matches ? 2 : 4);
+      setMensSlidesPerView(mobileQuery.matches ? 2 : tabletQuery.matches ? 2 : 4);
+      setWomenSlidesPerView(mobileQuery.matches ? 2 : tabletQuery.matches ? 2 : 4);
     };
     updateVisibleSlides();
     mobileQuery.addEventListener('change', updateVisibleSlides);
@@ -1190,7 +1188,7 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
                     {item.href === '/' || item.href === '/style-gallery' || item.href === '/products' || item.href === '/book' || item.href === '/voucher' || item.href === '/membership' || item.href === '/kelas' || item.href === '/events-community' || item.href === '/karir' || item.href === '/branches' || item.href === '/hair-journal' || item.href === '/our-team' || item.href === '/home-service' || item.href === '/mens-grooming' || item.href === '/womens-hair-beauty' || item.href === '/hair-self-care' ? (
                       <img
                         className="ggs-quick-menu-avatar ggs-quick-menu-avatar-photo"
-                        src={`${import.meta.env.BASE_URL}menu-icons/${item.href === '/' ? 'home-pink-avatar.png' : item.href === '/style-gallery' ? 'hair-gallery-pink-avatar.png' : item.href === '/products' ? 'products-undercut-skincare-avatar.png' : item.href === '/book' ? 'booking-pink-calendar.png' : item.href === '/voucher' ? 'voucher-black-ticket-avatar.png' : item.href === '/membership' ? 'membership-pink-avatar.png' : item.href === '/kelas' ? 'classes-graduation-avatar.png' : item.href === '/events-community' ? 'events-celebration-avatar.png' : item.href === '/karir' ? 'career-pink-avatar.png' : item.href === '/branches' ? 'ggs-branch-icon-no-shape.png' : item.href === '/hair-journal' ? 'hair-journal-avatar-no-shape.png' : item.href === '/our-team' ? 'team-group-avatar.png' : item.href === '/home-service' ? 'home-service-avatar.png' : item.href === '/hair-self-care' ? 'hair-self-care-cornrow-avatar.png' : item.href === '/mens-grooming' ? 'mens-grooming-black-scissors-avatar.png' : 'womens-pink-scissors.webp'}`}
+                        src={`${import.meta.env.BASE_URL}menu-icons/${item.href === '/' ? 'home-pink-avatar.webp' : item.href === '/style-gallery' ? 'hair-gallery-pink-avatar.webp' : item.href === '/products' ? 'products-undercut-skincare-avatar.webp' : item.href === '/book' ? 'booking-pink-calendar.webp' : item.href === '/voucher' ? 'voucher-black-ticket-avatar.webp' : item.href === '/membership' ? 'membership-pink-avatar.webp' : item.href === '/kelas' ? 'classes-graduation-avatar.webp' : item.href === '/events-community' ? 'events-celebration-avatar.webp' : item.href === '/karir' ? 'career-pink-avatar.webp' : item.href === '/branches' ? 'ggs-branch-icon-no-shape.webp' : item.href === '/hair-journal' ? 'hair-journal-avatar-no-shape.webp' : item.href === '/our-team' ? 'team-group-avatar.webp' : item.href === '/home-service' ? 'home-service-avatar.webp' : item.href === '/hair-self-care' ? 'hair-self-care-cornrow-avatar.webp' : item.href === '/mens-grooming' ? 'mens-grooming-black-scissors-avatar.webp' : 'womens-pink-scissors.webp'}`}
                         alt=""
                         aria-hidden="true"
                       />
@@ -1885,79 +1883,12 @@ const teamMembers = [
 
 function OurTeamShowcase({ variant }: { variant: 'home' | 'page' }) {
   const isHome = variant === 'home';
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [userPaused, setUserPaused] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [pageHidden, setPageHidden] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const touchStart = useRef<{ identifier: number; x: number; y: number } | null>(null);
-  const activeMember = teamMembers[activeIndex];
-  const isPlaying = !userPaused && !hovered && !focused && !pageHidden && !reducedMotion;
-
-  useEffect(() => {
-    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const syncMotionPreference = () => setReducedMotion(motionPreference.matches);
-    const syncVisibility = () => setPageHidden(document.hidden);
-    syncMotionPreference();
-    syncVisibility();
-    motionPreference.addEventListener('change', syncMotionPreference);
-    document.addEventListener('visibilitychange', syncVisibility);
-    return () => {
-      motionPreference.removeEventListener('change', syncMotionPreference);
-      document.removeEventListener('visibilitychange', syncVisibility);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isPlaying) return;
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % teamMembers.length);
-    }, 5600);
-    return () => window.clearInterval(timer);
-  }, [isPlaying, activeIndex]);
-
-  const showMember = (index: number) => {
-    setActiveIndex((index + teamMembers.length) % teamMembers.length);
-  };
-
-  const handleTouchStart = (event: ReactTouchEvent<HTMLElement>) => {
-    if (event.touches.length !== 1) {
-      touchStart.current = null;
-      return;
-    }
-    const touch = event.touches.item(0);
-    touchStart.current = touch
-      ? { identifier: touch.identifier, x: touch.clientX, y: touch.clientY }
-      : null;
-  };
-
-  const handleTouchEnd = (event: ReactTouchEvent<HTMLElement>) => {
-    const start = touchStart.current;
-    touchStart.current = null;
-    if (!start) return;
-    const touch = Array.from(event.changedTouches).find((item) => item.identifier === start.identifier);
-    if (!touch) return;
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    if (Math.abs(deltaX) < 42 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
-    showMember(activeIndex + (deltaX < 0 ? 1 : -1));
-  };
 
   return (
     <section
       className={`ggs-team-showcase${isHome ? ' ggs-team-showcase-home' : ' ggs-team-showcase-page'}`}
       aria-labelledby={isHome ? 'home-team-title' : 'our-team-title'}
       data-testid={isHome ? 'section-home-our-team' : 'section-our-team'}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocusCapture={() => setFocused(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
-      }}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={() => { touchStart.current = null; }}
     >
       <div className="ggs-team-heading">
         <div className="ggs-team-heading-copy">
@@ -1973,57 +1904,38 @@ function OurTeamShowcase({ variant }: { variant: 'home' | 'page' }) {
           </p>
         </div>
       </div>
-      <div className="ggs-team-carousel" role="region" aria-roledescription="carousel" aria-label="Profil tim GGS">
-        <div className="ggs-team-slide" aria-live={isPlaying ? 'off' : 'polite'} aria-atomic="true" key={activeMember.id}>
-          <div className="ggs-team-image">
-            <img
-              src={`${import.meta.env.BASE_URL}${activeMember.image.replace(/^\//, '')}`}
-              alt={`Potret ${activeMember.name}, ${activeMember.role} di GGS Hair Studio`}
-              loading={activeIndex === 0 ? 'eager' : 'lazy'}
-              data-testid={`img-team-profile-${activeMember.id}`}
-            />
-          </div>
-          <article className="ggs-team-profile" data-testid={`card-team-profile-${activeMember.id}`}>
-            <p className="ggs-team-profile__eyebrow">KENALI TIM KAMI</p>
-            <h3>{activeMember.name}</h3>
-            <p className="ggs-team-profile__role">{activeMember.role}</p>
-            <div className="ggs-team-profile__rule" aria-hidden="true" />
-            <p className="ggs-team-profile__note">{activeMember.note}</p>
-            <Link href="/book" className="clearer-primary-button ggs-team-book-link" data-testid="link-team-booking">
-              Jadwalkan kunjungan <ArrowUpRight size={16} aria-hidden="true" />
-            </Link>
-            <div className="ggs-team-controls">
-              <div className="ggs-team-pagination" aria-label="Pilih anggota tim">
-                {teamMembers.map((member, index) => (
-                  <button
-                    type="button"
-                    key={member.id}
-                    aria-label={`Lihat profil ${member.name}`}
-                    aria-current={index === activeIndex ? 'true' : undefined}
-                    onClick={() => showMember(index)}
-                    data-testid={`button-team-slide-${member.id}`}
-                  />
-                ))}
-              </div>
-              <div className="ggs-team-control-actions">
-                <button
-                  type="button"
-                  className="ggs-team-play"
-                  aria-label={reducedMotion ? 'Putar otomatis dinonaktifkan karena preferensi gerakan' : userPaused ? 'Putar otomatis' : 'Jeda putar otomatis'}
-                  title={reducedMotion ? 'Putar otomatis dinonaktifkan karena preferensi gerakan' : undefined}
-                  aria-pressed={!userPaused && !reducedMotion}
-                  disabled={reducedMotion}
-                  onClick={() => setUserPaused((paused) => !paused)}
-                  data-testid="button-team-autoplay"
-                >{userPaused || reducedMotion ? <Play size={15} fill="currentColor" /> : <Pause size={15} />}</button>
-                <div className="ggs-team-arrows">
-                  <button type="button" aria-label="Profil sebelumnya" onClick={() => showMember(activeIndex - 1)} data-testid="button-team-previous"><ArrowLeft size={18} /></button>
-                  <button type="button" aria-label="Profil berikutnya" onClick={() => showMember(activeIndex + 1)} data-testid="button-team-next"><ArrowRight size={18} /></button>
-                </div>
-              </div>
+      <div className="ggs-team-grid" role="list" aria-label="Tim GGS">
+        {teamMembers.map((member, index) => (
+          <article
+            className="ggs-team-card"
+            key={member.id}
+            role="listitem"
+            data-testid={`card-team-profile-${member.id}`}
+          >
+            <div className="ggs-team-image">
+              <img
+                src={`${import.meta.env.BASE_URL}${member.image.replace(/^\//, '')}`}
+                alt={`Potret ${member.name}, ${member.role} di GGS Hair Studio`}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                data-testid={`img-team-profile-${member.id}`}
+              />
+            </div>
+            <div className="ggs-team-profile">
+              <p className="ggs-team-profile__eyebrow">KENALI TIM KAMI</p>
+              <h3>{member.name}</h3>
+              <p className="ggs-team-profile__role">{member.role}</p>
+              <div className="ggs-team-profile__rule" aria-hidden="true" />
+              <p className="ggs-team-profile__note">{member.note}</p>
+              <Link
+                href="/book"
+                className="clearer-primary-button ggs-team-book-link"
+                data-testid={`link-team-booking-${member.id}`}
+              >
+                Jadwalkan kunjungan <ArrowUpRight size={16} aria-hidden="true" />
+              </Link>
             </div>
           </article>
-        </div>
+        ))}
       </div>
       {isHome && (
         <div className="ggs-team-footer">

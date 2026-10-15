@@ -9,6 +9,12 @@ For the GGS visitor website, show four menu shortcuts per row and eight per slid
 
 **How to apply:** Preserve this layout, overflow behavior, navigation control, and background-free styling when adding or changing homepage shortcuts.
 
+Use alpha-preserving WebP for detailed raster menu illustrations; do not convert them to SVG solely for file-size optimization.
+
+**Why:** The menu artwork is detailed raster imagery, and WebP reduces its payload while preserving transparency.
+
+**How to apply:** Keep the illustration unchanged, preserve its alpha channel, and size raster menu assets for their rendered dimensions.
+
 Use illustrated people for homepage shortcuts with varied hairstyles, except for Men's Grooming and Women's Hair & Beauty, which use their supplied hair-and-scissors images by themselves, without separate badges or colored tiles. Keep the other portraits in the existing colored rounded-square tiles and avoid cream-colored line details.
 
 **Why:** The user explicitly chose cutout hair-and-scissors images as the entire Men's Grooming and Women's Hair & Beauty icons, without added icons or shapes behind them, and later supplied a replacement Men's Grooming image.
