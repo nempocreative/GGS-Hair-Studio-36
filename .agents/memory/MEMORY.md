@@ -5,9 +5,11 @@
 - [My GGS customer dashboard](my-ggs-account.md) — make the Pengguna profile a compact marketplace-style account home with points, product shopping, and useful account info.
 - [Transparent cutouts](transparent-cutouts.md) — check the PNG alpha channel first; a black preview background may be transparent rather than part of the image.
 - [Visitor site palette](visitor-site-palette.md) — keep the GGS visitor website's base palette pink and black, matching the shortcut menu.
+- [Visitor tablet layout](visitor-tablet-layout.md) — on iPad portrait, show the mobile bottom tab bar in a compact centered group.
 - [Employee CMS style](employee-cms-style.md) — target the `/employee` workspace in `ggs-visit`; keep copy concise and use Arial or Poppins.
 - [Cashier voucher placement](cashier-voucher-placement.md) — keep voucher choices in a separate panel above, not inside, order details.
 - [Cashier announcement dates](cashier-announcement-dates.md) — interpret announcement start and end values as Jakarta calendar dates, with the end date inclusive.
 - [Cashier password stability](cashier-password.md) — switching employee or Replit accounts must not change the cashier password.
 - [Date-only API queries](date-only-api-queries.md) — normalize strict `YYYY-MM-DD` query strings before validating generated Zod date schemas.
 - [Employee password changes](employee-password-change.md) — preserve the active employee session, revoke other sessions, and relock cashier access after changing a password.
+- [GGS responsive coverage](responsive-coverage.md) — check visitor, account, employee, and admin pages on phone widths and iPad portrait/landscape.

@@ -1725,8 +1725,8 @@
     width: calc(100% - 40px);
     min-height: auto;
     grid-template-columns: 1fr;
-    gap: 34px;
-    padding: 40px 0 38px;
+    gap: 24px;
+    padding: 32px 0 34px;
   }
 
   .employee-sign-in__intro {
@@ -1734,8 +1734,8 @@
   }
 
   .employee-sign-in__ornament {
-    height: 22px;
-    margin: 17px 0 12px;
+    height: 18px;
+    margin: 12px 0 8px;
   }
 
   .employee-sign-in__intro h1 {
@@ -1748,15 +1748,15 @@
   }
 
   .employee-sign-in__privacy {
-    margin-top: 22px;
+    margin-top: 18px;
   }
 
   .employee-back-link {
-    margin-top: 19px;
+    margin-top: 16px;
   }
 
   .employee-login-card {
-    padding: 23px;
+    padding: 21px;
   }
 
   .employee-page-footer {

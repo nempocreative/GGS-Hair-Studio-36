@@ -542,22 +542,24 @@ function VisitorWebsite() {
         <Link href="/book" className="clearer-back-top" data-testid="link-footer-book">Ajukan janji <ArrowRight size={15} /></Link>
       </footer>
       <nav className="clearer-mobile-tabbar" aria-label="Navigasi bawah">
-        {[
+        <div className="clearer-mobile-tabbar__items">
+          {[
             { href: '/', label: 'Home', icon: House },
             { href: '/services', label: 'Services', icon: Scissors },
             { href: '/book', label: 'Booking', icon: CalendarDays },
-          { href: '/my-ggs', label: 'My GGS', icon: UserRound },
-        ].map((item) => (
-          <Link
-            href={item.href}
-            key={item.href}
-            aria-current={location === item.href ? 'page' : undefined}
-            data-testid={`link-tab-${item.href.slice(1) || 'home'}`}
-          >
-            <item.icon size={19} strokeWidth={1.8} aria-hidden="true" />
-            <span>{item.label}</span>
-          </Link>
-        ))}
+            { href: '/my-ggs', label: 'My GGS', icon: UserRound },
+          ].map((item) => (
+            <Link
+              href={item.href}
+              key={item.href}
+              aria-current={location === item.href ? 'page' : undefined}
+              data-testid={`link-tab-${item.href.slice(1) || 'home'}`}
+            >
+              <item.icon size={16} strokeWidth={1.8} aria-hidden="true" />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </div>
       </nav>
     </main>
   );
