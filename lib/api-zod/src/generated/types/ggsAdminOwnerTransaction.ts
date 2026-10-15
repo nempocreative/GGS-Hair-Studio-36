@@ -14,6 +14,10 @@ export interface GgsAdminOwnerTransaction {
   employeeId: string;
   employeeName: string;
   customerName: string;
+  /** @nullable */
+  customerProfileId: number | null;
+  /** @nullable */
+  branchId: string | null;
   paymentMethod: string;
   status: string;
   /** @nullable */

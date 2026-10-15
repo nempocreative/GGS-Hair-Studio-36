@@ -8,6 +8,7 @@ import {
   getGetGgsEmployeeAttendanceTodayQueryKey,
   getGetGgsEmployeeCashierSessionQueryKey,
   getGetGgsEmployeeCashierReceiptSettingsQueryKey,
+  getGetGgsEmployeeCashierCustomersQueryKey,
   getGetGgsEmployeeCashierVouchersQueryKey,
   getGetGgsEmployeeCashierTransactionsQueryKey,
   getGetGgsEmployeeCashierAnnouncementsQueryKey,
@@ -19,6 +20,7 @@ import {
   useGetGgsEmployeeBookings,
   useGetGgsEmployeeCashierSession,
   useGetGgsEmployeeCashierReceiptSettings,
+  useGetGgsEmployeeCashierCustomers,
   useGetGgsEmployeeCashierVouchers,
   useGetGgsEmployeeCashierTransactions,
   useGetGgsEmployeeCashierAnnouncements,
@@ -37,7 +39,7 @@ import {
   useLogoutGgsEmployee,
   useUnlockGgsEmployeeCashier,
 } from '@workspace/api-client-react';
-import type { GetGgsEmployeeCashierTransactionsParams, GetGgsEmployeeReportsParams, GgsEmployeeAccount, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsEmployeeCashierVoucher, GgsCashierAnnouncement, GgsEmployeeStockMovement, GgsEmployeeStockMovementInput, GgsProduct, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import type { GetGgsEmployeeCashierCustomersParams, GetGgsEmployeeCashierTransactionsParams, GetGgsEmployeeReportsParams, GgsEmployeeAccount, GgsEmployeeBooking, GgsEmployeeCashierCustomer, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsEmployeeCashierVoucher, GgsCashierAnnouncement, GgsEmployeeStockMovement, GgsEmployeeStockMovementInput, GgsProduct, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
 import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
@@ -291,6 +293,9 @@ function EmployeeCashierPage() {
   const [catalogTab, setCatalogTab] = useState<'service' | 'product'>('service');
   const [catalogSearch, setCatalogSearch] = useState('');
   const [customerName, setCustomerName] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerLookup, setCustomerLookup] = useState('');
+  const [selectedCustomerProfile, setSelectedCustomerProfile] = useState<GgsEmployeeCashierCustomer | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris' | 'card'>('cash');
   const [voucherCode, setVoucherCode] = useState('');
   const [amountReceived, setAmountReceived] = useState('');
@@ -300,6 +305,42 @@ function EmployeeCashierPage() {
     (register) => register.value === cashierSession.data?.register,
   );
   const hasActiveAccess = Boolean(cashierSession.data?.active && activeRegister);
+  const normalizedCustomerSearch = customerSearch.trim();
+  const customerLookupParams = useMemo<GetGgsEmployeeCashierCustomersParams>(
+    () => ({ search: customerLookup }),
+    [customerLookup],
+  );
+  const cashierCustomersQuery = useGetGgsEmployeeCashierCustomers(customerLookupParams, {
+    query: {
+      queryKey: getGetGgsEmployeeCashierCustomersQueryKey(customerLookupParams),
+      enabled: isCashierActive && customerLookup.length >= 2,
+      staleTime: 30_000,
+      retry: false,
+    },
+  });
+  const customerResults = customerLookup === normalizedCustomerSearch
+    ? cashierCustomersQuery.data ?? []
+    : [];
+  const customerSearchPending =
+    normalizedCustomerSearch.length >= 2 &&
+    customerLookup !== normalizedCustomerSearch;
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setCustomerLookup(normalizedCustomerSearch),
+      250,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [normalizedCustomerSearch]);
+  useEffect(() => {
+    if (isCashierActive) return;
+    setSelectedCustomerProfile(null);
+    setCustomerName('');
+    setCustomerSearch('');
+    setCustomerLookup('');
+    queryClient.removeQueries({
+      queryKey: getGetGgsEmployeeCashierCustomersQueryKey(),
+    });
+  }, [isCashierActive, queryClient]);
   const services = servicesQuery.data?.filter((service) => service.active) ?? [];
   const products = productsQuery.data?.filter((product) => product.active) ?? [];
   const now = Date.now();
@@ -416,6 +457,9 @@ function EmployeeCashierPage() {
         setCart([]);
         setReceipt(null);
         setCustomerName('');
+        setCustomerSearch('');
+        setCustomerLookup('');
+        setSelectedCustomerProfile(null);
         setAmountReceived('');
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierSessionQueryKey() }),
@@ -439,6 +483,9 @@ function EmployeeCashierPage() {
     }
     const input: GgsEmployeeCashierTransactionInput = {
       ...(customerName.trim() ? { customerName: customerName.trim() } : {}),
+      ...(selectedCustomerProfile
+        ? { customerProfileId: selectedCustomerProfile.id }
+        : {}),
       paymentMethod,
       amountReceived: paymentMethod === 'cash' ? receivedValue : previewTotal,
       ...(selectedVoucher ? { voucherCode: selectedVoucher.code } : {}),
@@ -449,6 +496,9 @@ function EmployeeCashierPage() {
         setReceipt(completedReceipt);
         setCart([]);
         setCustomerName('');
+        setCustomerSearch('');
+        setCustomerLookup('');
+        setSelectedCustomerProfile(null);
         setAmountReceived('');
         setVoucherCode('');
         setCheckoutError('');
@@ -674,7 +724,104 @@ function EmployeeCashierPage() {
 
             <aside className="cashier-checkout" aria-label="Rincian pembayaran">
               <div className="cashier-section-heading"><div><span>PEMBAYARAN</span><h2>Rincian pesanan</h2></div><span className="cashier-checkout__count">{cart.reduce((count, item) => count + item.quantity, 0)} item</span></div>
-              <label className="cashier-field">Nama pelanggan <span>Opsional</span><input type="text" maxLength={120} value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Contoh: Nadia" data-testid="input-cashier-customer-name" /></label>
+              <div className="cashier-customer-picker">
+                {selectedCustomerProfile ? (
+                  <article className="cashier-customer-selected" aria-live="polite">
+                    <div className="cashier-customer-selected__icon"><UserRound size={17} aria-hidden="true" /></div>
+                    <div className="cashier-customer-selected__copy">
+                      <strong>{selectedCustomerProfile.name}</strong>
+                      <span>{selectedCustomerProfile.phone || "Pelanggan terdaftar"}</span>
+                      <small>
+                        {[
+                          selectedCustomerProfile.membershipType,
+                          selectedCustomerProfile.memberId,
+                          `${selectedCustomerProfile.points.toLocaleString("id-ID")} poin`,
+                          selectedCustomerProfile.memberExpiry
+                            ? `Berlaku sampai ${displayDate(selectedCustomerProfile.memberExpiry, { day: "numeric", month: "short", year: "numeric" })}`
+                            : "",
+                        ].filter(Boolean).join(" · ")}
+                      </small>
+                      {selectedCustomerProfile.memberBenefit && (
+                        <small>Manfaat tercatat: {selectedCustomerProfile.memberBenefit}</small>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="cashier-customer-selected__clear"
+                      onClick={() => {
+                        setSelectedCustomerProfile(null);
+                        setCustomerName("");
+                        setCustomerSearch("");
+                      }}
+                    >
+                      Lepas profil
+                    </button>
+                    <p className="cashier-customer-picker__note">Poin dan manfaat hanya informasi; total tidak berubah otomatis.</p>
+                  </article>
+                ) : (
+                  <>
+                    <label className="cashier-field">
+                      Cari pelanggan/member <span>Opsional</span>
+                      <input
+                        type="search"
+                        value={customerSearch}
+                        onChange={(event) => setCustomerSearch(event.target.value)}
+                        placeholder="Nama, telepon, atau ID member"
+                        autoComplete="off"
+                        data-testid="input-cashier-customer-search"
+                      />
+                    </label>
+                    <div className="cashier-customer-results" aria-live="polite">
+                      {normalizedCustomerSearch.length < 2 ? (
+                        <small>Ketik minimal 2 karakter untuk mencari profil tersimpan.</small>
+                      ) : customerSearchPending || cashierCustomersQuery.isLoading ? (
+                        <small role="status">Mencari profil pelanggan…</small>
+                      ) : cashierCustomersQuery.isError ? (
+                        <small className="cashier-customer-results__error" role="alert">
+                          Profil belum dapat dimuat. Anda masih bisa mencatat pelanggan sebagai walk-in.
+                        </small>
+                      ) : customerResults.length ? (
+                        <div className="cashier-customer-results__list" role="listbox" aria-label="Hasil profil pelanggan">
+                          {customerResults.map((profile) => (
+                            <button
+                              key={profile.id}
+                              type="button"
+                              role="option"
+                              aria-selected={false}
+                              className="cashier-customer-result"
+                              onClick={() => {
+                                setSelectedCustomerProfile(profile);
+                                setCustomerName(profile.name);
+                                setCustomerSearch("");
+                              }}
+                              data-testid={`button-select-cashier-customer-${profile.id}`}
+                            >
+                              <span className="cashier-customer-result__copy">
+                                <strong>{profile.name}</strong>
+                                <small>{profile.phone || "Tanpa nomor telepon"}{profile.memberId ? ` · Member ${profile.memberId}` : ""}</small>
+                              </span>
+                              <span className="cashier-customer-result__points">{profile.points.toLocaleString("id-ID")} poin</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <small>Tidak ada profil aktif yang cocok.</small>
+                      )}
+                    </div>
+                    <label className="cashier-field">
+                      Nama pelanggan walk-in <span>Opsional</span>
+                      <input
+                        type="text"
+                        maxLength={120}
+                        value={customerName}
+                        onChange={(event) => setCustomerName(event.target.value)}
+                        placeholder="Contoh: Nadia"
+                        data-testid="input-cashier-customer-name"
+                      />
+                    </label>
+                  </>
+                )}
+              </div>
               <div className="cashier-cart" aria-live="polite">
                 {cart.length ? cart.map((line) => {
                   const item = line.itemType === 'service' ? services.find((entry) => entry.id === line.itemId) : products.find((entry) => entry.id === line.itemId);

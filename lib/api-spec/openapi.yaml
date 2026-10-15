@@ -272,6 +272,34 @@ paths:
           description: No active employee session
         "403":
           description: Cashier register is locked
+  /ggs/employee/cashier/customers:
+    get:
+      operationId: getGgsEmployeeCashierCustomers
+      tags: [ggs-employee]
+      summary: Search active GGS customer and member profiles for the cashier
+      parameters:
+        - name: search
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 120
+      responses:
+        "200":
+          description: Matching customer/member profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsEmployeeCashierCustomer"
+        "400":
+          description: Search query is invalid
+        "401":
+          description: No active employee session
+        "403":
+          description: Cashier register is locked
   /ggs/employee/cashier/access:
     post:
       operationId: unlockGgsEmployeeCashier
@@ -1715,6 +1743,9 @@ components:
         customerName:
           type: string
           maxLength: 120
+        customerProfileId:
+          type: integer
+          minimum: 1
         paymentMethod:
           $ref: "#/components/schemas/GgsEmployeeCashierPaymentMethod"
         amountReceived:
@@ -1734,6 +1765,26 @@ components:
         - paymentMethod
         - amountReceived
         - items
+    GgsEmployeeCashierCustomer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        membershipType:
+          type: string
+        memberId:
+          type: string
+        memberExpiry:
+          type: [string, "null"]
+        memberBenefit:
+          type: string
+        points:
+          type: integer
+      required: [id, name, phone, membershipType, memberId, memberExpiry, memberBenefit, points]
     GgsEmployeeCashierTransactionItem:
       type: object
       properties:
@@ -1770,6 +1821,10 @@ components:
           type: string
         customerName:
           type: string
+        customerProfileId:
+          type: [integer, "null"]
+        branchId:
+          type: [string, "null"]
         paymentMethod:
           $ref: "#/components/schemas/GgsEmployeeCashierPaymentMethod"
         status:
@@ -1812,6 +1867,8 @@ components:
         - register
         - employeeName
         - customerName
+        - customerProfileId
+        - branchId
         - paymentMethod
         - status
         - cancellationReason
@@ -2698,6 +2755,10 @@ components:
           type: string
         customerName:
           type: string
+        customerProfileId:
+          type: [integer, "null"]
+        branchId:
+          type: [string, "null"]
         paymentMethod:
           type: string
         status:
@@ -2734,6 +2795,8 @@ components:
         - employeeId
         - employeeName
         - customerName
+        - customerProfileId
+        - branchId
         - paymentMethod
         - status
         - cancellationReason

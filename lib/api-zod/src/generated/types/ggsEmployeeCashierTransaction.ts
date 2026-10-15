@@ -16,6 +16,10 @@ export interface GgsEmployeeCashierTransaction {
   register: GgsEmployeeCashierRegister;
   employeeName: string;
   customerName: string;
+  /** @nullable */
+  customerProfileId: number | null;
+  /** @nullable */
+  branchId: string | null;
   paymentMethod: GgsEmployeeCashierPaymentMethod;
   status: GgsEmployeeCashierTransactionStatus;
   /** @nullable */

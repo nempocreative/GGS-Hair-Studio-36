@@ -18,6 +18,8 @@ export const ggsCashierTransactionsTable = pgTable(
     employeeId: text("employee_id").notNull(),
     employeeName: text("employee_name").notNull(),
     customerName: text("customer_name").notNull().default(""),
+    customerProfileId: integer("customer_profile_id"),
+    branchId: text("branch_id"),
     paymentMethod: text("payment_method").notNull(),
     status: text("status").notNull().default("completed"),
     cancellationReason: text("cancellation_reason"),
@@ -45,6 +47,13 @@ export const ggsCashierTransactionsTable = pgTable(
       table.register,
       table.status,
       table.createdAt,
+    ),
+    index("ggs_cashier_transactions_branch_created_idx").on(
+      table.branchId,
+      table.createdAt,
+    ),
+    index("ggs_cashier_transactions_customer_profile_idx").on(
+      table.customerProfileId,
     ),
   ],
 );

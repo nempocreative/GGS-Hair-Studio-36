@@ -1626,3 +1626,29 @@
     color: #16130e;
   }
 }
+
+.owner-branch-integrity-note {
+  margin: -8px 0 16px;
+  padding-left: 2px;
+  line-height: 1.55;
+}
+
+.owner-customer-visits {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid var(--oc-line-soft);
+  background: #12110f;
+}
+
+.owner-customer-visits > b {
+  color: var(--oc-text);
+  font-size: 10px;
+}
+
+.owner-customer-visits > small {
+  color: var(--oc-copy);
+  font-size: 9px;
+  line-height: 1.5;
+}

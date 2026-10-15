@@ -293,6 +293,31 @@ export const GetGgsEmployeeCashierReceiptSettingsResponse = zod.object({
 
 
 /**
+ * @summary Search active GGS customer and member profiles for the cashier
+ */
+export const getGgsEmployeeCashierCustomersQuerySearchMin = 2;
+export const getGgsEmployeeCashierCustomersQuerySearchMax = 120;
+
+
+
+export const GetGgsEmployeeCashierCustomersQueryParams = zod.object({
+  "search": zod.coerce.string().min(getGgsEmployeeCashierCustomersQuerySearchMin).max(getGgsEmployeeCashierCustomersQuerySearchMax)
+})
+
+export const GetGgsEmployeeCashierCustomersResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "phone": zod.string(),
+  "membershipType": zod.string(),
+  "memberId": zod.string(),
+  "memberExpiry": zod.string().nullable(),
+  "memberBenefit": zod.string(),
+  "points": zod.number().int()
+})
+export const GetGgsEmployeeCashierCustomersResponse = zod.array(GetGgsEmployeeCashierCustomersResponseItem)
+
+
+/**
  * @summary Unlock one cashier register with its password
  */
 export const unlockGgsEmployeeCashierBodyPasswordMin = 8;
@@ -397,6 +422,8 @@ export const GetGgsEmployeeCashierTransactionsResponse = zod.object({
   "register": zod.enum(['ggs_beauty', 'barber_ggs']),
   "employeeName": zod.string(),
   "customerName": zod.string(),
+  "customerProfileId": zod.number().int().nullable(),
+  "branchId": zod.string().nullable(),
   "paymentMethod": zod.enum(['cash', 'qris', 'card']),
   "status": zod.enum(['completed', 'cancelled']),
   "cancellationReason": zod.string().nullable(),
@@ -429,6 +456,7 @@ export const GetGgsEmployeeCashierTransactionsResponse = zod.object({
  */
 export const createGgsEmployeeCashierTransactionBodyCustomerNameMax = 120;
 
+
 export const createGgsEmployeeCashierTransactionBodyAmountReceivedMin = 0;
 export const createGgsEmployeeCashierTransactionBodyAmountReceivedMax = 2147483647;
 
@@ -443,6 +471,7 @@ export const createGgsEmployeeCashierTransactionBodyItemsMax = 40;
 
 export const CreateGgsEmployeeCashierTransactionBody = zod.object({
   "customerName": zod.string().max(createGgsEmployeeCashierTransactionBodyCustomerNameMax).optional(),
+  "customerProfileId": zod.number().int().min(1).optional(),
   "paymentMethod": zod.enum(['cash', 'qris', 'card']),
   "amountReceived": zod.number().int().min(createGgsEmployeeCashierTransactionBodyAmountReceivedMin).max(createGgsEmployeeCashierTransactionBodyAmountReceivedMax),
   "voucherCode": zod.string().max(createGgsEmployeeCashierTransactionBodyVoucherCodeMax).nullish(),
@@ -459,6 +488,8 @@ export const CreateGgsEmployeeCashierTransactionResponse = zod.object({
   "register": zod.enum(['ggs_beauty', 'barber_ggs']),
   "employeeName": zod.string(),
   "customerName": zod.string(),
+  "customerProfileId": zod.number().int().nullable(),
+  "branchId": zod.string().nullable(),
   "paymentMethod": zod.enum(['cash', 'qris', 'card']),
   "status": zod.enum(['completed', 'cancelled']),
   "cancellationReason": zod.string().nullable(),
@@ -510,6 +541,8 @@ export const CancelGgsEmployeeCashierTransactionResponse = zod.object({
   "register": zod.enum(['ggs_beauty', 'barber_ggs']),
   "employeeName": zod.string(),
   "customerName": zod.string(),
+  "customerProfileId": zod.number().int().nullable(),
+  "branchId": zod.string().nullable(),
   "paymentMethod": zod.enum(['cash', 'qris', 'card']),
   "status": zod.enum(['completed', 'cancelled']),
   "cancellationReason": zod.string().nullable(),
@@ -1475,6 +1508,8 @@ export const GetGgsAdminOwnerCenterResponse = zod.object({
   "employeeId": zod.string(),
   "employeeName": zod.string(),
   "customerName": zod.string(),
+  "customerProfileId": zod.number().int().nullable(),
+  "branchId": zod.string().nullable(),
   "paymentMethod": zod.string(),
   "status": zod.string(),
   "cancellationReason": zod.string().nullable(),

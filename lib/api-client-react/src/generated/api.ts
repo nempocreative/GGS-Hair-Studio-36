@@ -21,6 +21,7 @@ import type {
 
 import type {
   GetGgsAdminOwnerCenterParams,
+  GetGgsEmployeeCashierCustomersParams,
   GetGgsEmployeeCashierTransactionsParams,
   GetGgsEmployeeReportsParams,
   GgsAccount,
@@ -56,6 +57,7 @@ import type {
   GgsEmployeeBooking,
   GgsEmployeeCashierAccess,
   GgsEmployeeCashierAccessInput,
+  GgsEmployeeCashierCustomer,
   GgsEmployeeCashierReceiptSettings,
   GgsEmployeeCashierSession,
   GgsEmployeeCashierTransaction,
@@ -1377,6 +1379,90 @@ export function useGetGgsEmployeeCashierReceiptSettings<TData = Awaited<ReturnTy
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetGgsEmployeeCashierReceiptSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGgsEmployeeCashierCustomersUrl = (params: GetGgsEmployeeCashierCustomersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/ggs/employee/cashier/customers?${stringifiedParams}` : `/api/ggs/employee/cashier/customers`
+}
+
+/**
+ * @summary Search active GGS customer and member profiles for the cashier
+ */
+export const getGgsEmployeeCashierCustomers = async (params: GetGgsEmployeeCashierCustomersParams, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeCashierCustomer[]> => {
+
+  return customFetch<GgsEmployeeCashierCustomer[]>(getGetGgsEmployeeCashierCustomersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeCashierCustomersQueryKey = (params?: GetGgsEmployeeCashierCustomersParams,) => {
+    return [
+    `/api/ggs/employee/cashier/customers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeCashierCustomersQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeCashierCustomers>>, TError = ErrorType<void>>(params: GetGgsEmployeeCashierCustomersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierCustomers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeCashierCustomersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeCashierCustomers>>> = ({ signal }) => getGgsEmployeeCashierCustomers(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierCustomers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeCashierCustomersQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeCashierCustomers>>>
+export type GetGgsEmployeeCashierCustomersQueryError = ErrorType<void>
+
+
+/**
+ * @summary Search active GGS customer and member profiles for the cashier
+ */
+
+export function useGetGgsEmployeeCashierCustomers<TData = Awaited<ReturnType<typeof getGgsEmployeeCashierCustomers>>, TError = ErrorType<void>>(
+ params: GetGgsEmployeeCashierCustomersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierCustomers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeCashierCustomersQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

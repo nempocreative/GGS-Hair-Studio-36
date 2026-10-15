@@ -41,6 +41,8 @@ import {
   GetGgsEmployeeCashierTransactionsResponse,
   GetGgsEmployeeCashierTransactionsQueryParams,
   GetGgsEmployeeCashierAnnouncementsResponse,
+  GetGgsEmployeeCashierCustomersQueryParams,
+  GetGgsEmployeeCashierCustomersResponse,
   GetGgsEmployeeCashierVouchersResponse,
   GetGgsEmployeeStockMovementsResponse,
   GetGgsEmployeeAttendanceHistoryResponse,
@@ -404,6 +406,8 @@ function serializeCashierTransaction(
     register: transaction.register,
     employeeName: transaction.employeeName,
     customerName: transaction.customerName,
+    customerProfileId: transaction.customerProfileId,
+    branchId: transaction.branchId,
     paymentMethod: transaction.paymentMethod,
     status: transaction.status,
     cancellationReason: transaction.cancellationReason,
@@ -706,6 +710,68 @@ router.get(
         logoUrl: stringValue("logoUrl"),
       }),
     );
+  },
+);
+
+router.get(
+  "/ggs/employee/cashier/customers",
+  async (req, res): Promise<void> => {
+    const cashier = await requireActiveCashier(req, res);
+    if (!cashier) return;
+
+    const parsed = GetGgsEmployeeCashierCustomersQueryParams.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const searchPattern = `%${parsed.data.search.trim().replace(/[\\%_]/g, "\\$&")}%`;
+    const customers = await db
+      .select({
+        id: ggsOwnerRecordsTable.id,
+        data: ggsOwnerRecordsTable.data,
+      })
+      .from(ggsOwnerRecordsTable)
+      .where(
+        and(
+          eq(ggsOwnerRecordsTable.recordType, "customer"),
+          eq(ggsOwnerRecordsTable.status, "active"),
+          or(
+            sql`${ggsOwnerRecordsTable.data} ->> 'name' ILIKE ${searchPattern}`,
+            sql`${ggsOwnerRecordsTable.data} ->> 'phone' ILIKE ${searchPattern}`,
+            sql`${ggsOwnerRecordsTable.data} ->> 'memberId' ILIKE ${searchPattern}`,
+          ),
+        ),
+      )
+      .orderBy(desc(ggsOwnerRecordsTable.updatedAt), desc(ggsOwnerRecordsTable.id))
+      .limit(50);
+    const results = customers.flatMap(({ id, data }) => {
+      const name = typeof data.name === "string" ? data.name.trim() : "";
+      if (!name) return [];
+      const phone = typeof data.phone === "string" ? data.phone.trim() : "";
+      const membershipType =
+        typeof data.membershipType === "string" ? data.membershipType.trim() : "";
+      const memberId = typeof data.memberId === "string" ? data.memberId.trim() : "";
+      const memberExpiry =
+        typeof data.memberExpiry === "string" && data.memberExpiry.trim()
+          ? data.memberExpiry.trim()
+          : null;
+      const memberBenefit =
+        typeof data.memberBenefit === "string" ? data.memberBenefit.trim() : "";
+      const rawPoints = typeof data.points === "number" ? data.points : 0;
+      return [{
+        id,
+        name,
+        phone,
+        membershipType,
+        memberId,
+        memberExpiry,
+        memberBenefit,
+        points: Number.isFinite(rawPoints) ? Math.max(0, Math.trunc(rawPoints)) : 0,
+      }];
+    });
+
+    res.json(GetGgsEmployeeCashierCustomersResponse.parse(results));
   },
 );
 
@@ -1296,6 +1362,45 @@ router.post(
             .where(eq(ggsProductsTable.id, product.id));
         }
 
+        let customerName = parsed.data.customerName?.trim() ?? "";
+        const customerProfileId = parsed.data.customerProfileId ?? null;
+        if (customerProfileId !== null) {
+          const [customerProfile] = await tx
+            .select({ data: ggsOwnerRecordsTable.data })
+            .from(ggsOwnerRecordsTable)
+            .where(
+              and(
+                eq(ggsOwnerRecordsTable.id, customerProfileId),
+                eq(ggsOwnerRecordsTable.recordType, "customer"),
+                eq(ggsOwnerRecordsTable.status, "active"),
+              ),
+            )
+            .limit(1);
+          const profileName =
+            typeof customerProfile?.data.name === "string"
+              ? customerProfile.data.name.trim()
+              : "";
+          if (!profileName) {
+            throw new CashierPaymentFailure(
+              "Profil pelanggan/member tidak ditemukan atau sudah diarsipkan. Cari ulang sebelum menyimpan transaksi.",
+              404,
+            );
+          }
+          customerName = profileName;
+        }
+
+        const [employeeProfile] = await tx
+          .select({ branchId: ggsOwnerRecordsTable.branchId })
+          .from(ggsOwnerRecordsTable)
+          .where(
+            and(
+              eq(ggsOwnerRecordsTable.recordType, "employee_profile"),
+              eq(ggsOwnerRecordsTable.employeeId, cashier.employee.id),
+              eq(ggsOwnerRecordsTable.status, "active"),
+            ),
+          )
+          .limit(1);
+
         const receiptNumber = `GGS-${jakartaAttendanceDate().replaceAll("-", "")}-${randomBytes(4).toString("hex").toUpperCase()}`;
         const [savedTransaction] = await tx
           .insert(ggsCashierTransactionsTable)
@@ -1304,7 +1409,9 @@ router.post(
             register: cashier.register,
             employeeId: cashier.employee.id,
             employeeName: cashier.employee.name,
-            customerName: parsed.data.customerName?.trim() ?? "",
+            customerName,
+            customerProfileId,
+            branchId: employeeProfile?.branchId ?? null,
             paymentMethod: parsed.data.paymentMethod,
             subtotal,
             discountAmount,

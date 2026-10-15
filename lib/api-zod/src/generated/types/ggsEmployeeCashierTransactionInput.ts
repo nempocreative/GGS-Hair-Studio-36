@@ -11,6 +11,8 @@ import type { GgsEmployeeCashierTransactionItemInput } from './ggsEmployeeCashie
 export interface GgsEmployeeCashierTransactionInput {
   /** @maxLength 120 */
   customerName?: string;
+  /** @minimum 1 */
+  customerProfileId?: number;
   paymentMethod: GgsEmployeeCashierPaymentMethod;
   /**
      * @minimum 0

@@ -293,6 +293,8 @@ export interface GgsEmployeeCashierTransactionItemInput {
 export interface GgsEmployeeCashierTransactionInput {
   /** @maxLength 120 */
   customerName?: string;
+  /** @minimum 1 */
+  customerProfileId?: number;
   paymentMethod: GgsEmployeeCashierPaymentMethod;
   /**
      * @minimum 0
@@ -309,6 +311,18 @@ export interface GgsEmployeeCashierTransactionInput {
      * @maxItems 40
      */
   items: GgsEmployeeCashierTransactionItemInput[];
+}
+
+export interface GgsEmployeeCashierCustomer {
+  id: number;
+  name: string;
+  phone: string;
+  membershipType: string;
+  memberId: string;
+  /** @nullable */
+  memberExpiry: string | null;
+  memberBenefit: string;
+  points: number;
 }
 
 export type GgsEmployeeCashierTransactionItemItemType = typeof GgsEmployeeCashierTransactionItemItemType[keyof typeof GgsEmployeeCashierTransactionItemItemType];
@@ -334,6 +348,10 @@ export interface GgsEmployeeCashierTransaction {
   register: GgsEmployeeCashierRegister;
   employeeName: string;
   customerName: string;
+  /** @nullable */
+  customerProfileId: number | null;
+  /** @nullable */
+  branchId: string | null;
   paymentMethod: GgsEmployeeCashierPaymentMethod;
   status: GgsEmployeeCashierTransactionStatus;
   /** @nullable */
@@ -916,6 +934,10 @@ export interface GgsAdminOwnerTransaction {
   employeeId: string;
   employeeName: string;
   customerName: string;
+  /** @nullable */
+  customerProfileId: number | null;
+  /** @nullable */
+  branchId: string | null;
   paymentMethod: string;
   status: string;
   /** @nullable */
@@ -1098,6 +1120,14 @@ export interface GgsAdminOwnerCenterBackupResult {
   updated: number;
   skipped: number;
 }
+
+export type GetGgsEmployeeCashierCustomersParams = {
+/**
+ * @minLength 2
+ * @maxLength 120
+ */
+search: string;
+};
 
 export type GetGgsEmployeeCashierTransactionsParams = {
 fromDate?: string;

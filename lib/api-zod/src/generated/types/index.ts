@@ -7,6 +7,7 @@
  */
 
 export * from './getGgsAdminOwnerCenterParams';
+export * from './getGgsEmployeeCashierCustomersParams';
 export * from './getGgsEmployeeCashierTransactionsParams';
 export * from './getGgsEmployeeCashierTransactionsStatus';
 export * from './getGgsEmployeeReportsParams';
@@ -67,6 +68,7 @@ export * from './ggsEmployeeBooking';
 export * from './ggsEmployeeBookingStatus';
 export * from './ggsEmployeeCashierAccess';
 export * from './ggsEmployeeCashierAccessInput';
+export * from './ggsEmployeeCashierCustomer';
 export * from './ggsEmployeeCashierPaymentMethod';
 export * from './ggsEmployeeCashierPaymentSummary';
 export * from './ggsEmployeeCashierReceiptSettings';

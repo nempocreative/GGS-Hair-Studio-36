@@ -311,7 +311,19 @@ export default function OwnerCenterPage() {
   const records = data?.records ?? [];
   const activeRecords = records.filter((record) => record.status !== "archived" && record.status !== "void");
   const branches = activeRecords.filter((record) => record.recordType === "branch");
+  const branchRecords = records.filter((record) => record.recordType === "branch");
   const customers = activeRecords.filter((record) => record.recordType === "customer");
+  const branchNamesById = useMemo(
+    () => new Map(branchRecords.map((record) => [
+      record.recordKey,
+      `${readString(dataOf(record), "name", record.recordKey)}${record.status === "archived" ? " (arsip)" : ""}`,
+    ])),
+    [branchRecords],
+  );
+  const customerProfilesById = useMemo(
+    () => new Map(customers.map((record) => [record.id, record])),
+    [customers],
+  );
   const financeEntries = activeRecords.filter(
     (record) => record.recordType === "finance" && record.status !== "void",
   );
@@ -343,14 +355,29 @@ export default function OwnerCenterPage() {
     const branchId = branchFilter;
     const needle = search.trim().toLocaleLowerCase("id-ID");
     return (data?.transactions ?? []).filter((transaction) => {
-      const profile = employeeProfileById.get(transaction.employeeId);
-      if (branchId && profile?.branchId !== branchId) return false;
+      if (branchId && transaction.branchId !== branchId) return false;
       if (!needle) return true;
       return `${transaction.receiptNumber} ${transaction.customerName} ${transaction.employeeName} ${transaction.status}`
         .toLocaleLowerCase("id-ID")
         .includes(needle);
     });
-  }, [branchFilter, data?.transactions, employeeProfileById, search]);
+  }, [branchFilter, data?.transactions, search]);
+  const customerTransactionsById = useMemo(() => {
+    const grouped = new Map<number, GgsAdminOwnerTransaction[]>();
+    for (const transaction of data?.transactions ?? []) {
+      if (
+        transaction.status !== "completed" ||
+        transaction.customerProfileId === null ||
+        (branchFilter && transaction.branchId !== branchFilter)
+      ) {
+        continue;
+      }
+      const current = grouped.get(transaction.customerProfileId) ?? [];
+      current.push(transaction);
+      grouped.set(transaction.customerProfileId, current);
+    }
+    return grouped;
+  }, [branchFilter, data?.transactions]);
 
   const filteredAttendance = useMemo(
     () =>
@@ -872,9 +899,9 @@ export default function OwnerCenterPage() {
           <span>Cabang</span>
           <select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)}>
             <option value="">Semua cabang</option>
-            {branches.map((branch) => (
+            {branchRecords.map((branch) => (
               <option key={branch.id} value={branch.recordKey}>
-                {readString(dataOf(branch), "name", branch.recordKey)}
+                {branchNamesById.get(branch.recordKey) ?? branch.recordKey}
               </option>
             ))}
           </select>
@@ -889,6 +916,9 @@ export default function OwnerCenterPage() {
           <RefreshCw size={16} />
         </button>
       </section>
+      <p className="owner-note owner-branch-integrity-note">
+        Penjualan baru dicatat ke cabang pada profil karyawan saat transaksi dibuat. Transaksi lama yang belum memiliki data cabang tetap ditandai belum tercatat.
+      </p>
 
       {pageError && (
         <div className="owner-alert owner-alert-error" role="alert">
@@ -938,7 +968,11 @@ export default function OwnerCenterPage() {
                     <div><span className="owner-eyebrow">KASIR</span><h2>Transaksi terbaru</h2></div>
                     <button className="owner-text-button" type="button" onClick={() => setTab("transactions")}>Lihat semua <ChevronRight size={15} /></button>
                   </div>
-                  <TransactionTable transactions={filteredTransactions.slice(0, 6)} />
+                  <TransactionTable
+                    transactions={filteredTransactions.slice(0, 6)}
+                    branchNamesById={branchNamesById}
+                    customerProfilesById={customerProfilesById}
+                  />
                 </section>
                 <section className="owner-card">
                   <div className="owner-section-head">
@@ -978,7 +1012,11 @@ export default function OwnerCenterPage() {
               </div>
               <section className="owner-card">
                 <div className="owner-section-head"><div><span className="owner-eyebrow">BUKU TRANSAKSI</span><h3>Riwayat kasir</h3></div><span className="owner-badge">{filteredTransactions.length} transaksi</span></div>
-                <TransactionTable transactions={filteredTransactions} onRequestCorrection={(transaction) => {
+                <TransactionTable
+                  transactions={filteredTransactions}
+                  branchNamesById={branchNamesById}
+                  customerProfilesById={customerProfilesById}
+                  onRequestCorrection={(transaction) => {
                   setCorrectionTransaction(transaction);
                   setCorrectionForm({
                     reason: "",
@@ -988,7 +1026,9 @@ export default function OwnerCenterPage() {
                     proposedAmountReceived: transaction.amountReceived,
                     proposedPaymentMethod: transaction.paymentMethod,
                   });
-                }} eligibleCorrectionTransactionIds={data?.eligibleCorrectionTransactionIds ?? []} />
+                }}
+                  eligibleCorrectionTransactionIds={data?.eligibleCorrectionTransactionIds ?? []}
+                />
               </section>
               {correctionTransaction && (
                 <section className="owner-card owner-form-card">
@@ -1069,6 +1109,7 @@ export default function OwnerCenterPage() {
                       key={customer.id}
                       record={customer}
                       reminder={reminderSettings}
+                      transactions={customerTransactionsById.get(customer.id) ?? []}
                       onEdit={() => startCustomerEdit(customer)}
                       onArchive={() => void archiveRecord(customer, readString(dataOf(customer), "name", "pelanggan"))}
                     />)}
@@ -1314,12 +1355,41 @@ function EmptyInline({ title, body }: { title: string; body: string }) {
   return <div className="owner-inline-empty"><span><Sparkles size={17} /></span><b>{title}</b><small>{body}</small></div>;
 }
 
-function TransactionTable({ transactions, onRequestCorrection, eligibleCorrectionTransactionIds = [] }: { transactions: GgsAdminOwnerTransaction[]; onRequestCorrection?: (transaction: GgsAdminOwnerTransaction) => void; eligibleCorrectionTransactionIds?: number[] }) {
+function TransactionTable({
+  transactions,
+  onRequestCorrection,
+  eligibleCorrectionTransactionIds = [],
+  branchNamesById,
+  customerProfilesById,
+}: {
+  transactions: GgsAdminOwnerTransaction[];
+  onRequestCorrection?: (transaction: GgsAdminOwnerTransaction) => void;
+  eligibleCorrectionTransactionIds?: number[];
+  branchNamesById?: Map<string, string>;
+  customerProfilesById?: Map<number, GgsAdminOwnerRecord>;
+}) {
   if (!transactions.length) return <EmptyInline title="Belum ada transaksi di periode ini" body="Transaksi dari ruang kasir karyawan akan muncul di sini." />;
   const eligibleIds = new Set(eligibleCorrectionTransactionIds);
-  return <div className="owner-table-wrap"><table className="owner-table"><thead><tr><th>Struk / tanggal</th><th>Pelanggan</th><th>Karyawan</th><th>Status</th><th>Total</th>{onRequestCorrection && <th>Aksi</th>}</tr></thead><tbody>{transactions.map((transaction) => {
+  return <div className="owner-table-wrap"><table className="owner-table"><thead><tr><th>Struk / tanggal</th><th>Pelanggan/member</th><th>Cabang transaksi</th><th>Karyawan</th><th>Status</th><th>Total</th>{onRequestCorrection && <th>Aksi</th>}</tr></thead><tbody>{transactions.map((transaction) => {
     const canRequestCorrection = transaction.status === "completed" && eligibleIds.has(transaction.id);
-    return <tr key={transaction.id}><td><b>{transaction.receiptNumber}</b><small>{dateTimeLabel(transaction.createdAt)}</small></td><td>{transaction.customerName || "Walk-in"}</td><td>{transaction.employeeName}</td><td><span className={`owner-status owner-status-${transaction.status}`}>{transaction.status === "completed" ? "Selesai" : transaction.status === "cancelled" ? "Batal" : transaction.status}</span>{transaction.cancellationReason && <small>{transaction.cancellationReason}</small>}</td><td><b>{currency(transaction.total)}</b></td>{onRequestCorrection && <td>{canRequestCorrection ? <button className="owner-small-button" type="button" onClick={() => onRequestCorrection(transaction)}>Ajukan koreksi</button> : <span className="owner-note">Di luar batas koreksi</span>}</td>}</tr>;
+    const customer = transaction.customerProfileId
+      ? customerProfilesById?.get(transaction.customerProfileId)
+      : undefined;
+    const memberId = customer ? readString(dataOf(customer), "memberId") : "";
+    return <tr key={transaction.id}>
+      <td><b>{transaction.receiptNumber}</b><small>{dateTimeLabel(transaction.createdAt)}</small></td>
+      <td>
+        <b>{transaction.customerName || "Walk-in"}</b>
+        {transaction.customerProfileId
+          ? <small>{customer ? `Profil terhubung${memberId ? ` · ${memberId}` : ""}` : `Profil #${transaction.customerProfileId}`}</small>
+          : <small>Tanpa profil tertaut</small>}
+      </td>
+      <td>{transaction.branchId ? branchNamesById?.get(transaction.branchId) ?? transaction.branchId : <span className="owner-note">Belum tercatat</span>}</td>
+      <td>{transaction.employeeName}</td>
+      <td><span className={`owner-status owner-status-${transaction.status}`}>{transaction.status === "completed" ? "Selesai" : transaction.status === "cancelled" ? "Batal" : transaction.status}</span>{transaction.cancellationReason && <small>{transaction.cancellationReason}</small>}</td>
+      <td><b>{currency(transaction.total)}</b></td>
+      {onRequestCorrection && <td>{canRequestCorrection ? <button className="owner-small-button" type="button" onClick={() => onRequestCorrection(transaction)}>Ajukan koreksi</button> : <span className="owner-note">Di luar batas koreksi</span>}</td>}
+    </tr>;
   })}</tbody></table></div>;
 }
 
@@ -1356,11 +1426,13 @@ function CustomerEditor({ form, setForm, saving, existing, onSubmit, onClose }: 
   </form></section>;
 }
 
-function CustomerCard({ record, reminder, onEdit, onArchive }: { record: GgsAdminOwnerRecord; reminder: OwnerData; onEdit: () => void; onArchive: () => void }) {
+function CustomerCard({ record, reminder, transactions, onEdit, onArchive }: { record: GgsAdminOwnerRecord; reminder: OwnerData; transactions: GgsAdminOwnerTransaction[]; onEdit: () => void; onArchive: () => void }) {
   const data = dataOf(record);
   const phone = waNumber(readString(data, "phone"));
   const message = interpolate(readString(reminder, "followUp"), readString(data, "name"));
-  return <article className="owner-customer-card"><div className="owner-customer-top"><span className="owner-customer-avatar"><Heart size={17} /></span><span><b>{readString(data, "name")}</b><small>{readString(data, "phone")}</small></span><span className="owner-points">{readNumber(data, "points")} poin</span></div><div className="owner-member-line"><span>{readString(data, "membershipType", "Pelanggan")}</span>{readString(data, "memberId") && <code>{readString(data, "memberId")}</code>}</div>{readString(data, "memberBenefit") && <p>{readString(data, "memberBenefit")}</p>}<div className="owner-customer-meta"><span>Ulang tahun: {dateLabel(readString(data, "dateOfBirth"))}</span><span>Member sampai: {dateLabel(readString(data, "memberExpiry"))}</span></div><div className="owner-row-actions"><button className="owner-small-button" type="button" onClick={onEdit}><Pencil size={14} /> Edit</button>{phone && <a className="owner-small-button" href={`https://wa.me/${phone}?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">WhatsApp</a>}<button className="owner-small-button owner-small-danger" type="button" onClick={onArchive}><Archive size={14} /> Arsip</button></div></article>;
+  const lifetimeInRange = transactions.reduce((total, transaction) => total + transaction.total, 0);
+  const latestTransaction = transactions[0];
+  return <article className="owner-customer-card"><div className="owner-customer-top"><span className="owner-customer-avatar"><Heart size={17} /></span><span><b>{readString(data, "name")}</b><small>{readString(data, "phone")}</small></span><span className="owner-points">{readNumber(data, "points")} poin</span></div><div className="owner-member-line"><span>{readString(data, "membershipType", "Pelanggan")}</span>{readString(data, "memberId") && <code>{readString(data, "memberId")}</code>}</div>{readString(data, "memberBenefit") && <p>{readString(data, "memberBenefit")}</p>}<div className="owner-customer-meta"><span>Ulang tahun: {dateLabel(readString(data, "dateOfBirth"))}</span><span>Member sampai: {dateLabel(readString(data, "memberExpiry"))}</span></div><div className="owner-customer-visits"><span className="owner-eyebrow">KUNJUNGAN · RENTANG LAPORAN</span><b>{transactions.length} transaksi selesai · {currency(lifetimeInRange)}</b><small>{latestTransaction ? `Terakhir ${dateTimeLabel(latestTransaction.createdAt)}` : "Belum ada transaksi tertaut pada cabang dan tanggal terpilih."}</small></div><div className="owner-row-actions"><button className="owner-small-button" type="button" onClick={onEdit}><Pencil size={14} /> Edit</button>{phone && <a className="owner-small-button" href={`https://wa.me/${phone}?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">WhatsApp</a>}<button className="owner-small-button owner-small-danger" type="button" onClick={onArchive}><Archive size={14} /> Arsip</button></div></article>;
 }
 
 function BirthdayList({ customers, reminder }: { customers: GgsAdminOwnerRecord[]; reminder: OwnerData }) {
