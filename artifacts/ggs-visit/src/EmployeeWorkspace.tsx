@@ -165,17 +165,19 @@ function EmployeeFooterTabbar() {
 
   return (
     <nav className="employee-footer-tabbar" aria-label="Navigasi bawah">
-      {employeeFooterMenuItems.map((item) => (
-        <Link
-          href={item.href}
-          key={item.href}
-          aria-current={location === item.href ? 'page' : undefined}
-          data-testid={`link-employee-footer-${item.href.slice(1) || 'home'}`}
-        >
-          <item.icon size={16} strokeWidth={1.8} aria-hidden="true" />
-          <span>{item.label}</span>
-        </Link>
-      ))}
+      <div className="employee-footer-tabbar__items">
+        {employeeFooterMenuItems.map((item) => (
+          <Link
+            href={item.href}
+            key={item.href}
+            aria-current={location === item.href ? 'page' : undefined}
+            data-testid={`link-employee-footer-${item.href.slice(1) || 'home'}`}
+          >
+            <item.icon size={16} strokeWidth={1.8} aria-hidden="true" />
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 }
