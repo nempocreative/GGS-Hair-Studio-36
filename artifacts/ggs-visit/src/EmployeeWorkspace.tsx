@@ -845,6 +845,172 @@ function EmployeeModulePlaceholder({ item }: { item: EmployeeMenuItem }) {
   );
 }
 
+type EmployeeCustomerSummary = {
+  key: string;
+  name: string;
+  phone: string;
+  bookingCount: number;
+  latestBooking: GgsEmployeeBooking;
+  serviceNames: string[];
+};
+
+function EmployeeCustomersPage({
+  bookings,
+  isLoading,
+  isError,
+  isRefreshing,
+  onRefresh,
+}: {
+  bookings: GgsEmployeeBooking[];
+  isLoading: boolean;
+  isError: boolean;
+  isRefreshing: boolean;
+  onRefresh: () => void;
+}) {
+  const [search, setSearch] = useState('');
+  const customers = useMemo(() => {
+    const byIdentity = new Map<string, {
+      key: string;
+      name: string;
+      phone: string;
+      bookingCount: number;
+      latestBooking: GgsEmployeeBooking;
+      latestBookingKey: string;
+      serviceNames: Set<string>;
+    }>();
+
+    for (const booking of bookings) {
+      const normalizedPhone = booking.phone.replace(/\D/g, '');
+      const normalizedName = booking.customerName.trim().toLocaleLowerCase('id-ID');
+      const key = normalizedPhone ? `phone:${normalizedPhone}` : `name:${normalizedName}`;
+      const bookingKey = `${dateKey(booking.appointmentDate)} ${booking.appointmentTime}`;
+      const existing = byIdentity.get(key);
+
+      if (!existing) {
+        byIdentity.set(key, {
+          key,
+          name: booking.customerName,
+          phone: booking.phone,
+          bookingCount: 1,
+          latestBooking: booking,
+          latestBookingKey: bookingKey,
+          serviceNames: new Set([booking.serviceName]),
+        });
+        continue;
+      }
+
+      existing.bookingCount += 1;
+      existing.serviceNames.add(booking.serviceName);
+      if (bookingKey > existing.latestBookingKey) {
+        existing.name = booking.customerName;
+        existing.phone = booking.phone;
+        existing.latestBooking = booking;
+        existing.latestBookingKey = bookingKey;
+      }
+    }
+
+    return Array.from(byIdentity.values())
+      .map(({ latestBookingKey: _latestBookingKey, serviceNames, ...customer }) => ({
+        ...customer,
+        serviceNames: Array.from(serviceNames),
+      }))
+      .sort((first, second) => {
+        const firstKey = `${dateKey(first.latestBooking.appointmentDate)} ${first.latestBooking.appointmentTime}`;
+        const secondKey = `${dateKey(second.latestBooking.appointmentDate)} ${second.latestBooking.appointmentTime}`;
+        return secondKey.localeCompare(firstKey);
+      });
+  }, [bookings]);
+
+  const query = search.trim().toLocaleLowerCase('id-ID');
+  const visibleCustomers = customers.filter((customer) =>
+    !query || `${customer.name} ${customer.phone} ${customer.serviceNames.join(' ')}`
+      .toLocaleLowerCase('id-ID')
+      .includes(query),
+  );
+  const metricValue = (value: number) => isLoading || isError ? '—' : value.toLocaleString('id-ID');
+  const returningCustomers = customers.filter((customer) => customer.bookingCount > 1).length;
+
+  return (
+    <div className="employee-schedule__content employee-customers" data-testid="page-employee-customers">
+      <section className="employee-schedule__heading employee-customers__heading">
+        <div>
+          <p className="employee-kicker">DATA PELANGGAN</p>
+          <h1>Pelanggan <em>studio.</em></h1>
+          <p className="employee-schedule__welcome">Ringkasan pelanggan berdasarkan riwayat booking yang masuk ke studio.</p>
+        </div>
+        <button
+          type="button"
+          className="employee-refresh-button"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          data-testid="button-refresh-employee-customers"
+        >
+          <RefreshCw size={15} aria-hidden="true" className={isRefreshing ? 'is-spinning' : ''} />
+          Perbarui data
+        </button>
+      </section>
+
+      <section className="employee-customers__metrics" aria-label="Ringkasan pelanggan">
+        <article><span>PELANGGAN UNIK</span><strong>{metricValue(customers.length)}</strong></article>
+        <article><span>TOTAL BOOKING</span><strong>{metricValue(bookings.length)}</strong></article>
+        <article><span>BOOKING BERULANG</span><strong>{metricValue(returningCustomers)}</strong></article>
+      </section>
+
+      <section className="employee-customers__panel" aria-label="Daftar pelanggan">
+        <div className="employee-customers__toolbar">
+          <div className="employee-bookings__title">
+            <h2>Daftar pelanggan</h2>
+            <span>{isLoading || isError ? '—' : `${visibleCustomers.length} tampil`}</span>
+          </div>
+          <label className="employee-search">
+            <Search size={15} aria-hidden="true" />
+            <span className="sr-only">Cari pelanggan</span>
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Cari nama, telepon, layanan"
+              data-testid="input-search-employee-customers"
+            />
+          </label>
+        </div>
+
+        {isLoading ? (
+          <EmployeeBookingsSkeleton />
+        ) : isError ? (
+          <div className="employee-bookings__error" role="alert" data-testid="status-employee-customers-error">
+            <div><strong>Data pelanggan belum dapat dimuat.</strong><p>Periksa koneksi, lalu coba perbarui data.</p></div>
+            <button type="button" onClick={onRefresh} disabled={isRefreshing}>Coba lagi</button>
+          </div>
+        ) : visibleCustomers.length ? (
+          <div className="employee-customers__table-wrap">
+            <table className="employee-customers__table">
+              <thead><tr><th>Pelanggan</th><th>Telepon</th><th>Booking</th><th>Booking terakhir</th><th>Status</th></tr></thead>
+              <tbody>
+                {visibleCustomers.map((customer) => (
+                  <tr key={customer.key} data-testid={`row-employee-customer-${customer.key.replace(/[^a-zA-Z0-9_-]/g, '-')}`}>
+                    <td><strong>{customer.name}</strong><small>{customer.latestBooking.serviceName}</small></td>
+                    <td>{customer.phone ? <a href={`tel:${customer.phone.replace(/[^\d+]/g, '')}`}>{customer.phone}</a> : '—'}</td>
+                    <td>{customer.bookingCount}</td>
+                    <td><strong>{displayDate(customer.latestBooking.appointmentDate, { day: 'numeric', month: 'short', year: 'numeric' })}</strong><small>{customer.latestBooking.appointmentTime}</small></td>
+                    <td><span className={`employee-status employee-status--${customer.latestBooking.status}`}>{statusLabels[customer.latestBooking.status] ?? customer.latestBooking.status}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="employee-bookings__empty" data-testid="status-employee-customers-empty">
+            <div className="employee-bookings__empty-mark"><UsersRound size={21} aria-hidden="true" /></div>
+            <h3>{customers.length ? 'Tidak ada pelanggan yang cocok.' : 'Belum ada data pelanggan.'}</h3>
+            <p>{customers.length ? 'Coba kata pencarian lain.' : 'Pelanggan akan tercatat setelah booking masuk ke studio.'}</p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
 export function EmployeeSignInPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -1322,6 +1488,14 @@ export function EmployeeSchedulePage() {
           <EmployeeAttendancePage employeeName={session.data?.name ?? 'Karyawan'} />
         ) : currentMenu.href === '/employee/cashier' ? (
           <EmployeeCashierPage />
+        ) : currentMenu.href === '/employee/customers' ? (
+          <EmployeeCustomersPage
+            bookings={bookings.data ?? []}
+            isLoading={bookings.isLoading}
+            isError={bookings.isError}
+            isRefreshing={refreshing || bookings.isFetching}
+            onRefresh={() => void refreshSchedule()}
+          />
         ) : (
           <EmployeeModulePlaceholder item={currentMenu} />
         )}
