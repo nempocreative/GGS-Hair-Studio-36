@@ -10,6 +10,7 @@ import type { GgsAdminOwnerAttendance } from './ggsAdminOwnerAttendance';
 import type { GgsAdminOwnerCorrection } from './ggsAdminOwnerCorrection';
 import type { GgsAdminOwnerEmployee } from './ggsAdminOwnerEmployee';
 import type { GgsAdminOwnerRecord } from './ggsAdminOwnerRecord';
+import type { GgsAdminOwnerService } from './ggsAdminOwnerService';
 import type { GgsAdminOwnerStockMovement } from './ggsAdminOwnerStockMovement';
 import type { GgsAdminOwnerTransaction } from './ggsAdminOwnerTransaction';
 import type { GgsProduct } from './ggsProduct';
@@ -25,4 +26,6 @@ export interface GgsAdminOwnerCenterResponse {
   appointments: GgsAdminOwnerAppointmentsSummary;
   correctionRequests: GgsAdminOwnerCorrection[];
   products: GgsProduct[];
+  services: GgsAdminOwnerService[];
+  eligibleCorrectionTransactionIds: number[];
 }

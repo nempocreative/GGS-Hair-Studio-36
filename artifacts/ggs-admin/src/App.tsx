@@ -59,12 +59,13 @@ import {
   ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown,
   Clock3, ExternalLink, Instagram, LayoutDashboard, LogOut, Menu, Pencil,
   Plus, Scissors, Settings2, ShieldAlert, Sparkles, Trash2, X, ShoppingBag,
-  Ticket, Megaphone, Bell, Tag,
+  Ticket, Megaphone, Bell, Tag, Crown,
   UsersRound,
 } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import EmployeesPage from '@/pages/EmployeesPage';
+import OwnerCenterPage from '@/pages/OwnerCenterPage';
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -140,6 +141,7 @@ const navItems: NavItem[] = [
   { label: 'Karyawan', href: '/employees', icon: UsersRound, kicker: '07' },
   { label: 'Kasir & pajak', href: '/settings', icon: Settings2, kicker: '08' },
   { label: 'Pengumuman kasir', href: '/cashier-announcements', icon: Megaphone, kicker: '09' },
+  { label: 'Pusat pemilik', href: '/owner-center', icon: Crown, kicker: '10' },
 ];
 
 function AuthPage({ mode }: { mode: 'in' | 'up' }) {
@@ -214,6 +216,7 @@ function ClerkProviderWithRoutes() {
         <Route path="/appointments" component={ProtectedAppointments} />
         <Route path="/employees" component={ProtectedEmployees} />
         <Route path="/cashier-announcements" component={ProtectedCashierAnnouncements} />
+        <Route path="/owner-center" component={ProtectedOwnerCenter} />
         <Route path="/dashboard" component={() => <Redirect to="/" />} />
         <Route component={NotFound} />
       </Switch>
@@ -239,6 +242,7 @@ function ProtectedSettings() { return <Protected><CashierSettingsPage /></Protec
 function ProtectedAppointments() { return <Protected><AppointmentsPage /></Protected>; }
 function ProtectedEmployees() { return <Protected><EmployeesPage /></Protected>; }
 function ProtectedCashierAnnouncements() { return <Protected><CashierAnnouncementsPage /></Protected>; }
+function ProtectedOwnerCenter() { return <Protected><OwnerCenterPage /></Protected>; }
 
 function AdminShell({ children }: { children: ReactNode }) {
   const [location] = useLocation();

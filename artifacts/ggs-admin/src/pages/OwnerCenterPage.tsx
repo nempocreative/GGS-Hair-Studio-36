@@ -455,8 +455,8 @@ export default function OwnerCenterPage() {
     event.preventDefault();
     const recordKey =
       customerEditor?.recordKey ??
-      customerForm.phone.replace(/\D/g, "") ||
-      crypto.randomUUID();
+      (customerForm.phone.replace(/\D/g, "") ||
+        crypto.randomUUID());
     const saved = await saveOwnerRecord(
       {
         recordType: "customer",
@@ -790,7 +790,7 @@ export default function OwnerCenterPage() {
       {
         recordType: "payroll",
         recordKey: key,
-        branchId: profileRecord.branchId ?? readString(profile, "branchId") || undefined,
+        branchId: profileRecord.branchId ?? (readString(profile, "branchId") || undefined),
         employeeId,
         recordPeriod: payrollPeriod,
         status: "draft",
@@ -988,7 +988,7 @@ export default function OwnerCenterPage() {
                     proposedAmountReceived: transaction.amountReceived,
                     proposedPaymentMethod: transaction.paymentMethod,
                   });
-                }} />
+                }} eligibleCorrectionTransactionIds={data?.eligibleCorrectionTransactionIds ?? []} />
               </section>
               {correctionTransaction && (
                 <section className="owner-card owner-form-card">
@@ -1223,6 +1223,7 @@ export default function OwnerCenterPage() {
                     <Field label="Nama cabang pada struk"><input value={readString(receiptSettings, "branchLabel")} onChange={(event) => setSettingGroup("receipt", "branchLabel", event.target.value)} /></Field>
                     <Field label="Pesan struk (satu per baris)" className="span-2"><textarea value={receiptMessagesText || (Array.isArray(receiptSettings.receiptMessages) ? (receiptSettings.receiptMessages as string[]).join("\n") : "")} onChange={(event) => setReceiptMessagesText(event.target.value)} /></Field>
                     <Field label="Footer struk" className="span-2"><textarea value={readString(receiptSettings, "footer")} onChange={(event) => setSettingGroup("receipt", "footer", event.target.value)} /></Field>
+                     <Field label="Teks media sosial"><input value={readString(receiptSettings, "socialText")} onChange={(event) => setSettingGroup("receipt", "socialText", event.target.value)} /></Field>
                     <Field label="Teks QR / pembayaran"><input value={readString(receiptSettings, "qrText")} onChange={(event) => setSettingGroup("receipt", "qrText", event.target.value)} /></Field>
                     <Field label="URL logo (opsional)"><input type="url" value={readString(receiptSettings, "logoUrl")} onChange={(event) => setSettingGroup("receipt", "logoUrl", event.target.value)} /></Field>
                     <div className="owner-toggle-list span-2">
@@ -1313,9 +1314,13 @@ function EmptyInline({ title, body }: { title: string; body: string }) {
   return <div className="owner-inline-empty"><span><Sparkles size={17} /></span><b>{title}</b><small>{body}</small></div>;
 }
 
-function TransactionTable({ transactions, onRequestCorrection }: { transactions: GgsAdminOwnerTransaction[]; onRequestCorrection?: (transaction: GgsAdminOwnerTransaction) => void }) {
+function TransactionTable({ transactions, onRequestCorrection, eligibleCorrectionTransactionIds = [] }: { transactions: GgsAdminOwnerTransaction[]; onRequestCorrection?: (transaction: GgsAdminOwnerTransaction) => void; eligibleCorrectionTransactionIds?: number[] }) {
   if (!transactions.length) return <EmptyInline title="Belum ada transaksi di periode ini" body="Transaksi dari ruang kasir karyawan akan muncul di sini." />;
-  return <div className="owner-table-wrap"><table className="owner-table"><thead><tr><th>Struk / tanggal</th><th>Pelanggan</th><th>Karyawan</th><th>Status</th><th>Total</th>{onRequestCorrection && <th>Aksi</th>}</tr></thead><tbody>{transactions.map((transaction) => <tr key={transaction.id}><td><b>{transaction.receiptNumber}</b><small>{dateTimeLabel(transaction.createdAt)}</small></td><td>{transaction.customerName || "Walk-in"}</td><td>{transaction.employeeName}</td><td><span className={`owner-status owner-status-${transaction.status}`}>{transaction.status === "completed" ? "Selesai" : transaction.status === "cancelled" ? "Batal" : transaction.status}</span>{transaction.cancellationReason && <small>{transaction.cancellationReason}</small>}</td><td><b>{currency(transaction.total)}</b></td>{onRequestCorrection && <td><button className="owner-small-button" type="button" disabled={transaction.status !== "completed"} onClick={() => onRequestCorrection(transaction)}>Ajukan koreksi</button></td>}</tr>)}</tbody></table></div>;
+  const eligibleIds = new Set(eligibleCorrectionTransactionIds);
+  return <div className="owner-table-wrap"><table className="owner-table"><thead><tr><th>Struk / tanggal</th><th>Pelanggan</th><th>Karyawan</th><th>Status</th><th>Total</th>{onRequestCorrection && <th>Aksi</th>}</tr></thead><tbody>{transactions.map((transaction) => {
+    const canRequestCorrection = transaction.status === "completed" && eligibleIds.has(transaction.id);
+    return <tr key={transaction.id}><td><b>{transaction.receiptNumber}</b><small>{dateTimeLabel(transaction.createdAt)}</small></td><td>{transaction.customerName || "Walk-in"}</td><td>{transaction.employeeName}</td><td><span className={`owner-status owner-status-${transaction.status}`}>{transaction.status === "completed" ? "Selesai" : transaction.status === "cancelled" ? "Batal" : transaction.status}</span>{transaction.cancellationReason && <small>{transaction.cancellationReason}</small>}</td><td><b>{currency(transaction.total)}</b></td>{onRequestCorrection && <td>{canRequestCorrection ? <button className="owner-small-button" type="button" onClick={() => onRequestCorrection(transaction)}>Ajukan koreksi</button> : <span className="owner-note">Di luar batas koreksi</span>}</td>}</tr>;
+  })}</tbody></table></div>;
 }
 
 function CorrectionList({ requests, onApprove, onReject, onApply, busy }: { requests: GgsAdminOwnerCorrection[]; onApprove: (request: GgsAdminOwnerCorrection) => void; onReject: (request: GgsAdminOwnerCorrection) => void; onApply: (request: GgsAdminOwnerCorrection) => void; busy: boolean }) {

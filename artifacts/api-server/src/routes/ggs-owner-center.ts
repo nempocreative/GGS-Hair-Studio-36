@@ -46,6 +46,7 @@ import {
   ggsOwnerTransactionCorrectionsTable,
   ggsProductStockMovementsTable,
   ggsProductsTable,
+  ggsServicesTable,
 } from "@workspace/db";
 import { requireGgsOwner } from "../middlewares/requireGgsOwner";
 
@@ -437,6 +438,15 @@ router.get(
       })
       .from(ggsProductsTable)
       .orderBy(asc(ggsProductsTable.sortOrder), asc(ggsProductsTable.id));
+    const services = await db
+      .select({
+        id: ggsServicesTable.id,
+        name: ggsServicesTable.name,
+        category: ggsServicesTable.category,
+        active: ggsServicesTable.active,
+      })
+      .from(ggsServicesTable)
+      .orderBy(asc(ggsServicesTable.sortOrder), asc(ggsServicesTable.name));
     const appointmentRows = await db
       .select({ status: ggsAppointmentsTable.status })
       .from(ggsAppointmentsTable)
@@ -461,6 +471,44 @@ router.get(
       )
       .orderBy(desc(ggsOwnerTransactionCorrectionsTable.createdAt))
       .limit(100);
+    const latestCorrectionCandidates = await db
+      .select({
+        id: ggsCashierTransactionsTable.id,
+        status: ggsCashierTransactionsTable.status,
+      })
+      .from(ggsCashierTransactionsTable)
+      .orderBy(desc(ggsCashierTransactionsTable.createdAt), desc(ggsCashierTransactionsTable.id))
+      .limit(3);
+    const latestCorrectionCandidateIds = latestCorrectionCandidates.map((item) => item.id);
+    const activeCorrectionRows = latestCorrectionCandidateIds.length
+      ? await db
+          .select({
+            transactionId: ggsOwnerTransactionCorrectionsTable.transactionId,
+          })
+          .from(ggsOwnerTransactionCorrectionsTable)
+          .where(
+            and(
+              inArray(
+                ggsOwnerTransactionCorrectionsTable.transactionId,
+                latestCorrectionCandidateIds,
+              ),
+              or(
+                eq(ggsOwnerTransactionCorrectionsTable.status, "pending"),
+                eq(ggsOwnerTransactionCorrectionsTable.status, "approved"),
+              ),
+            ),
+          )
+      : [];
+    const activeCorrectionIds = new Set(
+      activeCorrectionRows.map((item) => item.transactionId),
+    );
+    const eligibleCorrectionTransactionIds = latestCorrectionCandidates
+      .filter(
+        (transaction) =>
+          transaction.status === "completed" &&
+          !activeCorrectionIds.has(transaction.id),
+      )
+      .map((transaction) => transaction.id);
 
     const response = GetGgsAdminOwnerCenterResponse.parse({
       fromDate,
@@ -501,6 +549,8 @@ router.get(
         imageUrl: product.imageUrl ?? null,
         createdAt: product.createdAt.toISOString(),
       })),
+      services,
+      eligibleCorrectionTransactionIds,
       correctionRequests: corrections.map(({ correction, receiptNumber }) =>
         serializeCorrection({ ...correction, receiptNumber }),
       ),

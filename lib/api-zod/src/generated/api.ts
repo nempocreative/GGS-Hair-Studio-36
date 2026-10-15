@@ -273,6 +273,26 @@ export const GetGgsEmployeeCashierSessionResponse = zod.object({
 
 
 /**
+ * @summary Get owner-configured print details for the active cashier
+ */
+export const GetGgsEmployeeCashierReceiptSettingsResponse = zod.object({
+  "businessName": zod.string(),
+  "branchLabel": zod.string(),
+  "tagline": zod.string(),
+  "receiptSize": zod.enum(['58mm', '80mm']),
+  "footer": zod.string(),
+  "showFooter": zod.boolean(),
+  "showMessage": zod.boolean(),
+  "receiptMessages": zod.array(zod.string()),
+  "showSocial": zod.boolean(),
+  "socialText": zod.string(),
+  "showQr": zod.boolean(),
+  "qrText": zod.string(),
+  "logoUrl": zod.string()
+})
+
+
+/**
  * @summary Unlock one cashier register with its password
  */
 export const unlockGgsEmployeeCashierBodyPasswordMin = 8;
@@ -1534,7 +1554,14 @@ export const GetGgsAdminOwnerCenterResponse = zod.object({
   "stock": zod.number().int(),
   "active": zod.boolean(),
   "imageUrl": zod.string().nullable()
-}))
+})),
+  "services": zod.array(zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "active": zod.boolean()
+})),
+  "eligibleCorrectionTransactionIds": zod.array(zod.number().int())
 })
 
 

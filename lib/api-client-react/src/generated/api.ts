@@ -56,6 +56,7 @@ import type {
   GgsEmployeeBooking,
   GgsEmployeeCashierAccess,
   GgsEmployeeCashierAccessInput,
+  GgsEmployeeCashierReceiptSettings,
   GgsEmployeeCashierSession,
   GgsEmployeeCashierTransaction,
   GgsEmployeeCashierTransactionCancellationInput,
@@ -1299,6 +1300,83 @@ export function useGetGgsEmployeeCashierSession<TData = Awaited<ReturnType<typeo
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetGgsEmployeeCashierSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGgsEmployeeCashierReceiptSettingsUrl = () => {
+
+
+
+
+  return `/api/ggs/employee/cashier/receipt-settings`
+}
+
+/**
+ * @summary Get owner-configured print details for the active cashier
+ */
+export const getGgsEmployeeCashierReceiptSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeCashierReceiptSettings> => {
+
+  return customFetch<GgsEmployeeCashierReceiptSettings>(getGetGgsEmployeeCashierReceiptSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeCashierReceiptSettingsQueryKey = () => {
+    return [
+    `/api/ggs/employee/cashier/receipt-settings`
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeCashierReceiptSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeCashierReceiptSettings>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierReceiptSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeCashierReceiptSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeCashierReceiptSettings>>> = ({ signal }) => getGgsEmployeeCashierReceiptSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierReceiptSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeCashierReceiptSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeCashierReceiptSettings>>>
+export type GetGgsEmployeeCashierReceiptSettingsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get owner-configured print details for the active cashier
+ */
+
+export function useGetGgsEmployeeCashierReceiptSettings<TData = Awaited<ReturnType<typeof getGgsEmployeeCashierReceiptSettings>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierReceiptSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeCashierReceiptSettingsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

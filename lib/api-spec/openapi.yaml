@@ -256,6 +256,22 @@ paths:
                 $ref: "#/components/schemas/GgsEmployeeCashierSession"
         "401":
           description: No active employee session
+  /ggs/employee/cashier/receipt-settings:
+    get:
+      operationId: getGgsEmployeeCashierReceiptSettings
+      tags: [ggs-employee]
+      summary: Get owner-configured print details for the active cashier
+      responses:
+        "200":
+          description: Receipt settings for the unlocked cashier register
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeCashierReceiptSettings"
+        "401":
+          description: No active employee session
+        "403":
+          description: Cashier register is locked
   /ggs/employee/cashier/access:
     post:
       operationId: unlockGgsEmployeeCashier
@@ -1492,6 +1508,39 @@ components:
         - register
         - expiresAt
         - taxRate
+    GgsEmployeeCashierReceiptSettings:
+      type: object
+      properties:
+        businessName:
+          type: string
+        branchLabel:
+          type: string
+        tagline:
+          type: string
+        receiptSize:
+          type: string
+          enum: [58mm, 80mm]
+        footer:
+          type: string
+        showFooter:
+          type: boolean
+        showMessage:
+          type: boolean
+        receiptMessages:
+          type: array
+          items:
+            type: string
+        showSocial:
+          type: boolean
+        socialText:
+          type: string
+        showQr:
+          type: boolean
+        qrText:
+          type: string
+        logoUrl:
+          type: string
+      required: [businessName, branchLabel, tagline, receiptSize, footer, showFooter, showMessage, receiptMessages, showSocial, socialText, showQr, qrText, logoUrl]
     GgsCashierSettings:
       type: object
       properties:

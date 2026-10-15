@@ -3567,9 +3567,73 @@
     box-shadow: none;
   }
 
+  .cashier-receipt[data-paper-size="58mm"] {
+    width: 58mm;
+    max-width: 58mm;
+  }
+
+  .cashier-receipt[data-paper-size="80mm"] {
+    width: 80mm;
+    max-width: 80mm;
+  }
+
   .cashier-print-button,
   .cashier-receipt__dismiss {
     display: none !important;
+  }
+}
+
+.cashier-receipt__brand {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.cashier-receipt__brand img {
+  max-width: 48mm;
+  max-height: 18mm;
+  object-fit: contain;
+}
+
+.cashier-receipt__brand strong {
+  font-size: 18px;
+}
+
+.cashier-receipt__brand small,
+.cashier-receipt__brand span,
+.cashier-receipt__messages,
+.cashier-receipt__extra,
+.cashier-receipt__footer,
+.cashier-receipt__settings-warning {
+  color: var(--employee-muted);
+  font-size: 12px;
+}
+
+.cashier-receipt__messages,
+.cashier-receipt__extra,
+.cashier-receipt__footer {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.cashier-receipt__messages p {
+  margin: 4px 0;
+}
+
+.cashier-receipt__settings-warning {
+  color: #8b3b14;
+}
+
+@media print {
+  .cashier-receipt__brand,
+  .cashier-receipt__brand small,
+  .cashier-receipt__brand span,
+  .cashier-receipt__messages,
+  .cashier-receipt__extra,
+  .cashier-receipt__footer {
+    color: #222;
   }
 }
 

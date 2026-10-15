@@ -7,6 +7,7 @@ import {
   getGetGgsEmployeeAttendanceHistoryQueryKey,
   getGetGgsEmployeeAttendanceTodayQueryKey,
   getGetGgsEmployeeCashierSessionQueryKey,
+  getGetGgsEmployeeCashierReceiptSettingsQueryKey,
   getGetGgsEmployeeCashierVouchersQueryKey,
   getGetGgsEmployeeCashierTransactionsQueryKey,
   getGetGgsEmployeeCashierAnnouncementsQueryKey,
@@ -17,6 +18,7 @@ import {
   getGetGgsEmployeeSessionQueryKey,
   useGetGgsEmployeeBookings,
   useGetGgsEmployeeCashierSession,
+  useGetGgsEmployeeCashierReceiptSettings,
   useGetGgsEmployeeCashierVouchers,
   useGetGgsEmployeeCashierTransactions,
   useGetGgsEmployeeCashierAnnouncements,
@@ -234,6 +236,16 @@ function EmployeeCashierPage() {
     },
   });
   const isCashierActive = Boolean(cashierSession.data?.active && cashierSession.data.register);
+  const receiptSettingsQuery = useGetGgsEmployeeCashierReceiptSettings({
+    query: {
+      queryKey: getGetGgsEmployeeCashierReceiptSettingsQueryKey(),
+      enabled: isCashierActive,
+      retry: false,
+      staleTime: 0,
+      refetchInterval: 60_000,
+      refetchOnWindowFocus: true,
+    },
+  });
   const announcementsQuery = useGetGgsEmployeeCashierAnnouncements({
     query: {
       queryKey: getGetGgsEmployeeCashierAnnouncementsQueryKey(),
@@ -726,9 +738,16 @@ function EmployeeCashierPage() {
             </aside>
           </div>
 
-          {receipt && <section className="cashier-receipt" aria-labelledby="cashier-receipt-title" data-testid="status-cashier-payment-success">
+          {receipt && <section className="cashier-receipt" data-paper-size={receiptSettingsQuery.data?.receiptSize ?? '80mm'} aria-labelledby="cashier-receipt-title" data-testid="status-cashier-payment-success">
             <div className="cashier-receipt__heading"><span className="cashier-receipt__success"><CheckCircle2 size={19} aria-hidden="true" /></span><div><p className="employee-kicker">PEMBAYARAN BERHASIL</p><h2 id="cashier-receipt-title">Transaksi tercatat</h2></div><button type="button" className="cashier-print-button" onClick={() => window.print()} data-testid="button-print-cashier-receipt"><Printer size={15} aria-hidden="true" /> Cetak struk</button></div>
             <div className="cashier-receipt__body">
+              {receiptSettingsQuery.isError && <p className="cashier-receipt__settings-warning" role="status">Pengaturan struk belum dapat dimuat; format standar GGS digunakan.</p>}
+              <header className="cashier-receipt__brand">
+                {receiptSettingsQuery.data?.logoUrl && <img src={receiptSettingsQuery.data.logoUrl} alt="" />}
+                <strong>{receiptSettingsQuery.data?.businessName || 'GGS Hair Studio'}</strong>
+                {receiptSettingsQuery.data?.branchLabel && <span>{receiptSettingsQuery.data.branchLabel}</span>}
+                {receiptSettingsQuery.data?.tagline && <small>{receiptSettingsQuery.data.tagline}</small>}
+              </header>
               <div className="cashier-receipt__meta"><span>No. struk<strong>{receipt.receiptNumber}</strong></span><span>Register<strong>{activeRegister.label}</strong></span><span>Waktu<strong>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(receipt.createdAt))}</strong></span><span>Pelanggan<strong>{receipt.customerName || 'Pelanggan umum'}</strong></span></div>
               <div className="cashier-receipt__items">{receipt.items.map((item, index) => <div key={`${item.itemType}-${item.itemId}-${index}`}><span>{item.name} <small>× {item.quantity}</small></span><strong>{formatMoney(item.lineTotal)}</strong></div>)}</div>
               <div className="cashier-receipt__totals">
@@ -739,6 +758,10 @@ function EmployeeCashierPage() {
                 <span>Metode <strong>{receipt.paymentMethod === 'cash' ? 'Tunai' : receipt.paymentMethod === 'qris' ? 'QRIS' : 'Kartu'}</strong></span>
                 {receipt.paymentMethod === 'cash' && <><span>Diterima <strong>{formatMoney(receipt.amountReceived)}</strong></span><span>Kembalian <strong>{formatMoney(receipt.changeAmount)}</strong></span></>}
               </div>
+              {receiptSettingsQuery.data?.showMessage && receiptSettingsQuery.data.receiptMessages.length > 0 && <div className="cashier-receipt__messages">{receiptSettingsQuery.data.receiptMessages.map((message, index) => <p key={`${message}-${index}`}>{message}</p>)}</div>}
+              {receiptSettingsQuery.data?.showSocial && receiptSettingsQuery.data.socialText && <p className="cashier-receipt__extra">{receiptSettingsQuery.data.socialText}</p>}
+              {receiptSettingsQuery.data?.showQr && receiptSettingsQuery.data.qrText && <p className="cashier-receipt__extra">QR / pembayaran: {receiptSettingsQuery.data.qrText}</p>}
+              {receiptSettingsQuery.data?.showFooter && receiptSettingsQuery.data.footer && <footer className="cashier-receipt__footer">{receiptSettingsQuery.data.footer}</footer>}
             </div>
             <button type="button" className="cashier-receipt__dismiss" onClick={() => setReceipt(null)}>Tutup struk</button>
           </section>}

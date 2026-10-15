@@ -115,6 +115,30 @@ export interface GgsEmployeeCashierSession {
   taxRate: number;
 }
 
+export type GgsEmployeeCashierReceiptSettingsReceiptSize = typeof GgsEmployeeCashierReceiptSettingsReceiptSize[keyof typeof GgsEmployeeCashierReceiptSettingsReceiptSize];
+
+
+export const GgsEmployeeCashierReceiptSettingsReceiptSize = {
+  '58mm': '58mm',
+  '80mm': '80mm',
+} as const;
+
+export interface GgsEmployeeCashierReceiptSettings {
+  businessName: string;
+  branchLabel: string;
+  tagline: string;
+  receiptSize: GgsEmployeeCashierReceiptSettingsReceiptSize;
+  footer: string;
+  showFooter: boolean;
+  showMessage: boolean;
+  receiptMessages: string[];
+  showSocial: boolean;
+  socialText: string;
+  showQr: boolean;
+  qrText: string;
+  logoUrl: string;
+}
+
 export interface GgsCashierSettings {
   /**
      * @minimum 0
@@ -995,6 +1019,13 @@ export interface GgsAdminOwnerCorrection {
   appliedAt: string | null;
 }
 
+export interface GgsAdminOwnerService {
+  id: number;
+  name: string;
+  category: string;
+  active: boolean;
+}
+
 export interface GgsAdminOwnerCenterResponse {
   fromDate: string;
   toDate: string;
@@ -1006,6 +1037,8 @@ export interface GgsAdminOwnerCenterResponse {
   appointments: GgsAdminOwnerAppointmentsSummary;
   correctionRequests: GgsAdminOwnerCorrection[];
   products: GgsProduct[];
+  services: GgsAdminOwnerService[];
+  eligibleCorrectionTransactionIds: number[];
 }
 
 export interface GgsAdminOwnerCorrectionInput {

@@ -53,6 +53,7 @@ import {
   GetGgsEmployeeAttendanceTodayResponse,
   GetGgsEmployeeBookingsResponse,
   GetGgsEmployeeCashierSessionResponse,
+  GetGgsEmployeeCashierReceiptSettingsResponse,
   GetGgsEmployeeSessionResponse,
   CheckInGgsEmployeeAttendanceResponse,
   CheckOutGgsEmployeeAttendanceBody,
@@ -80,6 +81,7 @@ import {
   ggsEmployeeAttendanceChallengesTable,
   ggsEmployeeAttendanceTable,
   ggsEmployeeSessionsTable,
+  ggsOwnerRecordsTable,
   ggsProductStockMovementsTable,
   ggsProductsTable,
   ggsServicesTable,
@@ -649,6 +651,59 @@ router.get(
         register: active ? session?.cashierRegister : null,
         expiresAt: active ? session?.cashierExpiresAt : null,
         taxRate: cashierSettings.taxRate,
+      }),
+    );
+  },
+);
+
+router.get(
+  "/ggs/employee/cashier/receipt-settings",
+  async (req, res): Promise<void> => {
+    const cashier = await requireActiveCashier(req, res);
+    if (!cashier) return;
+
+    const [ownerSettings] = await db
+      .select({ data: ggsOwnerRecordsTable.data })
+      .from(ggsOwnerRecordsTable)
+      .where(
+        and(
+          eq(ggsOwnerRecordsTable.recordType, "settings"),
+          eq(ggsOwnerRecordsTable.recordKey, "main"),
+        ),
+      )
+      .limit(1);
+    const storedReceipt = ownerSettings?.data.receipt;
+    const receipt =
+      typeof storedReceipt === "object" &&
+      storedReceipt !== null &&
+      !Array.isArray(storedReceipt)
+        ? (storedReceipt as Record<string, unknown>)
+        : {};
+    const stringValue = (key: string, fallback = "") =>
+      typeof receipt[key] === "string" ? receipt[key] as string : fallback;
+    const booleanValue = (key: string, fallback: boolean) =>
+      typeof receipt[key] === "boolean" ? receipt[key] as boolean : fallback;
+    const receiptMessages = Array.isArray(receipt.receiptMessages)
+      ? receipt.receiptMessages.filter(
+          (message): message is string => typeof message === "string",
+        )
+      : [];
+
+    res.json(
+      GetGgsEmployeeCashierReceiptSettingsResponse.parse({
+        businessName: stringValue("businessName", "GGS Hair Studio"),
+        branchLabel: stringValue("branchLabel"),
+        tagline: stringValue("tagline"),
+        receiptSize: receipt.receiptSize === "58mm" ? "58mm" : "80mm",
+        footer: stringValue("footer"),
+        showFooter: booleanValue("showFooter", true),
+        showMessage: booleanValue("showMessage", true),
+        receiptMessages,
+        showSocial: booleanValue("showSocial", false),
+        socialText: stringValue("socialText"),
+        showQr: booleanValue("showQr", false),
+        qrText: stringValue("qrText"),
+        logoUrl: stringValue("logoUrl"),
       }),
     );
   },
