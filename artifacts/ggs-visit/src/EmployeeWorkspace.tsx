@@ -58,6 +58,28 @@ function isSameDayAsJakarta(value: string): boolean {
   return dateKey(value) === today;
 }
 
+function normalizeCashAmount(value: string): string {
+  const digits = value.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+  if (!digits) return '';
+  return Number(digits) > 2_147_483_647 ? '2147483647' : digits;
+}
+
+function formatCashAmount(value: string): string {
+  return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function cashAmountCaretPosition(value: string, digitsBeforeCaret: number, separatorsBeforeCaret: number): number {
+  if (digitsBeforeCaret === 0 && separatorsBeforeCaret === 0) return 0;
+  let digits = 0;
+  let separators = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (/\d/.test(value[index])) digits += 1;
+    else separators += 1;
+    if (digits >= digitsBeforeCaret && separators >= separatorsBeforeCaret) return index + 1;
+  }
+  return value.length;
+}
+
 function employeeNextPath(): string {
   const requestedPath = new URLSearchParams(window.location.search).get('next');
   if (!requestedPath) return '/employee/overview';
@@ -231,6 +253,21 @@ function EmployeeCashierPage() {
   const previewTotal = subtotal - discountAmount + previewTax;
   const receivedValue = Number(amountReceived) || 0;
   const changeAmount = paymentMethod === 'cash' ? Math.max(0, receivedValue - previewTotal) : 0;
+  const handleAmountReceivedChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const cursor = input.selectionStart ?? input.value.length;
+    const prefix = input.value.slice(0, cursor);
+    const digitsBeforeCaret = normalizeCashAmount(prefix).length;
+    const separatorsBeforeCaret = (prefix.match(/\./g) ?? []).length;
+    const nextAmount = normalizeCashAmount(input.value);
+    setAmountReceived(nextAmount);
+    setCheckoutError('');
+    window.requestAnimationFrame(() => {
+      const nextDisplayValue = formatCashAmount(nextAmount);
+      const nextCursor = cashAmountCaretPosition(nextDisplayValue, digitsBeforeCaret, separatorsBeforeCaret);
+      input.setSelectionRange(nextCursor, nextCursor);
+    });
+  };
   const cashSuggestions = previewTotal > 0
     ? [
         { label: 'Uang pas', amount: previewTotal },
@@ -597,7 +634,7 @@ function EmployeeCashierPage() {
                 </fieldset>
                 {paymentMethod === 'cash' ? (
                   <>
-                    <label className="cashier-field cashier-field--amount">Uang diterima<input type="number" min={0} max={2147483647} step={1} inputMode="numeric" value={amountReceived} onChange={(event) => setAmountReceived(event.target.value)} placeholder="Masukkan jumlah" data-testid="input-cashier-amount-received" />
+                    <label className="cashier-field cashier-field--amount">Uang diterima<input type="text" inputMode="numeric" autoComplete="off" value={formatCashAmount(amountReceived)} onChange={handleAmountReceivedChange} placeholder="Contoh: 250.000" data-testid="input-cashier-amount-received" />
                       {receivedValue >= previewTotal && previewTotal > 0 && <span className="cashier-change"><span>Kembalian</span><strong>{formatMoney(changeAmount)}</strong></span>}
                     </label>
                     {cashSuggestions.length > 0 && <div className="cashier-amount-shortcuts" role="group" aria-label="Pilihan cepat uang diterima">
