@@ -127,6 +127,10 @@ function EmployeeCashierPage() {
   const submitUnlock = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError('');
+    if (password.length !== 8) {
+      setFormError('Kata sandi harus tepat 8 karakter.');
+      return;
+    }
     unlockCashier.mutate(
       { data: { register: selectedRegister, password } },
       {
@@ -225,18 +229,18 @@ function EmployeeCashierPage() {
           </div>
 
           <form className="employee-cashier__form" onSubmit={submitUnlock}>
-            <label htmlFor="employee-cashier-password">Kata sandi {cashierRegisters.find((item) => item.value === selectedRegister)?.label}</label>
+            <label htmlFor="employee-cashier-password">Kata sandi tepat 8 karakter · {cashierRegisters.find((item) => item.value === selectedRegister)?.label}</label>
             <input
               id="employee-cashier-password"
               name="cashier-password"
               type="password"
               autoComplete="off"
               minLength={8}
-              maxLength={128}
+              maxLength={8}
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Masukkan kata sandi kasir"
+              placeholder="Masukkan 8 karakter"
               data-testid="input-employee-cashier-password"
             />
             {formError && <p className="employee-form-error" role="alert" data-testid="status-employee-cashier-error">{formError}</p>}

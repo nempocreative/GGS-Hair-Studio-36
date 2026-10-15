@@ -252,13 +252,13 @@ export const GetGgsEmployeeCashierSessionResponse = zod.object({
  * @summary Unlock one cashier register with its password
  */
 export const unlockGgsEmployeeCashierBodyPasswordMin = 8;
-export const unlockGgsEmployeeCashierBodyPasswordMax = 128;
+export const unlockGgsEmployeeCashierBodyPasswordMax = 8;
 
 
 
 export const UnlockGgsEmployeeCashierBody = zod.object({
   "register": zod.enum(['ggs_beauty', 'barber_ggs']),
-  "password": zod.string().min(unlockGgsEmployeeCashierBodyPasswordMin).max(unlockGgsEmployeeCashierBodyPasswordMax)
+  "password": zod.string().min(unlockGgsEmployeeCashierBodyPasswordMin).max(unlockGgsEmployeeCashierBodyPasswordMax).describe('Cashier password must be exactly 8 characters.')
 })
 
 export const UnlockGgsEmployeeCashierResponse = zod.object({

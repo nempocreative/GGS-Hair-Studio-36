@@ -872,7 +872,8 @@ components:
         password:
           type: string
           minLength: 8
-          maxLength: 128
+          maxLength: 8
+          description: Cashier password must be exactly 8 characters.
       required:
         - register
         - password
