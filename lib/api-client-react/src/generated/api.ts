@@ -20,11 +20,24 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetGgsAdminOwnerCenterParams,
   GetGgsEmployeeCashierTransactionsParams,
   GetGgsEmployeeReportsParams,
   GgsAccount,
   GgsAccountLoginInput,
   GgsAccountRegistrationInput,
+  GgsAdminOwnerCenterBackup,
+  GgsAdminOwnerCenterBackupInput,
+  GgsAdminOwnerCenterBackupResult,
+  GgsAdminOwnerCenterResponse,
+  GgsAdminOwnerCorrection,
+  GgsAdminOwnerCorrectionApply,
+  GgsAdminOwnerCorrectionApproval,
+  GgsAdminOwnerCorrectionInput,
+  GgsAdminOwnerCorrectionReject,
+  GgsAdminOwnerRecord,
+  GgsAdminOwnerRecordInput,
+  GgsAdminOwnerRecordUpdate,
   GgsAdminSummary,
   GgsAppointment,
   GgsAppointmentInput,
@@ -4768,5 +4781,845 @@ export const useUpdateGgsAppointment = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdateGgsAppointmentMutationOptions(options));
+    }
+
+export const getGetGgsAdminOwnerCenterUrl = (params: GetGgsAdminOwnerCenterParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/ggs/admin/owner-center?${stringifiedParams}` : `/api/ggs/admin/owner-center`
+}
+
+/**
+ * @summary Load owner operations data and reports
+ */
+export const getGgsAdminOwnerCenter = async (params: GetGgsAdminOwnerCenterParams, options?: Parameters<typeof customFetch>[1]): Promise<GgsAdminOwnerCenterResponse> => {
+
+  return customFetch<GgsAdminOwnerCenterResponse>(getGetGgsAdminOwnerCenterUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsAdminOwnerCenterQueryKey = (params?: GetGgsAdminOwnerCenterParams,) => {
+    return [
+    `/api/ggs/admin/owner-center`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetGgsAdminOwnerCenterQueryOptions = <TData = Awaited<ReturnType<typeof getGgsAdminOwnerCenter>>, TError = ErrorType<void>>(params: GetGgsAdminOwnerCenterParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminOwnerCenter>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsAdminOwnerCenterQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsAdminOwnerCenter>>> = ({ signal }) => getGgsAdminOwnerCenter(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminOwnerCenter>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsAdminOwnerCenterQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsAdminOwnerCenter>>>
+export type GetGgsAdminOwnerCenterQueryError = ErrorType<void>
+
+
+/**
+ * @summary Load owner operations data and reports
+ */
+
+export function useGetGgsAdminOwnerCenter<TData = Awaited<ReturnType<typeof getGgsAdminOwnerCenter>>, TError = ErrorType<void>>(
+ params: GetGgsAdminOwnerCenterParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminOwnerCenter>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsAdminOwnerCenterQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateGgsAdminOwnerRecordUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/owner-center/records`
+}
+
+/**
+ * @summary Create an owner operations record
+ */
+export const createGgsAdminOwnerRecord = async (ggsAdminOwnerRecordInput: GgsAdminOwnerRecordInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsAdminOwnerRecord> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsAdminOwnerRecord>(getCreateGgsAdminOwnerRecordUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsAdminOwnerRecordInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGgsAdminOwnerRecordMutationKey = () => ['createGgsAdminOwnerRecord'] as const;
+
+export const getCreateGgsAdminOwnerRecordMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminOwnerRecord>>, TError,CreateGgsAdminOwnerRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminOwnerRecord>>, TError,CreateGgsAdminOwnerRecordMutationVariables, TContext> => {
+
+const mutationKey = getCreateGgsAdminOwnerRecordMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGgsAdminOwnerRecord>>, CreateGgsAdminOwnerRecordMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGgsAdminOwnerRecord(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGgsAdminOwnerRecordMutationResult = NonNullable<Awaited<ReturnType<typeof createGgsAdminOwnerRecord>>>
+    export type CreateGgsAdminOwnerRecordMutationBody = BodyType<GgsAdminOwnerRecordInput>
+    export type CreateGgsAdminOwnerRecordMutationError = ErrorType<void>
+    export type CreateGgsAdminOwnerRecordMutationVariables = {data: BodyType<GgsAdminOwnerRecordInput>}
+
+    /**
+ * @summary Create an owner operations record
+ */
+export const useCreateGgsAdminOwnerRecord = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminOwnerRecord>>, TError,CreateGgsAdminOwnerRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGgsAdminOwnerRecord>>,
+        TError,
+        CreateGgsAdminOwnerRecordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGgsAdminOwnerRecordMutationOptions(options));
+    }
+
+export const getUpdateGgsAdminOwnerRecordUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/owner-center/records/${id}`
+}
+
+/**
+ * @summary Update an owner operations record
+ */
+export const updateGgsAdminOwnerRecord = async (id: number,
+    ggsAdminOwnerRecordUpdate: GgsAdminOwnerRecordUpdate, options?: Parameters<typeof customFetch>[1]): Promise<GgsAdminOwnerRecord> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsAdminOwnerRecord>(getUpdateGgsAdminOwnerRecordUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsAdminOwnerRecordUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateGgsAdminOwnerRecordMutationKey = () => ['updateGgsAdminOwnerRecord'] as const;
+
+export const getUpdateGgsAdminOwnerRecordMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminOwnerRecord>>, TError,UpdateGgsAdminOwnerRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminOwnerRecord>>, TError,UpdateGgsAdminOwnerRecordMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGgsAdminOwnerRecordMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGgsAdminOwnerRecord>>, UpdateGgsAdminOwnerRecordMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateGgsAdminOwnerRecord(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGgsAdminOwnerRecordMutationResult = NonNullable<Awaited<ReturnType<typeof updateGgsAdminOwnerRecord>>>
+    export type UpdateGgsAdminOwnerRecordMutationBody = BodyType<GgsAdminOwnerRecordUpdate>
+    export type UpdateGgsAdminOwnerRecordMutationError = ErrorType<void>
+    export type UpdateGgsAdminOwnerRecordMutationVariables = {id: number;data: BodyType<GgsAdminOwnerRecordUpdate>}
+
+    /**
+ * @summary Update an owner operations record
+ */
+export const useUpdateGgsAdminOwnerRecord = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminOwnerRecord>>, TError,UpdateGgsAdminOwnerRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGgsAdminOwnerRecord>>,
+        TError,
+        UpdateGgsAdminOwnerRecordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGgsAdminOwnerRecordMutationOptions(options));
+    }
+
+export const getDeleteGgsAdminOwnerRecordUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/owner-center/records/${id}`
+}
+
+/**
+ * @summary Archive an owner operations record
+ */
+export const deleteGgsAdminOwnerRecord = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteGgsAdminOwnerRecordUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteGgsAdminOwnerRecordMutationKey = () => ['deleteGgsAdminOwnerRecord'] as const;
+
+export const getDeleteGgsAdminOwnerRecordMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGgsAdminOwnerRecord>>, TError,DeleteGgsAdminOwnerRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGgsAdminOwnerRecord>>, TError,DeleteGgsAdminOwnerRecordMutationVariables, TContext> => {
+
+const mutationKey = getDeleteGgsAdminOwnerRecordMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGgsAdminOwnerRecord>>, DeleteGgsAdminOwnerRecordMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteGgsAdminOwnerRecord(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGgsAdminOwnerRecordMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGgsAdminOwnerRecord>>>
+
+    export type DeleteGgsAdminOwnerRecordMutationError = ErrorType<void>
+    export type DeleteGgsAdminOwnerRecordMutationVariables = {id: number}
+
+    /**
+ * @summary Archive an owner operations record
+ */
+export const useDeleteGgsAdminOwnerRecord = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGgsAdminOwnerRecord>>, TError,DeleteGgsAdminOwnerRecordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGgsAdminOwnerRecord>>,
+        TError,
+        DeleteGgsAdminOwnerRecordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteGgsAdminOwnerRecordMutationOptions(options));
+    }
+
+export const getCreateGgsAdminOwnerCorrectionUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/owner-center/corrections`
+}
+
+/**
+ * @summary Request a correction for one of the three most recent transactions
+ */
+export const createGgsAdminOwnerCorrection = async (ggsAdminOwnerCorrectionInput: GgsAdminOwnerCorrectionInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsAdminOwnerCorrection> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsAdminOwnerCorrection>(getCreateGgsAdminOwnerCorrectionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsAdminOwnerCorrectionInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGgsAdminOwnerCorrectionMutationKey = () => ['createGgsAdminOwnerCorrection'] as const;
+
+export const getCreateGgsAdminOwnerCorrectionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminOwnerCorrection>>, TError,CreateGgsAdminOwnerCorrectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminOwnerCorrection>>, TError,CreateGgsAdminOwnerCorrectionMutationVariables, TContext> => {
+
+const mutationKey = getCreateGgsAdminOwnerCorrectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGgsAdminOwnerCorrection>>, CreateGgsAdminOwnerCorrectionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGgsAdminOwnerCorrection(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGgsAdminOwnerCorrectionMutationResult = NonNullable<Awaited<ReturnType<typeof createGgsAdminOwnerCorrection>>>
+    export type CreateGgsAdminOwnerCorrectionMutationBody = BodyType<GgsAdminOwnerCorrectionInput>
+    export type CreateGgsAdminOwnerCorrectionMutationError = ErrorType<void>
+    export type CreateGgsAdminOwnerCorrectionMutationVariables = {data: BodyType<GgsAdminOwnerCorrectionInput>}
+
+    /**
+ * @summary Request a correction for one of the three most recent transactions
+ */
+export const useCreateGgsAdminOwnerCorrection = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGgsAdminOwnerCorrection>>, TError,CreateGgsAdminOwnerCorrectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGgsAdminOwnerCorrection>>,
+        TError,
+        CreateGgsAdminOwnerCorrectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGgsAdminOwnerCorrectionMutationOptions(options));
+    }
+
+export const getApproveGgsAdminOwnerCorrectionUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/owner-center/corrections/${id}/approve`
+}
+
+/**
+ * @summary Approve a correction and issue a one-time code
+ */
+export const approveGgsAdminOwnerCorrection = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<GgsAdminOwnerCorrectionApproval> => {
+
+  return customFetch<GgsAdminOwnerCorrectionApproval>(getApproveGgsAdminOwnerCorrectionUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveGgsAdminOwnerCorrectionMutationKey = () => ['approveGgsAdminOwnerCorrection'] as const;
+
+export const getApproveGgsAdminOwnerCorrectionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveGgsAdminOwnerCorrection>>, TError,ApproveGgsAdminOwnerCorrectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveGgsAdminOwnerCorrection>>, TError,ApproveGgsAdminOwnerCorrectionMutationVariables, TContext> => {
+
+const mutationKey = getApproveGgsAdminOwnerCorrectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveGgsAdminOwnerCorrection>>, ApproveGgsAdminOwnerCorrectionMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  approveGgsAdminOwnerCorrection(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveGgsAdminOwnerCorrectionMutationResult = NonNullable<Awaited<ReturnType<typeof approveGgsAdminOwnerCorrection>>>
+
+    export type ApproveGgsAdminOwnerCorrectionMutationError = ErrorType<void>
+    export type ApproveGgsAdminOwnerCorrectionMutationVariables = {id: number}
+
+    /**
+ * @summary Approve a correction and issue a one-time code
+ */
+export const useApproveGgsAdminOwnerCorrection = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveGgsAdminOwnerCorrection>>, TError,ApproveGgsAdminOwnerCorrectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveGgsAdminOwnerCorrection>>,
+        TError,
+        ApproveGgsAdminOwnerCorrectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApproveGgsAdminOwnerCorrectionMutationOptions(options));
+    }
+
+export const getRejectGgsAdminOwnerCorrectionUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/owner-center/corrections/${id}/reject`
+}
+
+/**
+ * @summary Reject a correction request
+ */
+export const rejectGgsAdminOwnerCorrection = async (id: number,
+    ggsAdminOwnerCorrectionReject: GgsAdminOwnerCorrectionReject, options?: Parameters<typeof customFetch>[1]): Promise<GgsAdminOwnerCorrection> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsAdminOwnerCorrection>(getRejectGgsAdminOwnerCorrectionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsAdminOwnerCorrectionReject)
+  }
+);}
+
+
+
+
+
+export const getRejectGgsAdminOwnerCorrectionMutationKey = () => ['rejectGgsAdminOwnerCorrection'] as const;
+
+export const getRejectGgsAdminOwnerCorrectionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectGgsAdminOwnerCorrection>>, TError,RejectGgsAdminOwnerCorrectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectGgsAdminOwnerCorrection>>, TError,RejectGgsAdminOwnerCorrectionMutationVariables, TContext> => {
+
+const mutationKey = getRejectGgsAdminOwnerCorrectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectGgsAdminOwnerCorrection>>, RejectGgsAdminOwnerCorrectionMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  rejectGgsAdminOwnerCorrection(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectGgsAdminOwnerCorrectionMutationResult = NonNullable<Awaited<ReturnType<typeof rejectGgsAdminOwnerCorrection>>>
+    export type RejectGgsAdminOwnerCorrectionMutationBody = BodyType<GgsAdminOwnerCorrectionReject>
+    export type RejectGgsAdminOwnerCorrectionMutationError = ErrorType<void>
+    export type RejectGgsAdminOwnerCorrectionMutationVariables = {id: number;data: BodyType<GgsAdminOwnerCorrectionReject>}
+
+    /**
+ * @summary Reject a correction request
+ */
+export const useRejectGgsAdminOwnerCorrection = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectGgsAdminOwnerCorrection>>, TError,RejectGgsAdminOwnerCorrectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectGgsAdminOwnerCorrection>>,
+        TError,
+        RejectGgsAdminOwnerCorrectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRejectGgsAdminOwnerCorrectionMutationOptions(options));
+    }
+
+export const getApplyGgsAdminOwnerCorrectionUrl = (id: number,) => {
+
+
+
+
+  return `/api/ggs/admin/owner-center/corrections/${id}/apply`
+}
+
+/**
+ * @summary Apply an approved correction using its one-time code
+ */
+export const applyGgsAdminOwnerCorrection = async (id: number,
+    ggsAdminOwnerCorrectionApply: GgsAdminOwnerCorrectionApply, options?: Parameters<typeof customFetch>[1]): Promise<GgsAdminOwnerCorrection> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsAdminOwnerCorrection>(getApplyGgsAdminOwnerCorrectionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsAdminOwnerCorrectionApply)
+  }
+);}
+
+
+
+
+
+export const getApplyGgsAdminOwnerCorrectionMutationKey = () => ['applyGgsAdminOwnerCorrection'] as const;
+
+export const getApplyGgsAdminOwnerCorrectionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applyGgsAdminOwnerCorrection>>, TError,ApplyGgsAdminOwnerCorrectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof applyGgsAdminOwnerCorrection>>, TError,ApplyGgsAdminOwnerCorrectionMutationVariables, TContext> => {
+
+const mutationKey = getApplyGgsAdminOwnerCorrectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof applyGgsAdminOwnerCorrection>>, ApplyGgsAdminOwnerCorrectionMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  applyGgsAdminOwnerCorrection(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApplyGgsAdminOwnerCorrectionMutationResult = NonNullable<Awaited<ReturnType<typeof applyGgsAdminOwnerCorrection>>>
+    export type ApplyGgsAdminOwnerCorrectionMutationBody = BodyType<GgsAdminOwnerCorrectionApply>
+    export type ApplyGgsAdminOwnerCorrectionMutationError = ErrorType<void>
+    export type ApplyGgsAdminOwnerCorrectionMutationVariables = {id: number;data: BodyType<GgsAdminOwnerCorrectionApply>}
+
+    /**
+ * @summary Apply an approved correction using its one-time code
+ */
+export const useApplyGgsAdminOwnerCorrection = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applyGgsAdminOwnerCorrection>>, TError,ApplyGgsAdminOwnerCorrectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof applyGgsAdminOwnerCorrection>>,
+        TError,
+        ApplyGgsAdminOwnerCorrectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApplyGgsAdminOwnerCorrectionMutationOptions(options));
+    }
+
+export const getGetGgsAdminOwnerCenterBackupUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/owner-center/backup`
+}
+
+/**
+ * @summary Export owner-managed operations data
+ */
+export const getGgsAdminOwnerCenterBackup = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsAdminOwnerCenterBackup> => {
+
+  return customFetch<GgsAdminOwnerCenterBackup>(getGetGgsAdminOwnerCenterBackupUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsAdminOwnerCenterBackupQueryKey = () => {
+    return [
+    `/api/ggs/admin/owner-center/backup`
+    ] as const;
+    }
+
+
+export const getGetGgsAdminOwnerCenterBackupQueryOptions = <TData = Awaited<ReturnType<typeof getGgsAdminOwnerCenterBackup>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminOwnerCenterBackup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsAdminOwnerCenterBackupQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsAdminOwnerCenterBackup>>> = ({ signal }) => getGgsAdminOwnerCenterBackup({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminOwnerCenterBackup>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsAdminOwnerCenterBackupQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsAdminOwnerCenterBackup>>>
+export type GetGgsAdminOwnerCenterBackupQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Export owner-managed operations data
+ */
+
+export function useGetGgsAdminOwnerCenterBackup<TData = Awaited<ReturnType<typeof getGgsAdminOwnerCenterBackup>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminOwnerCenterBackup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsAdminOwnerCenterBackupQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRestoreGgsAdminOwnerCenterBackupUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/owner-center/backup`
+}
+
+/**
+ * @summary Merge an owner-data backup without deleting existing records
+ */
+export const restoreGgsAdminOwnerCenterBackup = async (ggsAdminOwnerCenterBackupInput: GgsAdminOwnerCenterBackupInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsAdminOwnerCenterBackupResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsAdminOwnerCenterBackupResult>(getRestoreGgsAdminOwnerCenterBackupUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsAdminOwnerCenterBackupInput)
+  }
+);}
+
+
+
+
+
+export const getRestoreGgsAdminOwnerCenterBackupMutationKey = () => ['restoreGgsAdminOwnerCenterBackup'] as const;
+
+export const getRestoreGgsAdminOwnerCenterBackupMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreGgsAdminOwnerCenterBackup>>, TError,RestoreGgsAdminOwnerCenterBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreGgsAdminOwnerCenterBackup>>, TError,RestoreGgsAdminOwnerCenterBackupMutationVariables, TContext> => {
+
+const mutationKey = getRestoreGgsAdminOwnerCenterBackupMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreGgsAdminOwnerCenterBackup>>, RestoreGgsAdminOwnerCenterBackupMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  restoreGgsAdminOwnerCenterBackup(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreGgsAdminOwnerCenterBackupMutationResult = NonNullable<Awaited<ReturnType<typeof restoreGgsAdminOwnerCenterBackup>>>
+    export type RestoreGgsAdminOwnerCenterBackupMutationBody = BodyType<GgsAdminOwnerCenterBackupInput>
+    export type RestoreGgsAdminOwnerCenterBackupMutationError = ErrorType<void>
+    export type RestoreGgsAdminOwnerCenterBackupMutationVariables = {data: BodyType<GgsAdminOwnerCenterBackupInput>}
+
+    /**
+ * @summary Merge an owner-data backup without deleting existing records
+ */
+export const useRestoreGgsAdminOwnerCenterBackup = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreGgsAdminOwnerCenterBackup>>, TError,RestoreGgsAdminOwnerCenterBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreGgsAdminOwnerCenterBackup>>,
+        TError,
+        RestoreGgsAdminOwnerCenterBackupMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRestoreGgsAdminOwnerCenterBackupMutationOptions(options));
     }
 

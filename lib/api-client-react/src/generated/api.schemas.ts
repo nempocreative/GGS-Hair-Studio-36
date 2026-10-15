@@ -801,6 +801,271 @@ export interface GgsAdminSummary {
   monthlyRevenue: number;
 }
 
+export type GgsAdminOwnerRecordType = typeof GgsAdminOwnerRecordType[keyof typeof GgsAdminOwnerRecordType];
+
+
+export const GgsAdminOwnerRecordType = {
+  branch: 'branch',
+  customer: 'customer',
+  finance: 'finance',
+  employee_profile: 'employee_profile',
+  payroll: 'payroll',
+  settings: 'settings',
+} as const;
+
+export type GgsAdminOwnerRecordData = { [key: string]: unknown };
+
+export interface GgsAdminOwnerRecord {
+  id: number;
+  recordType: GgsAdminOwnerRecordType;
+  recordKey: string;
+  /** @nullable */
+  branchId: string | null;
+  /** @nullable */
+  employeeId: string | null;
+  /** @nullable */
+  recordDate: string | null;
+  /** @nullable */
+  recordPeriod: string | null;
+  status: string;
+  data: GgsAdminOwnerRecordData;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type GgsAdminOwnerRecordInputData = { [key: string]: unknown };
+
+export interface GgsAdminOwnerRecordInput {
+  recordType: GgsAdminOwnerRecordType;
+  /**
+     * @minLength 1
+     * @maxLength 180
+     */
+  recordKey: string;
+  /** @maxLength 100 */
+  branchId?: string;
+  /** @maxLength 100 */
+  employeeId?: string;
+  recordDate?: string;
+  /** @maxLength 20 */
+  recordPeriod?: string;
+  /** @maxLength 30 */
+  status?: string;
+  data: GgsAdminOwnerRecordInputData;
+}
+
+export type GgsAdminOwnerRecordUpdateData = { [key: string]: unknown };
+
+export interface GgsAdminOwnerRecordUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 180
+     */
+  recordKey?: string;
+  /** @maxLength 100 */
+  branchId?: string;
+  /** @maxLength 100 */
+  employeeId?: string;
+  recordDate?: string;
+  /** @maxLength 20 */
+  recordPeriod?: string;
+  /** @maxLength 30 */
+  status?: string;
+  data?: GgsAdminOwnerRecordUpdateData;
+}
+
+export interface GgsAdminOwnerTransactionItem {
+  id: number;
+  transactionId: number;
+  itemType: string;
+  itemId: number;
+  itemName: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface GgsAdminOwnerTransaction {
+  id: number;
+  receiptNumber: string;
+  register: string;
+  employeeId: string;
+  employeeName: string;
+  customerName: string;
+  paymentMethod: string;
+  status: string;
+  /** @nullable */
+  cancellationReason: string | null;
+  subtotal: number;
+  discountAmount: number;
+  /** @nullable */
+  voucherCode: string | null;
+  taxRate: number;
+  taxAmount: number;
+  amountReceived: number;
+  changeAmount: number;
+  total: number;
+  createdAt: string;
+  items: GgsAdminOwnerTransactionItem[];
+}
+
+export interface GgsAdminOwnerEmployee {
+  id: string;
+  employeeId: string;
+  name: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface GgsAdminOwnerAttendance {
+  id: string;
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  attendanceDate: string;
+  checkInAt: string;
+  /** @nullable */
+  checkOutAt: string | null;
+}
+
+export interface GgsAdminOwnerStockMovement {
+  id: number;
+  productId: number;
+  productName: string;
+  movementType: string;
+  quantityChange: number;
+  previousStock: number;
+  newStock: number;
+  note: string;
+  employeeId: string;
+  employeeName: string;
+  createdAt: string;
+}
+
+export interface GgsAdminOwnerAppointmentsSummary {
+  total: number;
+  completed: number;
+  pending: number;
+  cancelled: number;
+}
+
+export type GgsAdminOwnerCorrectionStatus = typeof GgsAdminOwnerCorrectionStatus[keyof typeof GgsAdminOwnerCorrectionStatus];
+
+
+export const GgsAdminOwnerCorrectionStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  applied: 'applied',
+} as const;
+
+/**
+ * @nullable
+ */
+export type GgsAdminOwnerCorrectionBeforeSnapshot = { [key: string]: unknown } | null;
+
+/**
+ * @nullable
+ */
+export type GgsAdminOwnerCorrectionAfterSnapshot = { [key: string]: unknown } | null;
+
+export interface GgsAdminOwnerCorrection {
+  id: number;
+  transactionId: number;
+  receiptNumber: string;
+  status: GgsAdminOwnerCorrectionStatus;
+  reason: string;
+  proposedCustomerName: string;
+  proposedEmployeeName: string;
+  proposedDiscountAmount: number;
+  proposedAmountReceived: number;
+  proposedPaymentMethod: string;
+  /** @nullable */
+  rejectReason: string | null;
+  /** @nullable */
+  beforeSnapshot: GgsAdminOwnerCorrectionBeforeSnapshot;
+  /** @nullable */
+  afterSnapshot: GgsAdminOwnerCorrectionAfterSnapshot;
+  createdAt: string;
+  /** @nullable */
+  approvedAt: string | null;
+  /** @nullable */
+  rejectedAt: string | null;
+  /** @nullable */
+  appliedAt: string | null;
+}
+
+export interface GgsAdminOwnerCenterResponse {
+  fromDate: string;
+  toDate: string;
+  records: GgsAdminOwnerRecord[];
+  employees: GgsAdminOwnerEmployee[];
+  transactions: GgsAdminOwnerTransaction[];
+  attendance: GgsAdminOwnerAttendance[];
+  stockMovements: GgsAdminOwnerStockMovement[];
+  appointments: GgsAdminOwnerAppointmentsSummary;
+  correctionRequests: GgsAdminOwnerCorrection[];
+  products: GgsProduct[];
+}
+
+export interface GgsAdminOwnerCorrectionInput {
+  transactionId: number;
+  /**
+     * @minLength 5
+     * @maxLength 600
+     */
+  reason: string;
+  /** @maxLength 120 */
+  proposedCustomerName: string;
+  /** @maxLength 120 */
+  proposedEmployeeName: string;
+  /** @minimum 0 */
+  proposedDiscountAmount: number;
+  /** @minimum 0 */
+  proposedAmountReceived: number;
+  /** @maxLength 40 */
+  proposedPaymentMethod: string;
+}
+
+export interface GgsAdminOwnerCorrectionApproval {
+  correction: GgsAdminOwnerCorrection;
+  approvalCode: string;
+}
+
+export interface GgsAdminOwnerCorrectionReject {
+  /**
+     * @minLength 3
+     * @maxLength 600
+     */
+  reason: string;
+}
+
+export interface GgsAdminOwnerCorrectionApply {
+  /**
+     * @minLength 6
+     * @maxLength 32
+     */
+  approvalCode: string;
+}
+
+export interface GgsAdminOwnerCenterBackup {
+  formatVersion: number;
+  exportedAt: string;
+  records: GgsAdminOwnerRecord[];
+}
+
+export interface GgsAdminOwnerCenterBackupInput {
+  formatVersion: number;
+  /** @maxItems 5000 */
+  records: GgsAdminOwnerRecordInput[];
+}
+
+export interface GgsAdminOwnerCenterBackupResult {
+  imported: number;
+  updated: number;
+  skipped: number;
+}
+
 export type GetGgsEmployeeCashierTransactionsParams = {
 fromDate?: string;
 toDate?: string;
@@ -854,4 +1119,10 @@ export const GetGgsEmployeeReportsPaymentMethod = {
   qris: 'qris',
   card: 'card',
 } as const;
+
+export type GetGgsAdminOwnerCenterParams = {
+fromDate: string;
+toDate: string;
+branchId?: string;
+};
 

@@ -1141,6 +1141,238 @@ paths:
                 $ref: "#/components/schemas/GgsAppointment"
         "404":
           description: Appointment not found
+  /ggs/admin/owner-center:
+    get:
+      operationId: getGgsAdminOwnerCenter
+      tags: [ggs-admin]
+      summary: Load owner operations data and reports
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: branchId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Owner-only operational data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAdminOwnerCenterResponse"
+        "400":
+          description: Invalid date range
+  /ggs/admin/owner-center/records:
+    post:
+      operationId: createGgsAdminOwnerRecord
+      tags: [ggs-admin]
+      summary: Create an owner operations record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsAdminOwnerRecordInput"
+      responses:
+        "201":
+          description: Owner record created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAdminOwnerRecord"
+        "400":
+          description: Invalid owner record
+        "409":
+          description: Record key already exists
+  /ggs/admin/owner-center/records/{id}:
+    patch:
+      operationId: updateGgsAdminOwnerRecord
+      tags: [ggs-admin]
+      summary: Update an owner operations record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsAdminOwnerRecordUpdate"
+      responses:
+        "200":
+          description: Owner record updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAdminOwnerRecord"
+        "400":
+          description: Invalid owner record
+        "404":
+          description: Owner record not found
+    delete:
+      operationId: deleteGgsAdminOwnerRecord
+      tags: [ggs-admin]
+      summary: Archive an owner operations record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Owner record archived
+        "404":
+          description: Owner record not found
+  /ggs/admin/owner-center/corrections:
+    post:
+      operationId: createGgsAdminOwnerCorrection
+      tags: [ggs-admin]
+      summary: Request a correction for one of the three most recent transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsAdminOwnerCorrectionInput"
+      responses:
+        "201":
+          description: Correction request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAdminOwnerCorrection"
+        "400":
+          description: Invalid correction request
+        "404":
+          description: Transaction not found or outside the eligible window
+        "409":
+          description: A correction request is already open for this transaction
+  /ggs/admin/owner-center/corrections/{id}/approve:
+    post:
+      operationId: approveGgsAdminOwnerCorrection
+      tags: [ggs-admin]
+      summary: Approve a correction and issue a one-time code
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Approved correction and one-time approval code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAdminOwnerCorrectionApproval"
+        "404":
+          description: Correction request not found
+        "409":
+          description: Correction request is not pending
+  /ggs/admin/owner-center/corrections/{id}/reject:
+    post:
+      operationId: rejectGgsAdminOwnerCorrection
+      tags: [ggs-admin]
+      summary: Reject a correction request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsAdminOwnerCorrectionReject"
+      responses:
+        "200":
+          description: Correction request rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAdminOwnerCorrection"
+        "404":
+          description: Correction request not found
+        "409":
+          description: Correction request is not pending
+  /ggs/admin/owner-center/corrections/{id}/apply:
+    post:
+      operationId: applyGgsAdminOwnerCorrection
+      tags: [ggs-admin]
+      summary: Apply an approved correction using its one-time code
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsAdminOwnerCorrectionApply"
+      responses:
+        "200":
+          description: Correction applied with an audit snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAdminOwnerCorrection"
+        "400":
+          description: Invalid approval code
+        "404":
+          description: Correction request not found
+        "409":
+          description: Correction request is not approved or was already used
+  /ggs/admin/owner-center/backup:
+    get:
+      operationId: getGgsAdminOwnerCenterBackup
+      tags: [ggs-admin]
+      summary: Export owner-managed operations data
+      responses:
+        "200":
+          description: Backup that excludes authentication credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAdminOwnerCenterBackup"
+    post:
+      operationId: restoreGgsAdminOwnerCenterBackup
+      tags: [ggs-admin]
+      summary: Merge an owner-data backup without deleting existing records
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsAdminOwnerCenterBackupInput"
+      responses:
+        "200":
+          description: Backup merged without deleting existing records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsAdminOwnerCenterBackupResult"
+        "400":
+          description: Invalid backup file
 components:
   schemas:
     HealthStatus:
@@ -2285,4 +2517,468 @@ components:
         - confirmedAppointments
         - activeServices
         - monthlyRevenue
+    GgsAdminOwnerRecordType:
+      type: string
+      enum: [branch, customer, finance, employee_profile, payroll, settings]
+    GgsAdminOwnerRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        recordType:
+          $ref: "#/components/schemas/GgsAdminOwnerRecordType"
+        recordKey:
+          type: string
+        branchId:
+          type: [string, "null"]
+        employeeId:
+          type: [string, "null"]
+        recordDate:
+          type: [string, "null"]
+          format: date
+        recordPeriod:
+          type: [string, "null"]
+        status:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - recordType
+        - recordKey
+        - branchId
+        - employeeId
+        - recordDate
+        - recordPeriod
+        - status
+        - data
+        - createdAt
+        - updatedAt
+    GgsAdminOwnerRecordInput:
+      type: object
+      properties:
+        recordType:
+          $ref: "#/components/schemas/GgsAdminOwnerRecordType"
+        recordKey:
+          type: string
+          minLength: 1
+          maxLength: 180
+        branchId:
+          type: string
+          maxLength: 100
+        employeeId:
+          type: string
+          maxLength: 100
+        recordDate:
+          type: string
+          format: date
+        recordPeriod:
+          type: string
+          maxLength: 20
+        status:
+          type: string
+          maxLength: 30
+        data:
+          type: object
+          additionalProperties: true
+      required: [recordType, recordKey, data]
+    GgsAdminOwnerRecordUpdate:
+      type: object
+      properties:
+        recordKey:
+          type: string
+          minLength: 1
+          maxLength: 180
+        branchId:
+          type: string
+          maxLength: 100
+        employeeId:
+          type: string
+          maxLength: 100
+        recordDate:
+          type: string
+          format: date
+        recordPeriod:
+          type: string
+          maxLength: 20
+        status:
+          type: string
+          maxLength: 30
+        data:
+          type: object
+          additionalProperties: true
+    GgsAdminOwnerTransactionItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        transactionId:
+          type: integer
+        itemType:
+          type: string
+        itemId:
+          type: integer
+        itemName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: integer
+        lineTotal:
+          type: integer
+      required: [id, transactionId, itemType, itemId, itemName, quantity, unitPrice, lineTotal]
+    GgsAdminOwnerTransaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        receiptNumber:
+          type: string
+        register:
+          type: string
+        employeeId:
+          type: string
+        employeeName:
+          type: string
+        customerName:
+          type: string
+        paymentMethod:
+          type: string
+        status:
+          type: string
+        cancellationReason:
+          type: [string, "null"]
+        subtotal:
+          type: integer
+        discountAmount:
+          type: integer
+        voucherCode:
+          type: [string, "null"]
+        taxRate:
+          type: integer
+        taxAmount:
+          type: integer
+        amountReceived:
+          type: integer
+        changeAmount:
+          type: integer
+        total:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerTransactionItem"
+      required:
+        - id
+        - receiptNumber
+        - register
+        - employeeId
+        - employeeName
+        - customerName
+        - paymentMethod
+        - status
+        - cancellationReason
+        - subtotal
+        - discountAmount
+        - voucherCode
+        - taxRate
+        - taxAmount
+        - amountReceived
+        - changeAmount
+        - total
+        - createdAt
+        - items
+    GgsAdminOwnerEmployee:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+        name:
+          type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, employeeId, name, active, createdAt]
+    GgsAdminOwnerAttendance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        employeeCode:
+          type: string
+        employeeName:
+          type: string
+        attendanceDate:
+          type: string
+          format: date
+        checkInAt:
+          type: string
+          format: date-time
+        checkOutAt:
+          type: [string, "null"]
+          format: date-time
+      required: [id, employeeId, employeeCode, employeeName, attendanceDate, checkInAt, checkOutAt]
+    GgsAdminOwnerStockMovement:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+        movementType:
+          type: string
+        quantityChange:
+          type: integer
+        previousStock:
+          type: integer
+        newStock:
+          type: integer
+        note:
+          type: string
+        employeeId:
+          type: string
+        employeeName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, productId, productName, movementType, quantityChange, previousStock, newStock, note, employeeId, employeeName, createdAt]
+    GgsAdminOwnerAppointmentsSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        completed:
+          type: integer
+        pending:
+          type: integer
+        cancelled:
+          type: integer
+      required: [total, completed, pending, cancelled]
+    GgsAdminOwnerCenterResponse:
+      type: object
+      properties:
+        fromDate:
+          type: string
+          format: date
+        toDate:
+          type: string
+          format: date
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerRecord"
+        employees:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerEmployee"
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerTransaction"
+        attendance:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerAttendance"
+        stockMovements:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerStockMovement"
+        appointments:
+          $ref: "#/components/schemas/GgsAdminOwnerAppointmentsSummary"
+        correctionRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerCorrection"
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsProduct"
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerService"
+        eligibleCorrectionTransactionIds:
+          type: array
+          items:
+            type: integer
+      required: [fromDate, toDate, records, employees, transactions, attendance, stockMovements, appointments, correctionRequests, products, services, eligibleCorrectionTransactionIds]
+    GgsAdminOwnerService:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        active:
+          type: boolean
+      required: [id, name, category, active]
+    GgsAdminOwnerCorrectionInput:
+      type: object
+      properties:
+        transactionId:
+          type: integer
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 600
+        proposedCustomerName:
+          type: string
+          maxLength: 120
+        proposedEmployeeName:
+          type: string
+          maxLength: 120
+        proposedDiscountAmount:
+          type: integer
+          minimum: 0
+        proposedAmountReceived:
+          type: integer
+          minimum: 0
+        proposedPaymentMethod:
+          type: string
+          maxLength: 40
+      required: [transactionId, reason, proposedCustomerName, proposedEmployeeName, proposedDiscountAmount, proposedAmountReceived, proposedPaymentMethod]
+    GgsAdminOwnerCorrection:
+      type: object
+      properties:
+        id:
+          type: integer
+        transactionId:
+          type: integer
+        receiptNumber:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, applied]
+        reason:
+          type: string
+        proposedCustomerName:
+          type: string
+        proposedEmployeeName:
+          type: string
+        proposedDiscountAmount:
+          type: integer
+        proposedAmountReceived:
+          type: integer
+        proposedPaymentMethod:
+          type: string
+        rejectReason:
+          type: [string, "null"]
+        beforeSnapshot:
+          type: [object, "null"]
+          additionalProperties: true
+        afterSnapshot:
+          type: [object, "null"]
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        approvedAt:
+          type: [string, "null"]
+          format: date-time
+        rejectedAt:
+          type: [string, "null"]
+          format: date-time
+        appliedAt:
+          type: [string, "null"]
+          format: date-time
+      required:
+        - id
+        - transactionId
+        - receiptNumber
+        - status
+        - reason
+        - proposedCustomerName
+        - proposedEmployeeName
+        - proposedDiscountAmount
+        - proposedAmountReceived
+        - proposedPaymentMethod
+        - rejectReason
+        - beforeSnapshot
+        - afterSnapshot
+        - createdAt
+        - approvedAt
+        - rejectedAt
+        - appliedAt
+    GgsAdminOwnerCorrectionApproval:
+      type: object
+      properties:
+        correction:
+          $ref: "#/components/schemas/GgsAdminOwnerCorrection"
+        approvalCode:
+          type: string
+      required: [correction, approvalCode]
+    GgsAdminOwnerCorrectionReject:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 600
+      required: [reason]
+    GgsAdminOwnerCorrectionApply:
+      type: object
+      properties:
+        approvalCode:
+          type: string
+          minLength: 6
+          maxLength: 32
+      required: [approvalCode]
+    GgsAdminOwnerCenterBackup:
+      type: object
+      properties:
+        formatVersion:
+          type: integer
+        exportedAt:
+          type: string
+          format: date-time
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerRecord"
+      required: [formatVersion, exportedAt, records]
+    GgsAdminOwnerCenterBackupInput:
+      type: object
+      properties:
+        formatVersion:
+          type: integer
+        records:
+          type: array
+          maxItems: 5000
+          items:
+            $ref: "#/components/schemas/GgsAdminOwnerRecordInput"
+      required: [formatVersion, records]
+    GgsAdminOwnerCenterBackupResult:
+      type: object
+      properties:
+        imported:
+          type: integer
+        updated:
+          type: integer
+        skipped:
+          type: integer
+      required: [imported, updated, skipped]
 

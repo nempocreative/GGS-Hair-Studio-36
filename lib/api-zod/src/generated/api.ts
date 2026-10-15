@@ -1416,3 +1416,434 @@ export const UpdateGgsAppointmentResponse = zod.object({
 })
 
 
+/**
+ * @summary Load owner operations data and reports
+ */
+export const GetGgsAdminOwnerCenterQueryParams = zod.object({
+  "fromDate": zod.date(),
+  "toDate": zod.date(),
+  "branchId": zod.coerce.string().optional()
+})
+
+export const GetGgsAdminOwnerCenterResponse = zod.object({
+  "fromDate": zod.coerce.date(),
+  "toDate": zod.coerce.date(),
+  "records": zod.array(zod.object({
+  "id": zod.number().int(),
+  "recordType": zod.enum(['branch', 'customer', 'finance', 'employee_profile', 'payroll', 'settings']),
+  "recordKey": zod.string(),
+  "branchId": zod.string().nullable(),
+  "employeeId": zod.string().nullable(),
+  "recordDate": zod.coerce.date().nullable(),
+  "recordPeriod": zod.string().nullable(),
+  "status": zod.string(),
+  "data": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "employees": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "employeeId": zod.string(),
+  "name": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})),
+  "transactions": zod.array(zod.object({
+  "id": zod.number().int(),
+  "receiptNumber": zod.string(),
+  "register": zod.string(),
+  "employeeId": zod.string(),
+  "employeeName": zod.string(),
+  "customerName": zod.string(),
+  "paymentMethod": zod.string(),
+  "status": zod.string(),
+  "cancellationReason": zod.string().nullable(),
+  "subtotal": zod.number().int(),
+  "discountAmount": zod.number().int(),
+  "voucherCode": zod.string().nullable(),
+  "taxRate": zod.number().int(),
+  "taxAmount": zod.number().int(),
+  "amountReceived": zod.number().int(),
+  "changeAmount": zod.number().int(),
+  "total": zod.number().int(),
+  "createdAt": zod.coerce.date(),
+  "items": zod.array(zod.object({
+  "id": zod.number().int(),
+  "transactionId": zod.number().int(),
+  "itemType": zod.string(),
+  "itemId": zod.number().int(),
+  "itemName": zod.string(),
+  "quantity": zod.number().int(),
+  "unitPrice": zod.number().int(),
+  "lineTotal": zod.number().int()
+}))
+})),
+  "attendance": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "employeeId": zod.string().uuid(),
+  "employeeCode": zod.string(),
+  "employeeName": zod.string(),
+  "attendanceDate": zod.coerce.date(),
+  "checkInAt": zod.coerce.date(),
+  "checkOutAt": zod.coerce.date().nullable()
+})),
+  "stockMovements": zod.array(zod.object({
+  "id": zod.number().int(),
+  "productId": zod.number().int(),
+  "productName": zod.string(),
+  "movementType": zod.string(),
+  "quantityChange": zod.number().int(),
+  "previousStock": zod.number().int(),
+  "newStock": zod.number().int(),
+  "note": zod.string(),
+  "employeeId": zod.string(),
+  "employeeName": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "appointments": zod.object({
+  "total": zod.number().int(),
+  "completed": zod.number().int(),
+  "pending": zod.number().int(),
+  "cancelled": zod.number().int()
+}),
+  "correctionRequests": zod.array(zod.object({
+  "id": zod.number().int(),
+  "transactionId": zod.number().int(),
+  "receiptNumber": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'applied']),
+  "reason": zod.string(),
+  "proposedCustomerName": zod.string(),
+  "proposedEmployeeName": zod.string(),
+  "proposedDiscountAmount": zod.number().int(),
+  "proposedAmountReceived": zod.number().int(),
+  "proposedPaymentMethod": zod.string(),
+  "rejectReason": zod.string().nullable(),
+  "beforeSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "afterSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "createdAt": zod.coerce.date(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "rejectedAt": zod.coerce.date().nullable(),
+  "appliedAt": zod.coerce.date().nullable()
+})),
+  "products": zod.array(zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().int(),
+  "stock": zod.number().int(),
+  "active": zod.boolean(),
+  "imageUrl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Create an owner operations record
+ */
+export const createGgsAdminOwnerRecordBodyRecordKeyMax = 180;
+
+export const createGgsAdminOwnerRecordBodyBranchIdMax = 100;
+
+export const createGgsAdminOwnerRecordBodyEmployeeIdMax = 100;
+
+export const createGgsAdminOwnerRecordBodyRecordPeriodMax = 20;
+
+export const createGgsAdminOwnerRecordBodyStatusMax = 30;
+
+
+
+export const CreateGgsAdminOwnerRecordBody = zod.object({
+  "recordType": zod.enum(['branch', 'customer', 'finance', 'employee_profile', 'payroll', 'settings']),
+  "recordKey": zod.string().min(1).max(createGgsAdminOwnerRecordBodyRecordKeyMax),
+  "branchId": zod.string().max(createGgsAdminOwnerRecordBodyBranchIdMax).optional(),
+  "employeeId": zod.string().max(createGgsAdminOwnerRecordBodyEmployeeIdMax).optional(),
+  "recordDate": zod.coerce.date().optional(),
+  "recordPeriod": zod.string().max(createGgsAdminOwnerRecordBodyRecordPeriodMax).optional(),
+  "status": zod.string().max(createGgsAdminOwnerRecordBodyStatusMax).optional(),
+  "data": zod.record(zod.string(), zod.unknown())
+})
+
+export const CreateGgsAdminOwnerRecordResponse = zod.object({
+  "id": zod.number().int(),
+  "recordType": zod.enum(['branch', 'customer', 'finance', 'employee_profile', 'payroll', 'settings']),
+  "recordKey": zod.string(),
+  "branchId": zod.string().nullable(),
+  "employeeId": zod.string().nullable(),
+  "recordDate": zod.coerce.date().nullable(),
+  "recordPeriod": zod.string().nullable(),
+  "status": zod.string(),
+  "data": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update an owner operations record
+ */
+export const UpdateGgsAdminOwnerRecordParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateGgsAdminOwnerRecordBodyRecordKeyMax = 180;
+
+export const updateGgsAdminOwnerRecordBodyBranchIdMax = 100;
+
+export const updateGgsAdminOwnerRecordBodyEmployeeIdMax = 100;
+
+export const updateGgsAdminOwnerRecordBodyRecordPeriodMax = 20;
+
+export const updateGgsAdminOwnerRecordBodyStatusMax = 30;
+
+
+
+export const UpdateGgsAdminOwnerRecordBody = zod.object({
+  "recordKey": zod.string().min(1).max(updateGgsAdminOwnerRecordBodyRecordKeyMax).optional(),
+  "branchId": zod.string().max(updateGgsAdminOwnerRecordBodyBranchIdMax).optional(),
+  "employeeId": zod.string().max(updateGgsAdminOwnerRecordBodyEmployeeIdMax).optional(),
+  "recordDate": zod.coerce.date().optional(),
+  "recordPeriod": zod.string().max(updateGgsAdminOwnerRecordBodyRecordPeriodMax).optional(),
+  "status": zod.string().max(updateGgsAdminOwnerRecordBodyStatusMax).optional(),
+  "data": zod.record(zod.string(), zod.unknown()).optional()
+})
+
+export const UpdateGgsAdminOwnerRecordResponse = zod.object({
+  "id": zod.number().int(),
+  "recordType": zod.enum(['branch', 'customer', 'finance', 'employee_profile', 'payroll', 'settings']),
+  "recordKey": zod.string(),
+  "branchId": zod.string().nullable(),
+  "employeeId": zod.string().nullable(),
+  "recordDate": zod.coerce.date().nullable(),
+  "recordPeriod": zod.string().nullable(),
+  "status": zod.string(),
+  "data": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Archive an owner operations record
+ */
+export const DeleteGgsAdminOwnerRecordParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteGgsAdminOwnerRecordResponse = zod.void()
+
+
+/**
+ * @summary Request a correction for one of the three most recent transactions
+ */
+export const createGgsAdminOwnerCorrectionBodyReasonMin = 5;
+export const createGgsAdminOwnerCorrectionBodyReasonMax = 600;
+
+export const createGgsAdminOwnerCorrectionBodyProposedCustomerNameMax = 120;
+
+export const createGgsAdminOwnerCorrectionBodyProposedEmployeeNameMax = 120;
+
+export const createGgsAdminOwnerCorrectionBodyProposedDiscountAmountMin = 0;
+
+export const createGgsAdminOwnerCorrectionBodyProposedAmountReceivedMin = 0;
+
+export const createGgsAdminOwnerCorrectionBodyProposedPaymentMethodMax = 40;
+
+
+
+export const CreateGgsAdminOwnerCorrectionBody = zod.object({
+  "transactionId": zod.number().int(),
+  "reason": zod.string().min(createGgsAdminOwnerCorrectionBodyReasonMin).max(createGgsAdminOwnerCorrectionBodyReasonMax),
+  "proposedCustomerName": zod.string().max(createGgsAdminOwnerCorrectionBodyProposedCustomerNameMax),
+  "proposedEmployeeName": zod.string().max(createGgsAdminOwnerCorrectionBodyProposedEmployeeNameMax),
+  "proposedDiscountAmount": zod.number().int().min(createGgsAdminOwnerCorrectionBodyProposedDiscountAmountMin),
+  "proposedAmountReceived": zod.number().int().min(createGgsAdminOwnerCorrectionBodyProposedAmountReceivedMin),
+  "proposedPaymentMethod": zod.string().max(createGgsAdminOwnerCorrectionBodyProposedPaymentMethodMax)
+})
+
+export const CreateGgsAdminOwnerCorrectionResponse = zod.object({
+  "id": zod.number().int(),
+  "transactionId": zod.number().int(),
+  "receiptNumber": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'applied']),
+  "reason": zod.string(),
+  "proposedCustomerName": zod.string(),
+  "proposedEmployeeName": zod.string(),
+  "proposedDiscountAmount": zod.number().int(),
+  "proposedAmountReceived": zod.number().int(),
+  "proposedPaymentMethod": zod.string(),
+  "rejectReason": zod.string().nullable(),
+  "beforeSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "afterSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "createdAt": zod.coerce.date(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "rejectedAt": zod.coerce.date().nullable(),
+  "appliedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Approve a correction and issue a one-time code
+ */
+export const ApproveGgsAdminOwnerCorrectionParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ApproveGgsAdminOwnerCorrectionResponse = zod.object({
+  "correction": zod.object({
+  "id": zod.number().int(),
+  "transactionId": zod.number().int(),
+  "receiptNumber": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'applied']),
+  "reason": zod.string(),
+  "proposedCustomerName": zod.string(),
+  "proposedEmployeeName": zod.string(),
+  "proposedDiscountAmount": zod.number().int(),
+  "proposedAmountReceived": zod.number().int(),
+  "proposedPaymentMethod": zod.string(),
+  "rejectReason": zod.string().nullable(),
+  "beforeSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "afterSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "createdAt": zod.coerce.date(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "rejectedAt": zod.coerce.date().nullable(),
+  "appliedAt": zod.coerce.date().nullable()
+}),
+  "approvalCode": zod.string()
+})
+
+
+/**
+ * @summary Reject a correction request
+ */
+export const RejectGgsAdminOwnerCorrectionParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const rejectGgsAdminOwnerCorrectionBodyReasonMin = 3;
+export const rejectGgsAdminOwnerCorrectionBodyReasonMax = 600;
+
+
+
+export const RejectGgsAdminOwnerCorrectionBody = zod.object({
+  "reason": zod.string().min(rejectGgsAdminOwnerCorrectionBodyReasonMin).max(rejectGgsAdminOwnerCorrectionBodyReasonMax)
+})
+
+export const RejectGgsAdminOwnerCorrectionResponse = zod.object({
+  "id": zod.number().int(),
+  "transactionId": zod.number().int(),
+  "receiptNumber": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'applied']),
+  "reason": zod.string(),
+  "proposedCustomerName": zod.string(),
+  "proposedEmployeeName": zod.string(),
+  "proposedDiscountAmount": zod.number().int(),
+  "proposedAmountReceived": zod.number().int(),
+  "proposedPaymentMethod": zod.string(),
+  "rejectReason": zod.string().nullable(),
+  "beforeSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "afterSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "createdAt": zod.coerce.date(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "rejectedAt": zod.coerce.date().nullable(),
+  "appliedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Apply an approved correction using its one-time code
+ */
+export const ApplyGgsAdminOwnerCorrectionParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const applyGgsAdminOwnerCorrectionBodyApprovalCodeMin = 6;
+export const applyGgsAdminOwnerCorrectionBodyApprovalCodeMax = 32;
+
+
+
+export const ApplyGgsAdminOwnerCorrectionBody = zod.object({
+  "approvalCode": zod.string().min(applyGgsAdminOwnerCorrectionBodyApprovalCodeMin).max(applyGgsAdminOwnerCorrectionBodyApprovalCodeMax)
+})
+
+export const ApplyGgsAdminOwnerCorrectionResponse = zod.object({
+  "id": zod.number().int(),
+  "transactionId": zod.number().int(),
+  "receiptNumber": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'applied']),
+  "reason": zod.string(),
+  "proposedCustomerName": zod.string(),
+  "proposedEmployeeName": zod.string(),
+  "proposedDiscountAmount": zod.number().int(),
+  "proposedAmountReceived": zod.number().int(),
+  "proposedPaymentMethod": zod.string(),
+  "rejectReason": zod.string().nullable(),
+  "beforeSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "afterSnapshot": zod.record(zod.string(), zod.unknown()).nullable(),
+  "createdAt": zod.coerce.date(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "rejectedAt": zod.coerce.date().nullable(),
+  "appliedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Export owner-managed operations data
+ */
+export const GetGgsAdminOwnerCenterBackupResponse = zod.object({
+  "formatVersion": zod.number().int(),
+  "exportedAt": zod.coerce.date(),
+  "records": zod.array(zod.object({
+  "id": zod.number().int(),
+  "recordType": zod.enum(['branch', 'customer', 'finance', 'employee_profile', 'payroll', 'settings']),
+  "recordKey": zod.string(),
+  "branchId": zod.string().nullable(),
+  "employeeId": zod.string().nullable(),
+  "recordDate": zod.coerce.date().nullable(),
+  "recordPeriod": zod.string().nullable(),
+  "status": zod.string(),
+  "data": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Merge an owner-data backup without deleting existing records
+ */
+export const restoreGgsAdminOwnerCenterBackupBodyRecordsItemRecordKeyMax = 180;
+
+export const restoreGgsAdminOwnerCenterBackupBodyRecordsItemBranchIdMax = 100;
+
+export const restoreGgsAdminOwnerCenterBackupBodyRecordsItemEmployeeIdMax = 100;
+
+export const restoreGgsAdminOwnerCenterBackupBodyRecordsItemRecordPeriodMax = 20;
+
+export const restoreGgsAdminOwnerCenterBackupBodyRecordsItemStatusMax = 30;
+
+export const restoreGgsAdminOwnerCenterBackupBodyRecordsMax = 5000;
+
+
+
+export const RestoreGgsAdminOwnerCenterBackupBody = zod.object({
+  "formatVersion": zod.number().int(),
+  "records": zod.array(zod.object({
+  "recordType": zod.enum(['branch', 'customer', 'finance', 'employee_profile', 'payroll', 'settings']),
+  "recordKey": zod.string().min(1).max(restoreGgsAdminOwnerCenterBackupBodyRecordsItemRecordKeyMax),
+  "branchId": zod.string().max(restoreGgsAdminOwnerCenterBackupBodyRecordsItemBranchIdMax).optional(),
+  "employeeId": zod.string().max(restoreGgsAdminOwnerCenterBackupBodyRecordsItemEmployeeIdMax).optional(),
+  "recordDate": zod.coerce.date().optional(),
+  "recordPeriod": zod.string().max(restoreGgsAdminOwnerCenterBackupBodyRecordsItemRecordPeriodMax).optional(),
+  "status": zod.string().max(restoreGgsAdminOwnerCenterBackupBodyRecordsItemStatusMax).optional(),
+  "data": zod.record(zod.string(), zod.unknown())
+})).max(restoreGgsAdminOwnerCenterBackupBodyRecordsMax)
+})
+
+export const RestoreGgsAdminOwnerCenterBackupResponse = zod.object({
+  "imported": zod.number().int(),
+  "updated": zod.number().int(),
+  "skipped": zod.number().int()
+})
+
+

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './getGgsAdminOwnerCenterParams';
 export * from './getGgsEmployeeCashierTransactionsParams';
 export * from './getGgsEmployeeCashierTransactionsStatus';
 export * from './getGgsEmployeeReportsParams';
@@ -17,6 +18,31 @@ export * from './ggsAccountLoginInput';
 export * from './ggsAccountLoginInputIdentifierType';
 export * from './ggsAccountRegistrationInput';
 export * from './ggsAccountRegistrationInputIdentifierType';
+export * from './ggsAdminOwnerAppointmentsSummary';
+export * from './ggsAdminOwnerAttendance';
+export * from './ggsAdminOwnerCenterBackup';
+export * from './ggsAdminOwnerCenterBackupInput';
+export * from './ggsAdminOwnerCenterBackupResult';
+export * from './ggsAdminOwnerCenterResponse';
+export * from './ggsAdminOwnerCorrection';
+export * from './ggsAdminOwnerCorrectionAfterSnapshot';
+export * from './ggsAdminOwnerCorrectionApply';
+export * from './ggsAdminOwnerCorrectionApproval';
+export * from './ggsAdminOwnerCorrectionBeforeSnapshot';
+export * from './ggsAdminOwnerCorrectionInput';
+export * from './ggsAdminOwnerCorrectionReject';
+export * from './ggsAdminOwnerCorrectionStatus';
+export * from './ggsAdminOwnerEmployee';
+export * from './ggsAdminOwnerRecord';
+export * from './ggsAdminOwnerRecordData';
+export * from './ggsAdminOwnerRecordInput';
+export * from './ggsAdminOwnerRecordInputData';
+export * from './ggsAdminOwnerRecordType';
+export * from './ggsAdminOwnerRecordUpdate';
+export * from './ggsAdminOwnerRecordUpdateData';
+export * from './ggsAdminOwnerStockMovement';
+export * from './ggsAdminOwnerTransaction';
+export * from './ggsAdminOwnerTransactionItem';
 export * from './ggsAdminSummary';
 export * from './ggsAppointment';
 export * from './ggsAppointmentInput';

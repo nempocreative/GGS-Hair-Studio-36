@@ -25,4 +25,5 @@ export * from "./ggs-accounts";
 export * from "./ggs-employee-attendance";
 export * from "./ggs-employees";
 export * from "./ggs-product-stock-movements";
+export * from "./ggs-owner-records";
 export * from "./ggs-vouchers";
