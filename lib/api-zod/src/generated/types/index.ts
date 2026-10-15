@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './getGgsEmployeeCashierTransactionsParams';
+export * from './getGgsEmployeeCashierTransactionsStatus';
 export * from './ggsAccount';
 export * from './ggsAccountIdentifierType';
 export * from './ggsAccountLoginInput';
@@ -18,6 +20,8 @@ export * from './ggsAppointmentInput';
 export * from './ggsAppointmentStatus';
 export * from './ggsAppointmentStatusUpdate';
 export * from './ggsAppointmentStatusUpdateStatus';
+export * from './ggsCashierSettings';
+export * from './ggsCashierSettingsInput';
 export * from './ggsEmployeeAccount';
 export * from './ggsEmployeeAccountInput';
 export * from './ggsEmployeeAccountUpdate';
@@ -31,16 +35,21 @@ export * from './ggsEmployeeBookingStatus';
 export * from './ggsEmployeeCashierAccess';
 export * from './ggsEmployeeCashierAccessInput';
 export * from './ggsEmployeeCashierPaymentMethod';
+export * from './ggsEmployeeCashierPaymentSummary';
 export * from './ggsEmployeeCashierRegister';
 export * from './ggsEmployeeCashierSession';
 export * from './ggsEmployeeCashierSessionRegister';
 export * from './ggsEmployeeCashierTransaction';
+export * from './ggsEmployeeCashierTransactionCancellationInput';
 export * from './ggsEmployeeCashierTransactionInput';
 export * from './ggsEmployeeCashierTransactionItem';
 export * from './ggsEmployeeCashierTransactionItemInput';
 export * from './ggsEmployeeCashierTransactionItemInputItemType';
 export * from './ggsEmployeeCashierTransactionItemItemType';
 export * from './ggsEmployeeCashierTransactionsSummary';
+export * from './ggsEmployeeCashierTransactionStatus';
+export * from './ggsEmployeeCashierTransactionStatusFilter';
+export * from './ggsEmployeeCashierVoucher';
 export * from './ggsEmployeeLoginInput';
 export * from './ggsProduct';
 export * from './ggsProductInput';
@@ -50,5 +59,7 @@ export * from './ggsServiceInput';
 export * from './ggsSiteContent';
 export * from './ggsSiteUpdate';
 export * from './ggsVoucher';
+export * from './ggsVoucherAppliesTo';
+export * from './ggsVoucherDiscountType';
 export * from './ggsVoucherInput';
 export * from './healthStatus';

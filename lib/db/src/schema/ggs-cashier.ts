@@ -19,7 +19,17 @@ export const ggsCashierTransactionsTable = pgTable(
     employeeName: text("employee_name").notNull(),
     customerName: text("customer_name").notNull().default(""),
     paymentMethod: text("payment_method").notNull(),
+    status: text("status").notNull().default("completed"),
+    cancellationReason: text("cancellation_reason"),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    cancelledByEmployeeId: text("cancelled_by_employee_id"),
+    cancelledByEmployeeName: text("cancelled_by_employee_name"),
     subtotal: integer("subtotal").notNull(),
+    discountAmount: integer("discount_amount").notNull().default(0),
+    voucherCode: text("voucher_code"),
+    voucherName: text("voucher_name"),
+    taxRate: integer("tax_rate").notNull().default(0),
+    taxAmount: integer("tax_amount").notNull().default(0),
     amountReceived: integer("amount_received").notNull(),
     changeAmount: integer("change_amount").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -29,6 +39,11 @@ export const ggsCashierTransactionsTable = pgTable(
   (table) => [
     index("ggs_cashier_transactions_register_created_idx").on(
       table.register,
+      table.createdAt,
+    ),
+    index("ggs_cashier_transactions_register_status_created_idx").on(
+      table.register,
+      table.status,
       table.createdAt,
     ),
   ],

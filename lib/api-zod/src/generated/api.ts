@@ -241,10 +241,16 @@ export const LogoutGgsEmployeeResponse = zod.void()
 /**
  * @summary Get the signed-in employee's cashier access
  */
+export const getGgsEmployeeCashierSessionResponseTaxRateMin = 0;
+export const getGgsEmployeeCashierSessionResponseTaxRateMax = 100;
+
+
+
 export const GetGgsEmployeeCashierSessionResponse = zod.object({
   "active": zod.boolean(),
   "register": zod.union([zod.literal('ggs_beauty'),zod.literal('barber_ggs'),zod.literal(null)]).nullable(),
-  "expiresAt": zod.coerce.date().nullable()
+  "expiresAt": zod.coerce.date().nullable(),
+  "taxRate": zod.number().int().min(getGgsEmployeeCashierSessionResponseTaxRateMin).max(getGgsEmployeeCashierSessionResponseTaxRateMax)
 })
 
 
@@ -274,19 +280,80 @@ export const LogoutGgsEmployeeCashierResponse = zod.void()
 
 
 /**
- * @summary List today's transactions for the active cashier register
+ * @summary List valid discount vouchers for the active cashier register
  */
+export const GetGgsEmployeeCashierVouchersResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "value": zod.string(),
+  "code": zod.string(),
+  "discountType": zod.enum(['percent', 'fixed']),
+  "discountValue": zod.number().int(),
+  "appliesTo": zod.enum(['services', 'all_items']),
+  "expiresAt": zod.coerce.date().nullable()
+})
+export const GetGgsEmployeeCashierVouchersResponse = zod.array(GetGgsEmployeeCashierVouchersResponseItem)
+
+
+/**
+ * @summary List and summarize cashier transactions for the active register
+ */
+export const getGgsEmployeeCashierTransactionsQuerySearchMax = 120;
+
+export const getGgsEmployeeCashierTransactionsQueryStatusDefault = `all`;
+export const getGgsEmployeeCashierTransactionsQueryPageDefault = 1;
+
+export const getGgsEmployeeCashierTransactionsQueryPageSizeDefault = 20;
+export const getGgsEmployeeCashierTransactionsQueryPageSizeMax = 100;
+
+
+
+export const GetGgsEmployeeCashierTransactionsQueryParams = zod.object({
+  "fromDate": zod.date().optional(),
+  "toDate": zod.date().optional(),
+  "search": zod.coerce.string().max(getGgsEmployeeCashierTransactionsQuerySearchMax).optional(),
+  "status": zod.enum(['all', 'completed', 'cancelled']).default(getGgsEmployeeCashierTransactionsQueryStatusDefault),
+  "page": zod.coerce.number().int().min(1).default(getGgsEmployeeCashierTransactionsQueryPageDefault),
+  "pageSize": zod.coerce.number().int().min(1).max(getGgsEmployeeCashierTransactionsQueryPageSizeMax).default(getGgsEmployeeCashierTransactionsQueryPageSizeDefault)
+})
+
 export const GetGgsEmployeeCashierTransactionsResponse = zod.object({
   "register": zod.enum(['ggs_beauty', 'barber_ggs']),
-  "date": zod.coerce.date(),
+  "fromDate": zod.coerce.date().nullable(),
+  "toDate": zod.coerce.date().nullable(),
   "totalCollected": zod.number().int(),
   "transactionCount": zod.number().int(),
+  "cancelledTotal": zod.number().int(),
+  "cancelledTransactionCount": zod.number().int(),
+  "totalTaxCollected": zod.number().int(),
+  "totalDiscountGiven": zod.number().int(),
+  "paymentMethods": zod.array(zod.object({
+  "paymentMethod": zod.enum(['cash', 'qris', 'card']),
+  "transactionCount": zod.number().int(),
+  "totalCollected": zod.number().int()
+})),
+  "matchedTransactionCount": zod.number().int(),
+  "page": zod.number().int(),
+  "pageSize": zod.number().int(),
+  "pageCount": zod.number().int(),
   "transactions": zod.array(zod.object({
+  "transactionId": zod.number().int(),
   "receiptNumber": zod.string(),
   "register": zod.enum(['ggs_beauty', 'barber_ggs']),
+  "employeeName": zod.string(),
   "customerName": zod.string(),
   "paymentMethod": zod.enum(['cash', 'qris', 'card']),
+  "status": zod.enum(['completed', 'cancelled']),
+  "cancellationReason": zod.string().nullable(),
+  "cancelledAt": zod.coerce.date().nullable(),
+  "cancelledByEmployeeName": zod.string().nullable(),
   "subtotal": zod.number().int(),
+  "discountAmount": zod.number().int(),
+  "voucherCode": zod.string().nullable(),
+  "voucherName": zod.string().nullable(),
+  "taxRate": zod.number().int(),
+  "taxAmount": zod.number().int(),
+  "totalAmount": zod.number().int(),
   "amountReceived": zod.number().int(),
   "changeAmount": zod.number().int(),
   "createdAt": zod.coerce.date(),
@@ -310,6 +377,8 @@ export const createGgsEmployeeCashierTransactionBodyCustomerNameMax = 120;
 export const createGgsEmployeeCashierTransactionBodyAmountReceivedMin = 0;
 export const createGgsEmployeeCashierTransactionBodyAmountReceivedMax = 2147483647;
 
+export const createGgsEmployeeCashierTransactionBodyVoucherCodeMax = 40;
+
 
 export const createGgsEmployeeCashierTransactionBodyItemsItemQuantityMax = 99;
 
@@ -321,6 +390,7 @@ export const CreateGgsEmployeeCashierTransactionBody = zod.object({
   "customerName": zod.string().max(createGgsEmployeeCashierTransactionBodyCustomerNameMax).optional(),
   "paymentMethod": zod.enum(['cash', 'qris', 'card']),
   "amountReceived": zod.number().int().min(createGgsEmployeeCashierTransactionBodyAmountReceivedMin).max(createGgsEmployeeCashierTransactionBodyAmountReceivedMax),
+  "voucherCode": zod.string().max(createGgsEmployeeCashierTransactionBodyVoucherCodeMax).nullish(),
   "items": zod.array(zod.object({
   "itemType": zod.enum(['service', 'product']),
   "itemId": zod.number().int().min(1),
@@ -329,11 +399,74 @@ export const CreateGgsEmployeeCashierTransactionBody = zod.object({
 })
 
 export const CreateGgsEmployeeCashierTransactionResponse = zod.object({
+  "transactionId": zod.number().int(),
   "receiptNumber": zod.string(),
   "register": zod.enum(['ggs_beauty', 'barber_ggs']),
+  "employeeName": zod.string(),
   "customerName": zod.string(),
   "paymentMethod": zod.enum(['cash', 'qris', 'card']),
+  "status": zod.enum(['completed', 'cancelled']),
+  "cancellationReason": zod.string().nullable(),
+  "cancelledAt": zod.coerce.date().nullable(),
+  "cancelledByEmployeeName": zod.string().nullable(),
   "subtotal": zod.number().int(),
+  "discountAmount": zod.number().int(),
+  "voucherCode": zod.string().nullable(),
+  "voucherName": zod.string().nullable(),
+  "taxRate": zod.number().int(),
+  "taxAmount": zod.number().int(),
+  "totalAmount": zod.number().int(),
+  "amountReceived": zod.number().int(),
+  "changeAmount": zod.number().int(),
+  "createdAt": zod.coerce.date(),
+  "items": zod.array(zod.object({
+  "itemType": zod.enum(['service', 'product']),
+  "itemId": zod.number().int(),
+  "name": zod.string(),
+  "quantity": zod.number().int(),
+  "unitPrice": zod.number().int(),
+  "lineTotal": zod.number().int()
+}))
+})
+
+
+/**
+ * @summary Cancel a cashier transaction and restore sold product stock
+ */
+
+
+
+export const CancelGgsEmployeeCashierTransactionParams = zod.object({
+  "transactionId": zod.coerce.number().int().min(1)
+})
+
+export const cancelGgsEmployeeCashierTransactionBodyReasonMin = 3;
+export const cancelGgsEmployeeCashierTransactionBodyReasonMax = 240;
+
+
+
+export const CancelGgsEmployeeCashierTransactionBody = zod.object({
+  "reason": zod.string().min(cancelGgsEmployeeCashierTransactionBodyReasonMin).max(cancelGgsEmployeeCashierTransactionBodyReasonMax)
+})
+
+export const CancelGgsEmployeeCashierTransactionResponse = zod.object({
+  "transactionId": zod.number().int(),
+  "receiptNumber": zod.string(),
+  "register": zod.enum(['ggs_beauty', 'barber_ggs']),
+  "employeeName": zod.string(),
+  "customerName": zod.string(),
+  "paymentMethod": zod.enum(['cash', 'qris', 'card']),
+  "status": zod.enum(['completed', 'cancelled']),
+  "cancellationReason": zod.string().nullable(),
+  "cancelledAt": zod.coerce.date().nullable(),
+  "cancelledByEmployeeName": zod.string().nullable(),
+  "subtotal": zod.number().int(),
+  "discountAmount": zod.number().int(),
+  "voucherCode": zod.string().nullable(),
+  "voucherName": zod.string().nullable(),
+  "taxRate": zod.number().int(),
+  "taxAmount": zod.number().int(),
+  "totalAmount": zod.number().int(),
   "amountReceived": zod.number().int(),
   "changeAmount": zod.number().int(),
   "createdAt": zod.coerce.date(),
@@ -836,6 +969,10 @@ export const DeleteGgsProductResponse = zod.void()
 /**
  * @summary List all vouchers in GGS CMS
  */
+export const getGgsAdminVouchersResponseDiscountValueMin = 0;
+
+
+
 export const GetGgsAdminVouchersResponseItem = zod.object({
   "id": zod.number().int(),
   "name": zod.string(),
@@ -843,6 +980,9 @@ export const GetGgsAdminVouchersResponseItem = zod.object({
   "code": zod.string().nullable(),
   "startsAt": zod.coerce.date().nullable(),
   "expiresAt": zod.coerce.date().nullable(),
+  "discountType": zod.enum(['percent', 'fixed']),
+  "discountValue": zod.number().int().min(getGgsAdminVouchersResponseDiscountValueMin),
+  "appliesTo": zod.enum(['services', 'all_items']),
   "active": zod.boolean()
 })
 export const GetGgsAdminVouchersResponse = zod.array(GetGgsAdminVouchersResponseItem)
@@ -857,6 +997,8 @@ export const createGgsVoucherBodyValueMax = 80;
 
 export const createGgsVoucherBodyCodeMax = 40;
 
+export const createGgsVoucherBodyDiscountValueMin = 0;
+
 
 
 export const CreateGgsVoucherBody = zod.object({
@@ -865,8 +1007,15 @@ export const CreateGgsVoucherBody = zod.object({
   "code": zod.string().max(createGgsVoucherBodyCodeMax).nullable(),
   "startsAt": zod.coerce.date().nullable(),
   "expiresAt": zod.coerce.date().nullable(),
+  "discountType": zod.enum(['percent', 'fixed']),
+  "discountValue": zod.number().int().min(createGgsVoucherBodyDiscountValueMin),
+  "appliesTo": zod.enum(['services', 'all_items']),
   "active": zod.boolean()
 })
+
+export const createGgsVoucherResponseDiscountValueMin = 0;
+
+
 
 export const CreateGgsVoucherResponse = zod.object({
   "id": zod.number().int(),
@@ -875,7 +1024,47 @@ export const CreateGgsVoucherResponse = zod.object({
   "code": zod.string().nullable(),
   "startsAt": zod.coerce.date().nullable(),
   "expiresAt": zod.coerce.date().nullable(),
+  "discountType": zod.enum(['percent', 'fixed']),
+  "discountValue": zod.number().int().min(createGgsVoucherResponseDiscountValueMin),
+  "appliesTo": zod.enum(['services', 'all_items']),
   "active": zod.boolean()
+})
+
+
+/**
+ * @summary Get cashier tax settings
+ */
+export const getGgsAdminCashierSettingsResponseTaxRateMin = 0;
+export const getGgsAdminCashierSettingsResponseTaxRateMax = 100;
+
+
+
+export const GetGgsAdminCashierSettingsResponse = zod.object({
+  "taxRate": zod.number().int().min(getGgsAdminCashierSettingsResponseTaxRateMin).max(getGgsAdminCashierSettingsResponseTaxRateMax),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update cashier tax settings
+ */
+export const updateGgsAdminCashierSettingsBodyTaxRateMin = 0;
+export const updateGgsAdminCashierSettingsBodyTaxRateMax = 100;
+
+
+
+export const UpdateGgsAdminCashierSettingsBody = zod.object({
+  "taxRate": zod.number().int().min(updateGgsAdminCashierSettingsBodyTaxRateMin).max(updateGgsAdminCashierSettingsBodyTaxRateMax)
+})
+
+export const updateGgsAdminCashierSettingsResponseTaxRateMin = 0;
+export const updateGgsAdminCashierSettingsResponseTaxRateMax = 100;
+
+
+
+export const UpdateGgsAdminCashierSettingsResponse = zod.object({
+  "taxRate": zod.number().int().min(updateGgsAdminCashierSettingsResponseTaxRateMin).max(updateGgsAdminCashierSettingsResponseTaxRateMax),
+  "updatedAt": zod.coerce.date()
 })
 
 
@@ -892,6 +1081,8 @@ export const updateGgsVoucherBodyValueMax = 80;
 
 export const updateGgsVoucherBodyCodeMax = 40;
 
+export const updateGgsVoucherBodyDiscountValueMin = 0;
+
 
 
 export const UpdateGgsVoucherBody = zod.object({
@@ -900,8 +1091,15 @@ export const UpdateGgsVoucherBody = zod.object({
   "code": zod.string().max(updateGgsVoucherBodyCodeMax).nullable(),
   "startsAt": zod.coerce.date().nullable(),
   "expiresAt": zod.coerce.date().nullable(),
+  "discountType": zod.enum(['percent', 'fixed']),
+  "discountValue": zod.number().int().min(updateGgsVoucherBodyDiscountValueMin),
+  "appliesTo": zod.enum(['services', 'all_items']),
   "active": zod.boolean()
 })
+
+export const updateGgsVoucherResponseDiscountValueMin = 0;
+
+
 
 export const UpdateGgsVoucherResponse = zod.object({
   "id": zod.number().int(),
@@ -910,6 +1108,9 @@ export const UpdateGgsVoucherResponse = zod.object({
   "code": zod.string().nullable(),
   "startsAt": zod.coerce.date().nullable(),
   "expiresAt": zod.coerce.date().nullable(),
+  "discountType": zod.enum(['percent', 'fixed']),
+  "discountValue": zod.number().int().min(updateGgsVoucherResponseDiscountValueMin),
+  "appliesTo": zod.enum(['services', 'all_items']),
   "active": zod.boolean()
 })
 

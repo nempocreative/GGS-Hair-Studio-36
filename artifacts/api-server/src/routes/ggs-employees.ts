@@ -5,11 +5,14 @@ import {
   count,
   desc,
   eq,
+  exists,
   gte,
   gt,
+  ilike,
   inArray,
   isNull,
   lt,
+  or,
   sum,
 } from "drizzle-orm";
 import {
@@ -20,6 +23,9 @@ import {
 } from "express";
 import {
   CheckInGgsEmployeeAttendanceBody,
+  CancelGgsEmployeeCashierTransactionBody,
+  CancelGgsEmployeeCashierTransactionParams,
+  CancelGgsEmployeeCashierTransactionResponse,
   CreateGgsAdminEmployeeBody,
   CreateGgsAdminEmployeeResponse,
   CreateGgsEmployeeCashierTransactionBody,
@@ -27,6 +33,7 @@ import {
   CreateGgsEmployeeAttendanceChallengeBody,
   CreateGgsEmployeeAttendanceChallengeResponse,
   GetGgsEmployeeCashierTransactionsResponse,
+  GetGgsEmployeeCashierTransactionsQueryParams,
   GetGgsEmployeeAttendanceHistoryResponse,
   GetGgsAdminEmployeesResponse,
   GetGgsEmployeeAttendanceTodayResponse,
@@ -95,7 +102,7 @@ class AttendanceMutationFailure extends Error {
 class CashierPaymentFailure extends Error {
   constructor(
     message: string,
-    readonly status: 400 | 409,
+    readonly status: 400 | 404 | 409,
   ) {
     super(message);
   }
@@ -192,6 +199,10 @@ function jakartaCashierDateRange(date = new Date()) {
     startAt,
     endAt: new Date(startAt.getTime() + 24 * 60 * 60 * 1000),
   };
+}
+
+function cashierJakartaDateStart(date: string) {
+  return new Date(`${date}T00:00:00.000+07:00`);
 }
 
 function serializeAttendance(
@@ -356,10 +367,16 @@ function serializeCashierTransaction(
   items: (typeof ggsCashierTransactionItemsTable.$inferSelect)[],
 ) {
   return {
+    transactionId: transaction.id,
     receiptNumber: transaction.receiptNumber,
     register: transaction.register,
+    employeeName: transaction.employeeName,
     customerName: transaction.customerName,
     paymentMethod: transaction.paymentMethod,
+    status: transaction.status,
+    cancellationReason: transaction.cancellationReason,
+    cancelledAt: transaction.cancelledAt?.toISOString() ?? null,
+    cancelledByEmployeeName: transaction.cancelledByEmployeeName,
     subtotal: transaction.subtotal,
     amountReceived: transaction.amountReceived,
     changeAmount: transaction.changeAmount,
@@ -601,25 +618,115 @@ router.get(
     const cashier = await requireActiveCashier(req, res);
     if (!cashier) return;
 
-    const { day, startAt, endAt } = jakartaCashierDateRange();
-    const conditions = and(
-      eq(ggsCashierTransactionsTable.register, cashier.register),
-      gte(ggsCashierTransactionsTable.createdAt, startAt),
-      lt(ggsCashierTransactionsTable.createdAt, endAt),
+    const parsed = GetGgsEmployeeCashierTransactionsQueryParams.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const fromDate = parsed.data.fromDate?.toISOString().slice(0, 10) ?? null;
+    const toDate = parsed.data.toDate?.toISOString().slice(0, 10) ?? null;
+    if (fromDate && toDate && fromDate > toDate) {
+      res.status(400).json({ error: "Tanggal awal harus sebelum atau sama dengan tanggal akhir." });
+      return;
+    }
+
+    const page = parsed.data.page ?? 1;
+    const pageSize = parsed.data.pageSize ?? 20;
+    const status = parsed.data.status ?? "all";
+    const search = parsed.data.search?.trim();
+    const rangeConditions = [eq(ggsCashierTransactionsTable.register, cashier.register)];
+    if (fromDate) {
+      rangeConditions.push(
+        gte(
+          ggsCashierTransactionsTable.createdAt,
+          cashierJakartaDateStart(fromDate),
+        ),
+      );
+    }
+    if (toDate) {
+      rangeConditions.push(
+        lt(
+          ggsCashierTransactionsTable.createdAt,
+          new Date(cashierJakartaDateStart(toDate).getTime() + 24 * 60 * 60 * 1000),
+        ),
+      );
+    }
+    const completedCondition = and(
+      ...rangeConditions,
+      eq(ggsCashierTransactionsTable.status, "completed"),
     );
-    const [totals] = await db
+    const cancelledCondition = and(
+      ...rangeConditions,
+      eq(ggsCashierTransactionsTable.status, "cancelled"),
+    );
+
+    const [incomeTotals] = await db
       .select({
         transactionCount: count(),
         totalCollected: sum(ggsCashierTransactionsTable.subtotal),
       })
       .from(ggsCashierTransactionsTable)
-      .where(conditions);
+      .where(completedCondition);
+    const [cancelledTotals] = await db
+      .select({
+        transactionCount: count(),
+        totalCollected: sum(ggsCashierTransactionsTable.subtotal),
+      })
+      .from(ggsCashierTransactionsTable)
+      .where(cancelledCondition);
+    const paymentMethods = await db
+      .select({
+        paymentMethod: ggsCashierTransactionsTable.paymentMethod,
+        transactionCount: count(),
+        totalCollected: sum(ggsCashierTransactionsTable.subtotal),
+      })
+      .from(ggsCashierTransactionsTable)
+      .where(completedCondition)
+      .groupBy(ggsCashierTransactionsTable.paymentMethod)
+      .orderBy(asc(ggsCashierTransactionsTable.paymentMethod));
+
+    const historyConditions = [...rangeConditions];
+    if (status !== "all") {
+      historyConditions.push(eq(ggsCashierTransactionsTable.status, status));
+    }
+    if (search) {
+      const searchPattern = `%${search.replace(/[\\%_]/g, "\\$&")}%`;
+      const matchingItem = db
+        .select({ transactionId: ggsCashierTransactionItemsTable.transactionId })
+        .from(ggsCashierTransactionItemsTable)
+        .where(
+          and(
+            eq(
+              ggsCashierTransactionItemsTable.transactionId,
+              ggsCashierTransactionsTable.id,
+            ),
+            ilike(ggsCashierTransactionItemsTable.itemName, searchPattern),
+          ),
+        );
+      const searchCondition = or(
+        ilike(ggsCashierTransactionsTable.receiptNumber, searchPattern),
+        ilike(ggsCashierTransactionsTable.customerName, searchPattern),
+        ilike(ggsCashierTransactionsTable.employeeName, searchPattern),
+        exists(matchingItem),
+      );
+      if (searchCondition) historyConditions.push(searchCondition);
+    }
+    const historyCondition = and(...historyConditions);
+    const [matched] = await db
+      .select({ count: count() })
+      .from(ggsCashierTransactionsTable)
+      .where(historyCondition);
     const transactions = await db
       .select()
       .from(ggsCashierTransactionsTable)
-      .where(conditions)
-      .orderBy(desc(ggsCashierTransactionsTable.createdAt))
-      .limit(20);
+      .where(historyCondition)
+      .orderBy(
+        desc(ggsCashierTransactionsTable.createdAt),
+        desc(ggsCashierTransactionsTable.id),
+      )
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
     const transactionIds = transactions.map((transaction) => transaction.id);
     const items = transactionIds.length
       ? await db
@@ -641,9 +748,21 @@ router.get(
     res.json(
       GetGgsEmployeeCashierTransactionsResponse.parse({
         register: cashier.register,
-        date: day,
-        totalCollected: Number(totals?.totalCollected ?? 0),
-        transactionCount: Number(totals?.transactionCount ?? 0),
+        fromDate,
+        toDate,
+        totalCollected: Number(incomeTotals?.totalCollected ?? 0),
+        transactionCount: Number(incomeTotals?.transactionCount ?? 0),
+        cancelledTotal: Number(cancelledTotals?.totalCollected ?? 0),
+        cancelledTransactionCount: Number(cancelledTotals?.transactionCount ?? 0),
+        paymentMethods: paymentMethods.map((method) => ({
+          paymentMethod: method.paymentMethod,
+          transactionCount: Number(method.transactionCount),
+          totalCollected: Number(method.totalCollected ?? 0),
+        })),
+        matchedTransactionCount: Number(matched?.count ?? 0),
+        page,
+        pageSize,
+        pageCount: Math.ceil(Number(matched?.count ?? 0) / pageSize),
         transactions: transactions.map((transaction) =>
           serializeCashierTransaction(
             transaction,
@@ -840,6 +959,137 @@ router.post(
       res
         .status(201)
         .json(CreateGgsEmployeeCashierTransactionResponse.parse(transaction));
+    } catch (error) {
+      if (error instanceof CashierPaymentFailure) {
+        res.status(error.status).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
+  },
+);
+
+router.post(
+  "/ggs/employee/cashier/transactions/:transactionId/cancel",
+  async (req, res): Promise<void> => {
+    const cashier = await requireActiveCashier(req, res);
+    if (!cashier) return;
+
+    const params = CancelGgsEmployeeCashierTransactionParams.safeParse(req.params);
+    if (!params.success) {
+      res.status(400).json({ error: params.error.message });
+      return;
+    }
+    const parsed = CancelGgsEmployeeCashierTransactionBody.safeParse(req.body);
+    if (!parsed.success || parsed.data.reason.trim().length < 3) {
+      res.status(400).json({
+        error: parsed.success
+          ? "Alasan pembatalan minimal 3 karakter."
+          : parsed.error.message,
+      });
+      return;
+    }
+
+    try {
+      const cancelledTransaction = await db.transaction(async (tx) => {
+        const [transaction] = await tx
+          .select()
+          .from(ggsCashierTransactionsTable)
+          .where(
+            and(
+              eq(ggsCashierTransactionsTable.id, params.data.transactionId),
+              eq(ggsCashierTransactionsTable.register, cashier.register),
+            ),
+          )
+          .for("update");
+        if (!transaction) {
+          throw new CashierPaymentFailure(
+            "Transaksi tidak ditemukan pada register ini.",
+            404,
+          );
+        }
+        if (transaction.status !== "completed") {
+          throw new CashierPaymentFailure(
+            "Transaksi ini sudah dibatalkan.",
+            409,
+          );
+        }
+
+        const items = await tx
+          .select()
+          .from(ggsCashierTransactionItemsTable)
+          .where(
+            eq(
+              ggsCashierTransactionItemsTable.transactionId,
+              transaction.id,
+            ),
+          )
+          .orderBy(asc(ggsCashierTransactionItemsTable.id));
+        const productQuantities = new Map<number, number>();
+        for (const item of items) {
+          if (item.itemType !== "product") continue;
+          productQuantities.set(
+            item.itemId,
+            (productQuantities.get(item.itemId) ?? 0) + item.quantity,
+          );
+        }
+
+        const productIds = [...productQuantities.keys()];
+        const products = productIds.length
+          ? await tx
+              .select()
+              .from(ggsProductsTable)
+              .where(inArray(ggsProductsTable.id, productIds))
+              .for("update")
+          : [];
+        const productsById = new Map(products.map((product) => [product.id, product]));
+        for (const [productId, quantity] of productQuantities) {
+          const product = productsById.get(productId);
+          if (!product) {
+            throw new CashierPaymentFailure(
+              "Stok tidak dapat dipulihkan karena data produk sudah tidak tersedia.",
+              409,
+            );
+          }
+          if (product.stock + quantity > 2_147_483_647) {
+            throw new CashierPaymentFailure(
+              `Stok ${product.name} melewati batas penyimpanan dan tidak dapat dipulihkan.`,
+              409,
+            );
+          }
+          await tx
+            .update(ggsProductsTable)
+            .set({ stock: product.stock + quantity })
+            .where(eq(ggsProductsTable.id, productId));
+        }
+
+        const [updatedTransaction] = await tx
+          .update(ggsCashierTransactionsTable)
+          .set({
+            status: "cancelled",
+            cancellationReason: parsed.data.reason.trim(),
+            cancelledAt: new Date(),
+            cancelledByEmployeeId: cashier.employee.id,
+            cancelledByEmployeeName: cashier.employee.name,
+          })
+          .where(
+            and(
+              eq(ggsCashierTransactionsTable.id, transaction.id),
+              eq(ggsCashierTransactionsTable.status, "completed"),
+            ),
+          )
+          .returning();
+        if (!updatedTransaction) {
+          throw new CashierPaymentFailure(
+            "Transaksi ini sudah berubah dan belum dapat dibatalkan.",
+            409,
+          );
+        }
+
+        return serializeCashierTransaction(updatedTransaction, items);
+      });
+
+      res.json(CancelGgsEmployeeCashierTransactionResponse.parse(cancelledTransaction));
     } catch (error) {
       if (error instanceof CashierPaymentFailure) {
         res.status(error.status).json({ error: error.message });

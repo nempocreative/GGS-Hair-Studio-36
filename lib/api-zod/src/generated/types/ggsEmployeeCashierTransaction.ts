@@ -8,13 +8,31 @@
 import type { GgsEmployeeCashierPaymentMethod } from './ggsEmployeeCashierPaymentMethod';
 import type { GgsEmployeeCashierRegister } from './ggsEmployeeCashierRegister';
 import type { GgsEmployeeCashierTransactionItem } from './ggsEmployeeCashierTransactionItem';
+import type { GgsEmployeeCashierTransactionStatus } from './ggsEmployeeCashierTransactionStatus';
 
 export interface GgsEmployeeCashierTransaction {
+  transactionId: number;
   receiptNumber: string;
   register: GgsEmployeeCashierRegister;
+  employeeName: string;
   customerName: string;
   paymentMethod: GgsEmployeeCashierPaymentMethod;
+  status: GgsEmployeeCashierTransactionStatus;
+  /** @nullable */
+  cancellationReason: string | null;
+  /** @nullable */
+  cancelledAt: Date | null;
+  /** @nullable */
+  cancelledByEmployeeName: string | null;
   subtotal: number;
+  discountAmount: number;
+  /** @nullable */
+  voucherCode: string | null;
+  /** @nullable */
+  voucherName: string | null;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
   amountReceived: number;
   changeAmount: number;
   createdAt: Date;

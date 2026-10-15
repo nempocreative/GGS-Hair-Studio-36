@@ -108,6 +108,28 @@ export interface GgsEmployeeCashierSession {
   register: GgsEmployeeCashierSessionRegister;
   /** @nullable */
   expiresAt: string | null;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  taxRate: number;
+}
+
+export interface GgsCashierSettings {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  taxRate: number;
+  updatedAt: string;
+}
+
+export interface GgsCashierSettingsInput {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  taxRate: number;
 }
 
 export interface GgsEmployeeCashierAccessInput {
@@ -132,6 +154,57 @@ export const GgsEmployeeCashierPaymentMethod = {
   qris: 'qris',
   card: 'card',
 } as const;
+
+export type GgsVoucherDiscountType = typeof GgsVoucherDiscountType[keyof typeof GgsVoucherDiscountType];
+
+
+export const GgsVoucherDiscountType = {
+  percent: 'percent',
+  fixed: 'fixed',
+} as const;
+
+export type GgsVoucherAppliesTo = typeof GgsVoucherAppliesTo[keyof typeof GgsVoucherAppliesTo];
+
+
+export const GgsVoucherAppliesTo = {
+  services: 'services',
+  all_items: 'all_items',
+} as const;
+
+export interface GgsEmployeeCashierVoucher {
+  id: number;
+  name: string;
+  value: string;
+  code: string;
+  discountType: GgsVoucherDiscountType;
+  discountValue: number;
+  appliesTo: GgsVoucherAppliesTo;
+  /** @nullable */
+  expiresAt: string | null;
+}
+
+export type GgsEmployeeCashierTransactionStatus = typeof GgsEmployeeCashierTransactionStatus[keyof typeof GgsEmployeeCashierTransactionStatus];
+
+
+export const GgsEmployeeCashierTransactionStatus = {
+  completed: 'completed',
+  cancelled: 'cancelled',
+} as const;
+
+export type GgsEmployeeCashierTransactionStatusFilter = typeof GgsEmployeeCashierTransactionStatusFilter[keyof typeof GgsEmployeeCashierTransactionStatusFilter];
+
+
+export const GgsEmployeeCashierTransactionStatusFilter = {
+  all: 'all',
+  completed: 'completed',
+  cancelled: 'cancelled',
+} as const;
+
+export interface GgsEmployeeCashierPaymentSummary {
+  paymentMethod: GgsEmployeeCashierPaymentMethod;
+  transactionCount: number;
+  totalCollected: number;
+}
 
 export type GgsEmployeeCashierTransactionItemInputItemType = typeof GgsEmployeeCashierTransactionItemInputItemType[keyof typeof GgsEmployeeCashierTransactionItemInputItemType];
 
@@ -162,6 +235,11 @@ export interface GgsEmployeeCashierTransactionInput {
      */
   amountReceived: number;
   /**
+     * @maxLength 40
+     * @nullable
+     */
+  voucherCode?: string | null;
+  /**
      * @minItems 1
      * @maxItems 40
      */
@@ -186,22 +264,59 @@ export interface GgsEmployeeCashierTransactionItem {
 }
 
 export interface GgsEmployeeCashierTransaction {
+  transactionId: number;
   receiptNumber: string;
   register: GgsEmployeeCashierRegister;
+  employeeName: string;
   customerName: string;
   paymentMethod: GgsEmployeeCashierPaymentMethod;
+  status: GgsEmployeeCashierTransactionStatus;
+  /** @nullable */
+  cancellationReason: string | null;
+  /** @nullable */
+  cancelledAt: string | null;
+  /** @nullable */
+  cancelledByEmployeeName: string | null;
   subtotal: number;
+  discountAmount: number;
+  /** @nullable */
+  voucherCode: string | null;
+  /** @nullable */
+  voucherName: string | null;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
   amountReceived: number;
   changeAmount: number;
   createdAt: string;
   items: GgsEmployeeCashierTransactionItem[];
 }
 
+export interface GgsEmployeeCashierTransactionCancellationInput {
+  /**
+     * @minLength 3
+     * @maxLength 240
+     */
+  reason: string;
+}
+
 export interface GgsEmployeeCashierTransactionsSummary {
   register: GgsEmployeeCashierRegister;
-  date: string;
+  /** @nullable */
+  fromDate: string | null;
+  /** @nullable */
+  toDate: string | null;
   totalCollected: number;
   transactionCount: number;
+  cancelledTotal: number;
+  cancelledTransactionCount: number;
+  totalTaxCollected: number;
+  totalDiscountGiven: number;
+  paymentMethods: GgsEmployeeCashierPaymentSummary[];
+  matchedTransactionCount: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
   transactions: GgsEmployeeCashierTransaction[];
 }
 
@@ -464,6 +579,10 @@ export interface GgsVoucher {
   startsAt: string | null;
   /** @nullable */
   expiresAt: string | null;
+  discountType: GgsVoucherDiscountType;
+  /** @minimum 0 */
+  discountValue: number;
+  appliesTo: GgsVoucherAppliesTo;
   active: boolean;
 }
 
@@ -487,6 +606,10 @@ export interface GgsVoucherInput {
   startsAt: string | null;
   /** @nullable */
   expiresAt: string | null;
+  discountType: GgsVoucherDiscountType;
+  /** @minimum 0 */
+  discountValue: number;
+  appliesTo: GgsVoucherAppliesTo;
   active: boolean;
 }
 
@@ -556,4 +679,32 @@ export interface GgsAdminSummary {
   activeServices: number;
   monthlyRevenue: number;
 }
+
+export type GetGgsEmployeeCashierTransactionsParams = {
+fromDate?: string;
+toDate?: string;
+/**
+ * @maxLength 120
+ */
+search?: string;
+status?: GetGgsEmployeeCashierTransactionsStatus;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+pageSize?: number;
+};
+
+export type GetGgsEmployeeCashierTransactionsStatus = typeof GetGgsEmployeeCashierTransactionsStatus[keyof typeof GetGgsEmployeeCashierTransactionsStatus];
+
+
+export const GetGgsEmployeeCashierTransactionsStatus = {
+  all: 'all',
+  completed: 'completed',
+  cancelled: 'cancelled',
+} as const;
 

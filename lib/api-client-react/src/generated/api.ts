@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetGgsEmployeeCashierTransactionsParams,
   GgsAccount,
   GgsAccountLoginInput,
   GgsAccountRegistrationInput,
@@ -27,6 +28,8 @@ import type {
   GgsAppointment,
   GgsAppointmentInput,
   GgsAppointmentStatusUpdate,
+  GgsCashierSettings,
+  GgsCashierSettingsInput,
   GgsEmployeeAccount,
   GgsEmployeeAccountInput,
   GgsEmployeeAccountUpdate,
@@ -39,8 +42,10 @@ import type {
   GgsEmployeeCashierAccessInput,
   GgsEmployeeCashierSession,
   GgsEmployeeCashierTransaction,
+  GgsEmployeeCashierTransactionCancellationInput,
   GgsEmployeeCashierTransactionInput,
   GgsEmployeeCashierTransactionsSummary,
+  GgsEmployeeCashierVoucher,
   GgsEmployeeLoginInput,
   GgsProduct,
   GgsProductInput,
@@ -1360,20 +1365,20 @@ export const useLogoutGgsEmployeeCashier = <TError = ErrorType<unknown>,
       return useMutation(getLogoutGgsEmployeeCashierMutationOptions(options));
     }
 
-export const getGetGgsEmployeeCashierTransactionsUrl = () => {
+export const getGetGgsEmployeeCashierVouchersUrl = () => {
 
 
 
 
-  return `/api/ggs/employee/cashier/transactions`
+  return `/api/ggs/employee/cashier/vouchers`
 }
 
 /**
- * @summary List today's transactions for the active cashier register
+ * @summary List valid discount vouchers for the active cashier register
  */
-export const getGgsEmployeeCashierTransactions = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeCashierTransactionsSummary> => {
+export const getGgsEmployeeCashierVouchers = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeCashierVoucher[]> => {
 
-  return customFetch<GgsEmployeeCashierTransactionsSummary>(getGetGgsEmployeeCashierTransactionsUrl(),
+  return customFetch<GgsEmployeeCashierVoucher[]>(getGetGgsEmployeeCashierVouchersUrl(),
   {
     ...options,
     method: 'GET'
@@ -1386,23 +1391,107 @@ export const getGgsEmployeeCashierTransactions = async ( options?: Parameters<ty
 
 
 
-export const getGetGgsEmployeeCashierTransactionsQueryKey = () => {
+export const getGetGgsEmployeeCashierVouchersQueryKey = () => {
     return [
-    `/api/ggs/employee/cashier/transactions`
+    `/api/ggs/employee/cashier/vouchers`
     ] as const;
     }
 
 
-export const getGetGgsEmployeeCashierTransactionsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeCashierTransactions>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierTransactions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetGgsEmployeeCashierVouchersQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeCashierVouchers>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierVouchers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeCashierTransactionsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeCashierVouchersQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeCashierTransactions>>> = ({ signal }) => getGgsEmployeeCashierTransactions({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeCashierVouchers>>> = ({ signal }) => getGgsEmployeeCashierVouchers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierVouchers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeCashierVouchersQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeCashierVouchers>>>
+export type GetGgsEmployeeCashierVouchersQueryError = ErrorType<void>
+
+
+/**
+ * @summary List valid discount vouchers for the active cashier register
+ */
+
+export function useGetGgsEmployeeCashierVouchers<TData = Awaited<ReturnType<typeof getGgsEmployeeCashierVouchers>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierVouchers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeCashierVouchersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGgsEmployeeCashierTransactionsUrl = (params?: GetGgsEmployeeCashierTransactionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/ggs/employee/cashier/transactions?${stringifiedParams}` : `/api/ggs/employee/cashier/transactions`
+}
+
+/**
+ * @summary List and summarize cashier transactions for the active register
+ */
+export const getGgsEmployeeCashierTransactions = async (params?: GetGgsEmployeeCashierTransactionsParams, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeCashierTransactionsSummary> => {
+
+  return customFetch<GgsEmployeeCashierTransactionsSummary>(getGetGgsEmployeeCashierTransactionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeCashierTransactionsQueryKey = (params?: GetGgsEmployeeCashierTransactionsParams,) => {
+    return [
+    `/api/ggs/employee/cashier/transactions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeCashierTransactionsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeCashierTransactions>>, TError = ErrorType<void>>(params?: GetGgsEmployeeCashierTransactionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierTransactions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeCashierTransactionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeCashierTransactions>>> = ({ signal }) => getGgsEmployeeCashierTransactions(params, { signal, ...requestOptions });
 
 
 
@@ -1416,15 +1505,15 @@ export type GetGgsEmployeeCashierTransactionsQueryError = ErrorType<void>
 
 
 /**
- * @summary List today's transactions for the active cashier register
+ * @summary List and summarize cashier transactions for the active register
  */
 
 export function useGetGgsEmployeeCashierTransactions<TData = Awaited<ReturnType<typeof getGgsEmployeeCashierTransactions>>, TError = ErrorType<void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierTransactions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: GetGgsEmployeeCashierTransactionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeCashierTransactions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetGgsEmployeeCashierTransactionsQueryOptions(options)
+  const queryOptions = getGetGgsEmployeeCashierTransactionsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -1523,6 +1612,95 @@ export const useCreateGgsEmployeeCashierTransaction = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getCreateGgsEmployeeCashierTransactionMutationOptions(options));
+    }
+
+export const getCancelGgsEmployeeCashierTransactionUrl = (transactionId: number,) => {
+
+
+
+
+  return `/api/ggs/employee/cashier/transactions/${transactionId}/cancel`
+}
+
+/**
+ * @summary Cancel a cashier transaction and restore sold product stock
+ */
+export const cancelGgsEmployeeCashierTransaction = async (transactionId: number,
+    ggsEmployeeCashierTransactionCancellationInput: GgsEmployeeCashierTransactionCancellationInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeCashierTransaction> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsEmployeeCashierTransaction>(getCancelGgsEmployeeCashierTransactionUrl(transactionId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsEmployeeCashierTransactionCancellationInput)
+  }
+);}
+
+
+
+
+
+export const getCancelGgsEmployeeCashierTransactionMutationKey = () => ['cancelGgsEmployeeCashierTransaction'] as const;
+
+export const getCancelGgsEmployeeCashierTransactionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelGgsEmployeeCashierTransaction>>, TError,CancelGgsEmployeeCashierTransactionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelGgsEmployeeCashierTransaction>>, TError,CancelGgsEmployeeCashierTransactionMutationVariables, TContext> => {
+
+const mutationKey = getCancelGgsEmployeeCashierTransactionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelGgsEmployeeCashierTransaction>>, CancelGgsEmployeeCashierTransactionMutationVariables> = (props) => {
+          const {transactionId,data} = props ?? {};
+
+          return  cancelGgsEmployeeCashierTransaction(transactionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelGgsEmployeeCashierTransactionMutationResult = NonNullable<Awaited<ReturnType<typeof cancelGgsEmployeeCashierTransaction>>>
+    export type CancelGgsEmployeeCashierTransactionMutationBody = BodyType<GgsEmployeeCashierTransactionCancellationInput>
+    export type CancelGgsEmployeeCashierTransactionMutationError = ErrorType<void>
+    export type CancelGgsEmployeeCashierTransactionMutationVariables = {transactionId: number;data: BodyType<GgsEmployeeCashierTransactionCancellationInput>}
+
+    /**
+ * @summary Cancel a cashier transaction and restore sold product stock
+ */
+export const useCancelGgsEmployeeCashierTransaction = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelGgsEmployeeCashierTransaction>>, TError,CancelGgsEmployeeCashierTransactionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelGgsEmployeeCashierTransaction>>,
+        TError,
+        CancelGgsEmployeeCashierTransactionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCancelGgsEmployeeCashierTransactionMutationOptions(options));
     }
 
 export const getGetGgsEmployeeBookingsUrl = () => {
@@ -3258,6 +3436,171 @@ export const useCreateGgsVoucher = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getCreateGgsVoucherMutationOptions(options));
+    }
+
+export const getGetGgsAdminCashierSettingsUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/cashier-settings`
+}
+
+/**
+ * @summary Get cashier tax settings
+ */
+export const getGgsAdminCashierSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<GgsCashierSettings> => {
+
+  return customFetch<GgsCashierSettings>(getGetGgsAdminCashierSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsAdminCashierSettingsQueryKey = () => {
+    return [
+    `/api/ggs/admin/cashier-settings`
+    ] as const;
+    }
+
+
+export const getGetGgsAdminCashierSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsAdminCashierSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminCashierSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsAdminCashierSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsAdminCashierSettings>>> = ({ signal }) => getGgsAdminCashierSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminCashierSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsAdminCashierSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsAdminCashierSettings>>>
+export type GetGgsAdminCashierSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get cashier tax settings
+ */
+
+export function useGetGgsAdminCashierSettings<TData = Awaited<ReturnType<typeof getGgsAdminCashierSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsAdminCashierSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsAdminCashierSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateGgsAdminCashierSettingsUrl = () => {
+
+
+
+
+  return `/api/ggs/admin/cashier-settings`
+}
+
+/**
+ * @summary Update cashier tax settings
+ */
+export const updateGgsAdminCashierSettings = async (ggsCashierSettingsInput: GgsCashierSettingsInput, options?: Parameters<typeof customFetch>[1]): Promise<GgsCashierSettings> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GgsCashierSettings>(getUpdateGgsAdminCashierSettingsUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ggsCashierSettingsInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateGgsAdminCashierSettingsMutationKey = () => ['updateGgsAdminCashierSettings'] as const;
+
+export const getUpdateGgsAdminCashierSettingsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminCashierSettings>>, TError,UpdateGgsAdminCashierSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminCashierSettings>>, TError,UpdateGgsAdminCashierSettingsMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGgsAdminCashierSettingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGgsAdminCashierSettings>>, UpdateGgsAdminCashierSettingsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateGgsAdminCashierSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGgsAdminCashierSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateGgsAdminCashierSettings>>>
+    export type UpdateGgsAdminCashierSettingsMutationBody = BodyType<GgsCashierSettingsInput>
+    export type UpdateGgsAdminCashierSettingsMutationError = ErrorType<void>
+    export type UpdateGgsAdminCashierSettingsMutationVariables = {data: BodyType<GgsCashierSettingsInput>}
+
+    /**
+ * @summary Update cashier tax settings
+ */
+export const useUpdateGgsAdminCashierSettings = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGgsAdminCashierSettings>>, TError,UpdateGgsAdminCashierSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGgsAdminCashierSettings>>,
+        TError,
+        UpdateGgsAdminCashierSettingsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGgsAdminCashierSettingsMutationOptions(options));
     }
 
 export const getUpdateGgsVoucherUrl = (id: number,) => {

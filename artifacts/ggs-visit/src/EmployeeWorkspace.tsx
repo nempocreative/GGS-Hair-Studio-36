@@ -1,29 +1,32 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, Clock3, CreditCard, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, CreditCard, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import {
   getGetGgsEmployeeBookingsQueryKey,
   getGetGgsEmployeeAttendanceHistoryQueryKey,
   getGetGgsEmployeeAttendanceTodayQueryKey,
   getGetGgsEmployeeCashierSessionQueryKey,
+  getGetGgsEmployeeCashierVouchersQueryKey,
   getGetGgsEmployeeCashierTransactionsQueryKey,
   getGetGgsPublicProductsQueryKey,
   getGetGgsPublicServicesQueryKey,
   getGetGgsEmployeeSessionQueryKey,
   useGetGgsEmployeeBookings,
   useGetGgsEmployeeCashierSession,
+  useGetGgsEmployeeCashierVouchers,
   useGetGgsEmployeeCashierTransactions,
   useGetGgsPublicProducts,
   useGetGgsPublicServices,
   useCreateGgsEmployeeCashierTransaction,
+  useCancelGgsEmployeeCashierTransaction,
   useGetGgsEmployeeSession,
   useLoginGgsEmployee,
   useLogoutGgsEmployeeCashier,
   useLogoutGgsEmployee,
   useUnlockGgsEmployeeCashier,
 } from '@workspace/api-client-react';
-import type { GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import type { GetGgsEmployeeCashierTransactionsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
 import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
@@ -100,7 +103,10 @@ const cashierRegisters: {
 
 type EmployeeMenuItem = (typeof employeeMenuItems)[number];
 
-function cashierErrorMessage(error: unknown): string {
+function cashierErrorMessage(
+  error: unknown,
+  fallback = 'Kasir belum dapat dibuka. Periksa koneksi lalu coba lagi.',
+): string {
   if (typeof error === 'object' && error !== null && 'data' in error) {
     const data = (error as { data?: unknown }).data;
     if (typeof data === 'object' && data !== null && 'error' in data) {
@@ -108,16 +114,35 @@ function cashierErrorMessage(error: unknown): string {
       if (typeof message === 'string' && message.trim()) return message;
     }
   }
-  return 'Kasir belum dapat dibuka. Periksa koneksi lalu coba lagi.';
+  return fallback;
 }
 
 function EmployeeCashierPage() {
   const queryClient = useQueryClient();
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyStatus, setHistoryStatus] = useState<GetGgsEmployeeCashierTransactionsParams['status']>('all');
+  const [historyFromDate, setHistoryFromDate] = useState('');
+  const [historyToDate, setHistoryToDate] = useState('');
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyDateRangeValid = !historyFromDate || !historyToDate || historyFromDate <= historyToDate;
+  const [selectedTransaction, setSelectedTransaction] = useState<GgsEmployeeCashierTransaction | null>(null);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [confirmCancellation, setConfirmCancellation] = useState(false);
+  const historyParams = useMemo<GetGgsEmployeeCashierTransactionsParams>(() => ({
+    ...(historyFromDate ? { fromDate: historyFromDate } : {}),
+    ...(historyToDate ? { toDate: historyToDate } : {}),
+    ...(historySearch.trim() ? { search: historySearch.trim() } : {}),
+    status: historyStatus,
+    page: historyPage,
+    pageSize: 10,
+  }), [historyFromDate, historyToDate, historySearch, historyStatus, historyPage]);
   const cashierSession = useGetGgsEmployeeCashierSession({
     query: {
       queryKey: getGetGgsEmployeeCashierSessionQueryKey(),
       retry: false,
       staleTime: 0,
+      refetchInterval: 60_000,
+      refetchOnWindowFocus: true,
     },
   });
   const isCashierActive = Boolean(cashierSession.data?.active && cashierSession.data.register);
@@ -127,10 +152,20 @@ function EmployeeCashierPage() {
   const productsQuery = useGetGgsPublicProducts({
     query: { queryKey: getGetGgsPublicProductsQueryKey(), retry: false, enabled: isCashierActive },
   });
-  const transactionsQuery = useGetGgsEmployeeCashierTransactions({
-    query: { queryKey: getGetGgsEmployeeCashierTransactionsQueryKey(), retry: false, enabled: isCashierActive },
+  const vouchersQuery = useGetGgsEmployeeCashierVouchers({
+    query: { queryKey: getGetGgsEmployeeCashierVouchersQueryKey(), retry: false, enabled: isCashierActive },
+  });
+  const transactionsQuery = useGetGgsEmployeeCashierTransactions(historyParams, {
+    query: {
+      queryKey: getGetGgsEmployeeCashierTransactionsQueryKey(historyParams),
+      retry: false,
+      enabled: isCashierActive && historyDateRangeValid,
+      refetchInterval: 30_000,
+      refetchOnWindowFocus: true,
+    },
   });
   const createTransaction = useCreateGgsEmployeeCashierTransaction();
+  const cancelTransaction = useCancelGgsEmployeeCashierTransaction();
   const unlockCashier = useUnlockGgsEmployeeCashier();
   const lockCashier = useLogoutGgsEmployeeCashier();
   const [selectedRegister, setSelectedRegister] = useState<GgsEmployeeCashierRegister>('ggs_beauty');
@@ -142,6 +177,7 @@ function EmployeeCashierPage() {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris' | 'card'>('cash');
+  const [voucherCode, setVoucherCode] = useState('');
   const [amountReceived, setAmountReceived] = useState('');
   const [cart, setCart] = useState<{ itemType: 'service' | 'product'; itemId: number; quantity: number }[]>([]);
   const [receipt, setReceipt] = useState<GgsEmployeeCashierTransaction | null>(null);
@@ -151,14 +187,44 @@ function EmployeeCashierPage() {
   const hasActiveAccess = Boolean(cashierSession.data?.active && activeRegister);
   const services = servicesQuery.data?.filter((service) => service.active) ?? [];
   const products = productsQuery.data?.filter((product) => product.active) ?? [];
+  const now = Date.now();
+  const vouchers = (vouchersQuery.data ?? []).filter((voucher) =>
+    !voucher.expiresAt || new Date(voucher.expiresAt).getTime() >= now,
+  );
+  const selectedVoucher = vouchers.find((voucher) => voucher.code === voucherCode);
   const subtotal = cart.reduce((sum, line) => {
     const item = line.itemType === 'service'
       ? services.find((service) => service.id === line.itemId)
       : products.find((product) => product.id === line.itemId);
     return sum + (item?.price ?? 0) * line.quantity;
   }, 0);
+  const discountBase = selectedVoucher
+    ? selectedVoucher.appliesTo === 'all_items'
+      ? subtotal
+      : cart.reduce((sum, line) => line.itemType === 'service'
+        ? sum + (services.find((service) => service.id === line.itemId)?.price ?? 0) * line.quantity
+        : sum, 0)
+    : 0;
+  const discountAmount = selectedVoucher
+    ? Math.min(discountBase, selectedVoucher.discountType === 'percent'
+      ? Math.round(discountBase * selectedVoucher.discountValue / 100)
+      : selectedVoucher.discountValue)
+    : 0;
+  const taxRate = Math.min(100, Math.max(0, cashierSession.data?.taxRate ?? 0));
+  const previewTax = Math.round((subtotal - discountAmount) * taxRate / 100);
+  const previewTotal = subtotal - discountAmount + previewTax;
   const receivedValue = Number(amountReceived) || 0;
-  const changeAmount = paymentMethod === 'cash' ? Math.max(0, receivedValue - subtotal) : 0;
+  const changeAmount = paymentMethod === 'cash' ? Math.max(0, receivedValue - previewTotal) : 0;
+  const cashSuggestions = previewTotal > 0
+    ? [
+        { label: 'Uang pas', amount: previewTotal },
+        { label: 'Pembulatan Rp10 rb', amount: Math.ceil(previewTotal / 10_000) * 10_000 },
+        { label: 'Pembulatan Rp50 rb', amount: Math.ceil(previewTotal / 50_000) * 50_000 },
+      ].filter((suggestion, index, suggestions) => (
+        suggestion.amount <= 2_147_483_647
+        && suggestions.findIndex((candidate) => candidate.amount === suggestion.amount) === index
+      ))
+    : [];
   const visibleCatalog = (catalogTab === 'service' ? services : products).filter((item) => {
     const query = catalogSearch.trim().toLocaleLowerCase('id-ID');
     return !query || `${item.name} ${item.category} ${item.description}`.toLocaleLowerCase('id-ID').includes(query);
@@ -203,9 +269,10 @@ function EmployeeCashierPage() {
       {
         onSuccess: async () => {
           setPassword('');
-          await queryClient.invalidateQueries({
-            queryKey: getGetGgsEmployeeCashierSessionQueryKey(),
-          });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierSessionQueryKey() }),
+          queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierVouchersQueryKey() }),
+        ]);
         },
         onError: (error) => setFormError(cashierErrorMessage(error)),
       },
@@ -221,9 +288,10 @@ function EmployeeCashierPage() {
         setReceipt(null);
         setCustomerName('');
         setAmountReceived('');
-        await queryClient.invalidateQueries({
-          queryKey: getGetGgsEmployeeCashierSessionQueryKey(),
-        });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierSessionQueryKey() }),
+          queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierVouchersQueryKey() }),
+        ]);
       },
       onError: (error) => setLockError(cashierErrorMessage(error)),
     });
@@ -236,14 +304,15 @@ function EmployeeCashierPage() {
       setCheckoutError('Tambahkan layanan atau produk sebelum menyelesaikan pembayaran.');
       return;
     }
-    if (paymentMethod === 'cash' && receivedValue < subtotal) {
+    if (paymentMethod === 'cash' && receivedValue < previewTotal) {
       setCheckoutError('Jumlah uang diterima belum mencukupi total pembayaran.');
       return;
     }
     const input: GgsEmployeeCashierTransactionInput = {
       ...(customerName.trim() ? { customerName: customerName.trim() } : {}),
       paymentMethod,
-      amountReceived: paymentMethod === 'cash' ? receivedValue : subtotal,
+      amountReceived: paymentMethod === 'cash' ? receivedValue : previewTotal,
+      ...(selectedVoucher ? { voucherCode: selectedVoucher.code } : {}),
       items: cart,
     };
     createTransaction.mutate({ data: input }, {
@@ -252,10 +321,13 @@ function EmployeeCashierPage() {
         setCart([]);
         setCustomerName('');
         setAmountReceived('');
+        setVoucherCode('');
         setCheckoutError('');
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierTransactionsQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getGetGgsPublicProductsQueryKey() }),
+          queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierSessionQueryKey() }),
+          queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierVouchersQueryKey() }),
         ]);
       },
       onError: (error) => {
@@ -265,7 +337,41 @@ function EmployeeCashierPage() {
     });
   };
 
+  const submitCancellation = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedTransaction || selectedTransaction.status !== 'completed') return;
+    const reason = cancellationReason.trim();
+    if (reason.length < 3) return;
+    if (!confirmCancellation) {
+      setConfirmCancellation(true);
+      return;
+    }
+    cancelTransaction.mutate(
+      { transactionId: selectedTransaction.transactionId, data: { reason } },
+      {
+        onSuccess: async () => {
+          setSelectedTransaction(null);
+          setCancellationReason('');
+          setConfirmCancellation(false);
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierTransactionsQueryKey() }),
+            queryClient.invalidateQueries({ queryKey: getGetGgsPublicProductsQueryKey() }),
+          ]);
+        },
+        onError: () => setConfirmCancellation(false),
+      },
+    );
+  };
+
   const formatMoney = (value: number) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`;
+  const paymentMethodLabel = (method: GgsEmployeeCashierTransaction['paymentMethod']) => (
+    method === 'cash' ? 'Tunai' : method === 'qris' ? 'QRIS' : 'Kartu'
+  );
+  const dateTimeLabel = (value: string) => new Intl.DateTimeFormat('id-ID', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Jakarta',
+  }).format(new Date(value));
 
   return (
     <div className="employee-cashier" data-testid="employee-cashier">
@@ -298,7 +404,7 @@ function EmployeeCashierPage() {
             <div className="cashier-workspace__register">
               <span className="cashier-workspace__register-mark"><Store size={17} aria-hidden="true" /></span>
               <div><span>REGISTER AKTIF</span><strong id="employee-cashier-active-title">{activeRegister.label}</strong></div>
-              {cashierSession.data?.expiresAt && <small>Sesi berakhir {new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(new Date(cashierSession.data.expiresAt))}</small>}
+              {cashierSession.data?.expiresAt && <small>Sesi berakhir {new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(new Date(cashierSession.data.expiresAt))} · Pajak {taxRate}%</small>}
             </div>
             <div className="cashier-workspace__bar-actions">
               {lockError && <span className="employee-form-error" role="alert">{lockError}</span>}
@@ -308,14 +414,54 @@ function EmployeeCashierPage() {
             </div>
           </div>
 
-          <section className="cashier-day-summary" aria-label="Ringkasan transaksi hari ini" data-testid="summary-cashier-today">
-            <div className="cashier-day-summary__intro"><span>HARI INI</span><strong>{transactionsQuery.data?.date ? displayDate(transactionsQuery.data.date, { day: 'numeric', month: 'long' }) : 'Ringkasan register'}</strong></div>
-            <div className="cashier-day-summary__metric"><span>Total penjualan</span><strong>{transactionsQuery.isLoading ? 'Memuat…' : transactionsQuery.isError ? '—' : formatMoney(transactionsQuery.data?.totalCollected ?? 0)}</strong></div>
-            <div className="cashier-day-summary__metric"><span>Transaksi</span><strong>{transactionsQuery.isLoading ? '—' : transactionsQuery.isError ? '—' : transactionsQuery.data?.transactionCount ?? 0}</strong></div>
+          <section className="cashier-day-summary" aria-label="Rekap pemasukan register" data-testid="summary-cashier-today">
+            <div className="cashier-day-summary__intro"><span>REKAP REGISTER</span><strong>{transactionsQuery.data?.fromDate || transactionsQuery.data?.toDate ? `${transactionsQuery.data?.fromDate || 'Awal'} — ${transactionsQuery.data?.toDate || 'Hari ini'}` : 'Seluruh riwayat'}</strong></div>
+            <div className="cashier-day-summary__metric"><span>Pemasukan bersih</span><strong>{transactionsQuery.isLoading ? 'Memuat…' : transactionsQuery.isError ? '—' : formatMoney(transactionsQuery.data?.totalCollected ?? 0)}</strong></div>
+            <div className="cashier-day-summary__metric"><span>Pembayaran selesai</span><strong>{transactionsQuery.isLoading ? '—' : transactionsQuery.isError ? '—' : transactionsQuery.data?.transactionCount ?? 0}</strong></div>
+            <div className="cashier-day-summary__metric cashier-day-summary__metric--cancelled"><span>Dibatalkan</span><strong>{transactionsQuery.isLoading ? '—' : transactionsQuery.isError ? '—' : `${transactionsQuery.data?.cancelledTransactionCount ?? 0} · ${formatMoney(transactionsQuery.data?.cancelledTotal ?? 0)}`}</strong></div>
             <button type="button" className="cashier-day-summary__refresh" onClick={() => void transactionsQuery.refetch()} disabled={transactionsQuery.isFetching} aria-label="Perbarui ringkasan"><RefreshCw size={15} className={transactionsQuery.isFetching ? 'is-spinning' : ''} aria-hidden="true" /></button>
           </section>
 
-          {transactionsQuery.isError && <div className="cashier-inline-error" role="alert"><span>Ringkasan transaksi belum dapat dimuat.</span><button type="button" onClick={() => void transactionsQuery.refetch()}>Coba lagi</button></div>}
+          {transactionsQuery.isError && <div className="cashier-inline-error" role="alert"><span>Rekap dan riwayat belum dapat dimuat.</span><button type="button" onClick={() => void transactionsQuery.refetch()}>Coba lagi</button></div>}
+
+          <section className="cashier-history" aria-labelledby="cashier-history-title">
+            <div className="cashier-history__top">
+              <div className="cashier-section-heading">
+                <div><span>RIWAYAT REGISTER AKTIF</span><h2 id="cashier-history-title">Transaksi &amp; pemasukan</h2></div>
+                <span className="cashier-history__count">{transactionsQuery.data ? `${transactionsQuery.data.matchedTransactionCount} hasil` : 'Riwayat lengkap'}</span>
+              </div>
+              <div className="cashier-history__filters">
+                <label className="cashier-history__search"><Search size={15} aria-hidden="true" /><span className="sr-only">Cari struk, pelanggan, atau item</span><input type="search" value={historySearch} onChange={(event) => { setHistorySearch(event.target.value); setHistoryPage(1); }} placeholder="Struk, pelanggan, item…" data-testid="input-cashier-history-search" /></label>
+                <label className="cashier-history__filter">Status<select value={historyStatus} onChange={(event) => { setHistoryStatus(event.target.value as GetGgsEmployeeCashierTransactionsParams['status']); setHistoryPage(1); }} data-testid="select-cashier-history-status"><option value="all">Semua status</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
+                <label className="cashier-history__filter">Dari<input type="date" value={historyFromDate} onChange={(event) => { setHistoryFromDate(event.target.value); setHistoryPage(1); }} data-testid="input-cashier-history-from-date" /></label>
+                <label className="cashier-history__filter">Sampai<input type="date" value={historyToDate} onChange={(event) => { setHistoryToDate(event.target.value); setHistoryPage(1); }} data-testid="input-cashier-history-to-date" /></label>
+              </div>
+            </div>
+            {historyFromDate && historyToDate && historyFromDate > historyToDate && <p className="cashier-history__validation" role="alert">Tanggal awal harus sebelum atau sama dengan tanggal akhir.</p>}
+            {transactionsQuery.data && <div className="cashier-method-recap" aria-label="Pemasukan menurut metode pembayaran">
+              <span className="cashier-method-recap__label">METODE PEMBAYARAN</span>
+              {transactionsQuery.data.paymentMethods.map((method) => <div className="cashier-method-recap__item" key={method.paymentMethod}><span>{paymentMethodLabel(method.paymentMethod)} <small>{method.transactionCount} transaksi</small></span><strong>{formatMoney(method.totalCollected)}</strong></div>)}
+            </div>}
+            {!historyDateRangeValid ? null : transactionsQuery.isLoading ? <div className="cashier-history__skeleton" role="status" aria-label="Memuat riwayat transaksi"><span /><span /><span /><span /></div> :
+              transactionsQuery.isError ? <div className="cashier-history__empty cashier-history__empty--error"><strong>Riwayat belum dapat dibuka</strong><span>Periksa koneksi register, lalu coba lagi.</span><button type="button" onClick={() => void transactionsQuery.refetch()}>Coba lagi</button></div> :
+                transactionsQuery.data?.transactions.length ? <div className="cashier-history__table-wrap">
+                  <table className="cashier-history__table">
+                    <thead><tr><th>Struk / waktu</th><th>Pelanggan &amp; item</th><th>Metode</th><th>Status</th><th className="is-number">Jumlah</th><th><span className="sr-only">Detail</span></th></tr></thead>
+                    <tbody>{transactionsQuery.data.transactions.map((transaction) => <tr key={transaction.transactionId} data-testid={`row-cashier-transaction-${transaction.transactionId}`}>
+                      <td><strong>{transaction.receiptNumber}</strong><span>{dateTimeLabel(transaction.createdAt)}</span></td>
+                      <td><strong>{transaction.customerName || 'Pelanggan umum'}</strong><span>{transaction.items.map((item) => `${item.name} ×${item.quantity}`).join(', ')}</span></td>
+                      <td>{paymentMethodLabel(transaction.paymentMethod)}</td>
+                      <td><span className={`cashier-history__status cashier-history__status--${transaction.status}`}>{transaction.status === 'completed' ? 'Selesai' : 'Dibatalkan'}</span></td>
+                      <td className="is-number"><strong>{formatMoney(transaction.totalAmount)}</strong></td>
+                      <td><button type="button" className="cashier-history__detail" onClick={() => { cancelTransaction.reset(); setSelectedTransaction(transaction); setCancellationReason(''); setConfirmCancellation(false); }} data-testid={`button-cashier-transaction-detail-${transaction.transactionId}`}>Detail <ArrowRight size={13} aria-hidden="true" /></button></td>
+                    </tr>)}</tbody>
+                  </table>
+                </div> : <div className="cashier-history__empty"><span className="cashier-history__empty-mark"><ReceiptText size={20} aria-hidden="true" /></span><strong>{historySearch || historyFromDate || historyToDate || historyStatus !== 'all' ? 'Tidak ada transaksi yang cocok' : 'Belum ada transaksi'}</strong><span>{historySearch || historyFromDate || historyToDate || historyStatus !== 'all' ? 'Ubah pencarian atau filter untuk melihat hasil lain.' : 'Pembayaran yang tercatat di register ini akan tampil di sini.'}</span></div>}
+            {transactionsQuery.data && <footer className="cashier-history__pagination">
+              <span>Halaman {transactionsQuery.data.page} dari {Math.max(1, transactionsQuery.data.pageCount)} <small>· {transactionsQuery.data.matchedTransactionCount} transaksi</small></span>
+              <div><button type="button" onClick={() => setHistoryPage((page) => Math.max(1, page - 1))} disabled={historyPage <= 1 || transactionsQuery.isFetching} aria-label="Halaman sebelumnya" data-testid="button-cashier-history-previous"><ChevronLeft size={16} /></button><button type="button" onClick={() => setHistoryPage((page) => Math.min(transactionsQuery.data?.pageCount ?? page, page + 1))} disabled={historyPage >= transactionsQuery.data.pageCount || transactionsQuery.isFetching} aria-label="Halaman berikutnya" data-testid="button-cashier-history-next"><ChevronRight size={16} /></button></div>
+            </footer>}
+          </section>
 
           <div className="cashier-layout">
             <section className="cashier-catalog" aria-label="Katalog layanan dan produk">
@@ -371,7 +517,21 @@ function EmployeeCashierPage() {
                   </article>;
                 }) : <div className="cashier-cart__empty"><ReceiptText size={21} aria-hidden="true" /><strong>Belum ada item</strong><span>Pilih layanan atau produk di samping.</span></div>}
               </div>
-              <div className="cashier-total"><span>Total pembayaran</span><strong>{formatMoney(subtotal)}</strong></div>
+              <label className="cashier-field cashier-voucher-field">Voucher kasir <span>Opsional</span>
+                {vouchersQuery.isLoading ? <span className="cashier-voucher-state" role="status">Memuat voucher…</span> :
+                  vouchersQuery.isError ? <span className="cashier-voucher-state cashier-voucher-state--error" role="alert">Voucher belum dapat dimuat. <button type="button" onClick={() => void vouchersQuery.refetch()}>Coba lagi</button></span> :
+                    <select value={voucherCode} onChange={(event) => { setVoucherCode(event.target.value); setCheckoutError(''); }} data-testid="select-cashier-voucher">
+                      <option value="">Tanpa voucher</option>
+                      {vouchers.map((voucher) => <option key={voucher.id} value={voucher.code}>{voucher.name} · {voucher.discountType === 'percent' ? `${voucher.discountValue}%` : formatMoney(voucher.discountValue)} · {voucher.appliesTo === 'services' ? 'Layanan' : 'Semua item'}</option>)}
+                    </select>}
+                {selectedVoucher && <small className="cashier-voucher-field__note">{selectedVoucher.value}{selectedVoucher.expiresAt ? ` · Berlaku sampai ${displayDate(selectedVoucher.expiresAt)}` : ''}</small>}
+              </label>
+              <div className="cashier-breakdown" aria-label="Rincian total">
+                <div><span>Subtotal</span><strong>{formatMoney(subtotal)}</strong></div>
+                {selectedVoucher && <div className="cashier-breakdown__discount"><span>Diskon · {selectedVoucher.name}</span><strong>−{formatMoney(discountAmount)}</strong></div>}
+                <div><span>Pajak ({taxRate}%)</span><strong>{formatMoney(previewTax)}</strong></div>
+                <div className="cashier-breakdown__total"><span>Total pembayaran</span><strong>{formatMoney(previewTotal)}</strong></div>
+              </div>
               <form onSubmit={submitPayment}>
                 <fieldset className="cashier-payment-method">
                   <legend>Metode pembayaran</legend>
@@ -384,12 +544,28 @@ function EmployeeCashierPage() {
                   </button>)}
                 </fieldset>
                 {paymentMethod === 'cash' ? (
-                  <label className="cashier-field cashier-field--amount">Uang diterima<input type="number" min={0} max={2147483647} step={1} inputMode="numeric" value={amountReceived} onChange={(event) => setAmountReceived(event.target.value)} placeholder="Masukkan jumlah" data-testid="input-cashier-amount-received" />
-                    {receivedValue >= subtotal && subtotal > 0 && <span className="cashier-change"><span>Kembalian</span><strong>{formatMoney(changeAmount)}</strong></span>}
-                  </label>
+                  <>
+                    <label className="cashier-field cashier-field--amount">Uang diterima<input type="number" min={0} max={2147483647} step={1} inputMode="numeric" value={amountReceived} onChange={(event) => setAmountReceived(event.target.value)} placeholder="Masukkan jumlah" data-testid="input-cashier-amount-received" />
+                      {receivedValue >= previewTotal && previewTotal > 0 && <span className="cashier-change"><span>Kembalian</span><strong>{formatMoney(changeAmount)}</strong></span>}
+                    </label>
+                    {cashSuggestions.length > 0 && <div className="cashier-amount-shortcuts" role="group" aria-label="Pilihan cepat uang diterima">
+                      {cashSuggestions.map((suggestion) => <button
+                        type="button"
+                        key={suggestion.amount}
+                        onClick={() => {
+                          setAmountReceived(String(suggestion.amount));
+                          setCheckoutError('');
+                        }}
+                        aria-label={`Isi ${formatMoney(suggestion.amount)}`}
+                        data-testid={`button-cashier-amount-${suggestion.amount}`}
+                      >
+                        <span>{suggestion.label}</span><strong>{formatMoney(suggestion.amount)}</strong>
+                      </button>)}
+                    </div>}
+                  </>
                 ) : <p className="cashier-record-note">Pembayaran {paymentMethod === 'qris' ? 'QRIS' : 'kartu'} diterima di resepsionis dan dicatat di sini. Aplikasi ini tidak memproses pembayaran.</p>}
                 {checkoutError && <p className="cashier-form-error" role="alert" data-testid="status-cashier-checkout-error">{checkoutError}</p>}
-                <button type="submit" className="cashier-submit" disabled={createTransaction.isPending || !cart.length || (paymentMethod === 'cash' && receivedValue < subtotal)} data-testid="button-submit-cashier-payment">
+                <button type="submit" className="cashier-submit" disabled={createTransaction.isPending || !cart.length || (paymentMethod === 'cash' && receivedValue < previewTotal)} data-testid="button-submit-cashier-payment">
                   {createTransaction.isPending ? <><span className="cashier-submit__pending" />Menyimpan pembayaran…</> : <>Konfirmasi pembayaran <ArrowRight size={16} aria-hidden="true" /></>}
                 </button>
                 <p className="cashier-checkout__footnote"><ShieldCheck size={13} aria-hidden="true" /> Harga akhir dan stok dikonfirmasi oleh sistem.</p>
@@ -402,22 +578,40 @@ function EmployeeCashierPage() {
             <div className="cashier-receipt__body">
               <div className="cashier-receipt__meta"><span>No. struk<strong>{receipt.receiptNumber}</strong></span><span>Register<strong>{activeRegister.label}</strong></span><span>Waktu<strong>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(receipt.createdAt))}</strong></span><span>Pelanggan<strong>{receipt.customerName || 'Pelanggan umum'}</strong></span></div>
               <div className="cashier-receipt__items">{receipt.items.map((item, index) => <div key={`${item.itemType}-${item.itemId}-${index}`}><span>{item.name} <small>× {item.quantity}</small></span><strong>{formatMoney(item.lineTotal)}</strong></div>)}</div>
-              <div className="cashier-receipt__totals"><span>Total <strong>{formatMoney(receipt.subtotal)}</strong></span><span>Metode <strong>{receipt.paymentMethod === 'cash' ? 'Tunai' : receipt.paymentMethod === 'qris' ? 'QRIS' : 'Kartu'}</strong></span>{receipt.paymentMethod === 'cash' && <><span>Diterima <strong>{formatMoney(receipt.amountReceived)}</strong></span><span>Kembalian <strong>{formatMoney(receipt.changeAmount)}</strong></span></>}</div>
+              <div className="cashier-receipt__totals">
+                <span>Subtotal <strong>{formatMoney(receipt.subtotal)}</strong></span>
+                {receipt.voucherName && <span>Voucher · {receipt.voucherName}{receipt.voucherCode ? ` (${receipt.voucherCode})` : ''}<strong>−{formatMoney(receipt.discountAmount)}</strong></span>}
+                <span>Pajak ({receipt.taxRate}%) <strong>{formatMoney(receipt.taxAmount)}</strong></span>
+                <span className="cashier-receipt__grand-total">Total pembayaran <strong>{formatMoney(receipt.totalAmount)}</strong></span>
+                <span>Metode <strong>{receipt.paymentMethod === 'cash' ? 'Tunai' : receipt.paymentMethod === 'qris' ? 'QRIS' : 'Kartu'}</strong></span>
+                {receipt.paymentMethod === 'cash' && <><span>Diterima <strong>{formatMoney(receipt.amountReceived)}</strong></span><span>Kembalian <strong>{formatMoney(receipt.changeAmount)}</strong></span></>}
+              </div>
             </div>
             <button type="button" className="cashier-receipt__dismiss" onClick={() => setReceipt(null)}>Tutup struk</button>
           </section>}
 
-          <section className="cashier-recent" aria-labelledby="cashier-recent-title">
-            <div className="cashier-section-heading"><div><span>REGISTER · HARI INI</span><h2 id="cashier-recent-title">Transaksi terbaru</h2></div><span className="cashier-recent__date">{transactionsQuery.data?.transactions.length ?? 0} tercatat</span></div>
-            {transactionsQuery.isLoading ? <div className="cashier-recent-skeleton" role="status"><span /><span /><span /></div> : transactionsQuery.isError ? <div className="cashier-empty cashier-empty--compact"><strong>Daftar transaksi belum tersedia</strong><button type="button" onClick={() => void transactionsQuery.refetch()}>Coba lagi</button></div> : transactionsQuery.data?.transactions.length ? (
-              <div className="cashier-recent__list">{transactionsQuery.data.transactions.slice(0, 6).map((transaction) => <article className="cashier-recent-row" key={transaction.receiptNumber}>
-                <span className="cashier-recent-row__icon"><ReceiptText size={16} aria-hidden="true" /></span>
-                <div className="cashier-recent-row__main"><strong>{transaction.customerName || 'Pelanggan umum'}</strong><span>{transaction.receiptNumber} · {new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(new Date(transaction.createdAt))} · {transaction.items.length} item</span></div>
-                <span className="cashier-recent-row__method">{transaction.paymentMethod === 'cash' ? 'Tunai' : transaction.paymentMethod === 'qris' ? 'QRIS' : 'Kartu'}</span>
-                <strong className="cashier-recent-row__amount">{formatMoney(transaction.subtotal)}</strong>
-              </article>)}</div>
-            ) : <div className="cashier-empty cashier-empty--compact"><strong>Belum ada transaksi hari ini</strong><p>Pembayaran yang selesai akan muncul di sini.</p></div>}
-          </section>
+          {selectedTransaction && <div className="cashier-detail-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedTransaction(null); }}>
+            <section className="cashier-detail" role="dialog" aria-modal="true" aria-labelledby="cashier-detail-title" data-testid="dialog-cashier-transaction-detail">
+              <header className="cashier-detail__header"><div><span>DETAIL TRANSAKSI</span><h2 id="cashier-detail-title">{selectedTransaction.receiptNumber}</h2></div><button type="button" onClick={() => setSelectedTransaction(null)} aria-label="Tutup detail transaksi" data-testid="button-close-cashier-transaction-detail"><X size={18} /></button></header>
+              <div className="cashier-detail__state"><span className={`cashier-history__status cashier-history__status--${selectedTransaction.status}`}>{selectedTransaction.status === 'completed' ? 'Selesai' : 'Dibatalkan'}</span><span>{dateTimeLabel(selectedTransaction.createdAt)}</span></div>
+              <dl className="cashier-detail__facts"><div><dt>Pelanggan</dt><dd>{selectedTransaction.customerName || 'Pelanggan umum'}</dd></div><div><dt>Petugas</dt><dd>{selectedTransaction.employeeName}</dd></div><div><dt>Register</dt><dd>{selectedTransaction.register === 'ggs_beauty' ? 'GGS Beauty' : 'Barber GGS'}</dd></div><div><dt>Metode</dt><dd>{paymentMethodLabel(selectedTransaction.paymentMethod)}</dd></div></dl>
+              <div className="cashier-detail__items"><h3>Item transaksi</h3>{selectedTransaction.items.map((item, index) => <div key={`${item.itemType}-${item.itemId}-${index}`}><span><strong>{item.name}</strong><small>{item.quantity} × {formatMoney(item.unitPrice)}</small></span><strong>{formatMoney(item.lineTotal)}</strong></div>)}</div>
+              <div className="cashier-detail__breakdown">
+                <div><span>Subtotal</span><strong>{formatMoney(selectedTransaction.subtotal)}</strong></div>
+                {selectedTransaction.voucherName && <div className="is-discount"><span>Diskon · {selectedTransaction.voucherName}{selectedTransaction.voucherCode ? ` (${selectedTransaction.voucherCode})` : ''}</span><strong>−{formatMoney(selectedTransaction.discountAmount)}</strong></div>}
+                <div><span>Pajak ({selectedTransaction.taxRate}%)</span><strong>{formatMoney(selectedTransaction.taxAmount)}</strong></div>
+                <div className="is-total"><span>Total pembayaran</span><strong>{formatMoney(selectedTransaction.totalAmount)}</strong></div>
+              </div>
+              {selectedTransaction.paymentMethod === 'cash' && <div className="cashier-detail__cash"><span>Uang diterima <strong>{formatMoney(selectedTransaction.amountReceived)}</strong></span><span>Kembalian <strong>{formatMoney(selectedTransaction.changeAmount)}</strong></span></div>}
+              {selectedTransaction.status === 'cancelled' ? <div className="cashier-detail__audit"><AlertTriangle size={16} aria-hidden="true" /><div><strong>Pembatalan tercatat</strong><span>Alasan: {selectedTransaction.cancellationReason || 'Tidak tersedia'}</span><small>{selectedTransaction.cancelledAt ? dateTimeLabel(selectedTransaction.cancelledAt) : ''}{selectedTransaction.cancelledByEmployeeName ? ` · oleh ${selectedTransaction.cancelledByEmployeeName}` : ''}</small></div></div> :
+                <form className="cashier-detail__cancel" onSubmit={submitCancellation}>
+                  <label>Batalkan transaksi <span>Wajib diisi · 3–240 karakter</span><textarea value={cancellationReason} onChange={(event) => { setCancellationReason(event.target.value); setConfirmCancellation(false); }} minLength={3} maxLength={240} required placeholder="Jelaskan kesalahan yang perlu dikoreksi…" data-testid="input-cashier-cancellation-reason" /></label>
+                  {confirmCancellation ? <div className="cashier-detail__confirm" role="alert"><AlertTriangle size={16} aria-hidden="true" /><span>Transaksi akan ditandai batal, dikeluarkan dari pemasukan, dan stok produk dipulihkan. Catatan audit tetap tersimpan.</span><button type="submit" disabled={cancelTransaction.isPending || cancellationReason.trim().length < 3} data-testid="button-confirm-cashier-cancellation">{cancelTransaction.isPending ? 'Membatalkan…' : 'Ya, batalkan transaksi'}</button><button type="button" onClick={() => setConfirmCancellation(false)}>Kembali</button></div> :
+                    <button type="submit" className="cashier-detail__cancel-button" disabled={cancellationReason.trim().length < 3} data-testid="button-start-cashier-cancellation"><AlertTriangle size={15} aria-hidden="true" /> Tinjau pembatalan</button>}
+                  {cancelTransaction.isError && <p className="cashier-history__validation" role="alert">{cashierErrorMessage(cancelTransaction.error, 'Pembatalan belum berhasil. Periksa kembali transaksi dan coba lagi.')}</p>}
+                </form>}
+            </section>
+          </div>}
         </div>
       ) : (
         <section className="employee-cashier__access" aria-label="Buka akses kasir">

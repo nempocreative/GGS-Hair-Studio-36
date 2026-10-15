@@ -20,6 +20,9 @@ export const ggsVouchersTable = pgTable(
     code: text("code"),
     startsAt: date("starts_at", { mode: "string" }),
     expiresAt: date("expires_at", { mode: "string" }),
+    discountType: text("discount_type").notNull().default("percent"),
+    discountValue: integer("discount_value").notNull().default(0),
+    appliesTo: text("applies_to").notNull().default("all_items"),
     active: boolean("active").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })

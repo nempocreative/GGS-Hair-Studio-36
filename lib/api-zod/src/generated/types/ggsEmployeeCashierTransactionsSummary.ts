@@ -5,13 +5,26 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GgsEmployeeCashierPaymentSummary } from './ggsEmployeeCashierPaymentSummary';
 import type { GgsEmployeeCashierRegister } from './ggsEmployeeCashierRegister';
 import type { GgsEmployeeCashierTransaction } from './ggsEmployeeCashierTransaction';
 
 export interface GgsEmployeeCashierTransactionsSummary {
   register: GgsEmployeeCashierRegister;
-  date: Date;
+  /** @nullable */
+  fromDate: Date | null;
+  /** @nullable */
+  toDate: Date | null;
   totalCollected: number;
   transactionCount: number;
+  cancelledTotal: number;
+  cancelledTransactionCount: number;
+  totalTaxCollected: number;
+  totalDiscountGiven: number;
+  paymentMethods: GgsEmployeeCashierPaymentSummary[];
+  matchedTransactionCount: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
   transactions: GgsEmployeeCashierTransaction[];
 }

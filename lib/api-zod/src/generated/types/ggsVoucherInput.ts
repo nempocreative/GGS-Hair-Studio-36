@@ -5,6 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GgsVoucherAppliesTo } from './ggsVoucherAppliesTo';
+import type { GgsVoucherDiscountType } from './ggsVoucherDiscountType';
 
 export interface GgsVoucherInput {
   /**
@@ -26,5 +28,9 @@ export interface GgsVoucherInput {
   startsAt: Date | null;
   /** @nullable */
   expiresAt: Date | null;
+  discountType: GgsVoucherDiscountType;
+  /** @minimum 0 */
+  discountValue: number;
+  appliesTo: GgsVoucherAppliesTo;
   active: boolean;
 }

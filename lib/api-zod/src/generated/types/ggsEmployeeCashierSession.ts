@@ -13,4 +13,9 @@ export interface GgsEmployeeCashierSession {
   register: GgsEmployeeCashierSessionRegister;
   /** @nullable */
   expiresAt: Date | null;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  taxRate: number;
 }

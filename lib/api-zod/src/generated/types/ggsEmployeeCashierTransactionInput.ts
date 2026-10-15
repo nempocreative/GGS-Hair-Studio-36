@@ -18,6 +18,11 @@ export interface GgsEmployeeCashierTransactionInput {
      */
   amountReceived: number;
   /**
+     * @maxLength 40
+     * @nullable
+     */
+  voucherCode?: string | null;
+  /**
      * @minItems 1
      * @maxItems 40
      */

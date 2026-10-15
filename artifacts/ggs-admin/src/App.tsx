@@ -4,8 +4,10 @@ import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import {
   getGetGgsAdminAppointmentsQueryKey,
+  getGetGgsAdminCashierSettingsQueryKey,
   getGetGgsAdminProductsQueryKey,
   getGetGgsAdminVouchersQueryKey,
+  getGetGgsEmployeeCashierVouchersQueryKey,
   getGetGgsPublicProductsQueryKey,
   getGetGgsPublicVouchersQueryKey,
   getGetGgsAdminServicesQueryKey,
@@ -18,12 +20,14 @@ import {
   useDeleteGgsProduct,
   useDeleteGgsVoucher,
   useGetGgsAdminAppointments,
+  useGetGgsAdminCashierSettings,
   useGetGgsAdminProducts,
   useGetGgsAdminServices,
   useGetGgsAdminVouchers,
   useGetGgsAdminSummary,
   useGetGgsSite,
   useUpdateGgsAppointment,
+  useUpdateGgsAdminCashierSettings,
   useUpdateGgsService,
   useUpdateGgsProduct,
   useUpdateGgsVoucher,
@@ -36,6 +40,9 @@ import {
   type GgsProductInput,
   type GgsVoucher,
   type GgsVoucherInput,
+  type GgsCashierSettings,
+  type GgsVoucherDiscountType,
+  type GgsVoucherAppliesTo,
   type GgsSiteContent,
 } from '@workspace/api-client-react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
@@ -123,6 +130,7 @@ const navItems: NavItem[] = [
   { label: 'Produk', href: '/products', icon: ShoppingBag, kicker: '05' },
   { label: 'Voucher', href: '/vouchers', icon: Ticket, kicker: '06' },
   { label: 'Karyawan', href: '/employees', icon: UsersRound, kicker: '07' },
+  { label: 'Kasir & pajak', href: '/settings', icon: Settings2, kicker: '08' },
 ];
 
 function AuthPage({ mode }: { mode: 'in' | 'up' }) {
@@ -193,6 +201,7 @@ function ClerkProviderWithRoutes() {
         <Route path="/services" component={ProtectedServices} />
         <Route path="/products" component={ProtectedProducts} />
         <Route path="/vouchers" component={ProtectedVouchers} />
+        <Route path="/settings" component={ProtectedSettings} />
         <Route path="/appointments" component={ProtectedAppointments} />
         <Route path="/employees" component={ProtectedEmployees} />
         <Route path="/dashboard" component={() => <Redirect to="/" />} />
@@ -216,6 +225,7 @@ function ProtectedSite() { return <Protected><SitePage /></Protected>; }
 function ProtectedServices() { return <Protected><ServicesPage /></Protected>; }
 function ProtectedProducts() { return <Protected><ProductsPage /></Protected>; }
 function ProtectedVouchers() { return <Protected><VouchersPage /></Protected>; }
+function ProtectedSettings() { return <Protected><CashierSettingsPage /></Protected>; }
 function ProtectedAppointments() { return <Protected><AppointmentsPage /></Protected>; }
 function ProtectedEmployees() { return <Protected><EmployeesPage /></Protected>; }
 
@@ -280,6 +290,67 @@ function niceDate(date: string) {
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) return date;
   return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(parsed);
+}
+
+function CashierSettingsPage() {
+  const query = useGetGgsAdminCashierSettings({
+    query: { queryKey: getGetGgsAdminCashierSettingsQueryKey(), refetchOnMount: 'always', staleTime: 0 },
+  });
+  const update = useUpdateGgsAdminCashierSettings();
+  const client = useQueryClient();
+  const { toast } = useToast();
+  const [rate, setRate] = useState('');
+  const [initialized, setInitialized] = useState(false);
+  useEffect(() => {
+    if (query.data && !initialized) {
+      const settings: GgsCashierSettings = query.data;
+      setRate(String(settings.taxRate));
+      setInitialized(true);
+    }
+  }, [query.data, initialized]);
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    const taxRate = Number(rate);
+    if (!Number.isInteger(taxRate) || taxRate < 0 || taxRate > 100) return;
+    update.mutate({ data: { taxRate } }, {
+      onSuccess: (settings) => {
+        client.setQueryData(getGetGgsAdminCashierSettingsQueryKey(), settings);
+        void client.invalidateQueries({ queryKey: getGetGgsAdminCashierSettingsQueryKey() });
+        toast({ title: 'Aturan kasir tersimpan', description: `Pajak transaksi kini ${settings.taxRate}%.` });
+      },
+      onError: (error) => toast({
+        title: isForbidden(error) ? 'Akses pemilik diperlukan' : 'Pengaturan belum tersimpan',
+        description: isForbidden(error) ? 'Akun ini tidak dapat mengubah aturan kasir.' : 'Periksa koneksi lalu coba lagi.',
+        variant: 'destructive',
+      }),
+    });
+  }
+  return <div className="cashier-settings-page">
+    <PageHeading eyebrow="ATURAN TRANSAKSI" title={<>Kasir yang<br /><em>konsisten.</em></>} detail="Tetapkan pajak yang digunakan kasir untuk setiap transaksi studio." />
+    {query.isLoading ? <section className="panel settings-panel"><Skeleton rows={4} /></section> :
+      query.isError ? <QueryFailure error={query.error} retry={() => void query.refetch()} /> :
+        query.data && <div className="settings-layout">
+          <form className="panel settings-panel" onSubmit={submit}>
+            <div className="panel-heading"><div><span className="eyebrow">01 — KEBIJAKAN KASIR</span><h2 className="font-display">Pajak transaksi</h2></div><span className="settings-seal">GGS / OWNER</span></div>
+            <p className="settings-intro">Satu tarif untuk seluruh pembayaran. Kasir akan menghitung pajak ini secara otomatis saat total transaksi disusun.</p>
+            <Field label="Tarif pajak" id="cashier-tax-rate" hint="Bilangan bulat · 0–100%">
+              <div className="unit-input tax-rate-input"><input id="cashier-tax-rate" data-testid="input-cashier-tax-rate" type="number" min={0} max={100} step={1} required value={rate} onChange={(e) => setRate(e.target.value)} /><span>%</span></div>
+            </Field>
+            <div className="tax-example" aria-live="polite">
+              <span className="eyebrow">PRATINJAU PERHITUNGAN</span>
+              <div className="tax-math"><span>Subtotal contoh</span><b>Rp100.000</b></div>
+              <div className="tax-math"><span>Pajak {rate || '0'}%</span><b>Rp{(1000 * (Number(rate) || 0)).toLocaleString('id-ID')}</b></div>
+              <div className="tax-total"><span>Total setelah pajak</span><b>Rp{(100000 + 1000 * (Number(rate) || 0)).toLocaleString('id-ID')}</b></div>
+            </div>
+            <div className="form-actions"><span>Terakhir diubah {new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(query.data.updatedAt))}</span><button className="button button-gold" type="submit" disabled={update.isPending || !rate.trim() || Number(rate) < 0 || Number(rate) > 100 || !Number.isInteger(Number(rate))}>{update.isPending ? 'Menyimpan…' : 'Simpan aturan pajak'} <ArrowRight size={15} /></button></div>
+          </form>
+          <aside className="settings-aside">
+            <div className="settings-note"><span className="settings-note-index">01</span><div><b>Aturan yang jelas</b><p>Tim kasir tidak perlu menghitung pajak manual atau menebak tarif yang berlaku.</p></div></div>
+            <div className="settings-note"><span className="settings-note-index">02</span><div><b>Perubahan tercatat</b><p>Waktu pembaruan disimpan bersama konfigurasi untuk memudahkan pengecekan.</p></div></div>
+            <div className="settings-caption"><span className="eyebrow">PENGATURAN PEMILIK</span><p>Perubahan di sini berlaku untuk transaksi berikutnya.</p></div>
+          </aside>
+        </div>}
+  </div>;
 }
 
 function DashboardPage() {
@@ -530,6 +601,21 @@ const emptyVoucher: GgsVoucherInput = {
   code: null,
   startsAt: null,
   expiresAt: null,
+  discountType: 'percent',
+  discountValue: 0,
+  appliesTo: 'services',
+  active: false,
+};
+
+const voucherDraft: GgsVoucherInput = {
+  name: 'Diskon All Treatment',
+  value: 'Diskon 30% untuk semua treatment',
+  code: null,
+  startsAt: null,
+  expiresAt: '2026-10-31',
+  discountType: 'percent',
+  discountValue: 30,
+  appliesTo: 'services',
   active: false,
 };
 
@@ -538,6 +624,7 @@ function jakartaToday() {
 }
 
 function voucherStatus(voucher: GgsVoucher) {
+  if (voucher.discountValue === 0) return { label: 'Informasional', active: false };
   if (!voucher.active) return { label: 'Nonaktif', active: false };
   if (!voucher.code?.trim()) return { label: 'Kode belum diisi', active: false };
   const today = jakartaToday();
@@ -580,6 +667,7 @@ function VouchersPage() {
   function saved() {
     void client.invalidateQueries({ queryKey: getGetGgsAdminVouchersQueryKey() });
     void client.invalidateQueries({ queryKey: getGetGgsPublicVouchersQueryKey() });
+    void client.invalidateQueries({ queryKey: getGetGgsEmployeeCashierVouchersQueryKey() });
   }
 
   const records = query.data?.filter((voucher) =>
@@ -590,7 +678,7 @@ function VouchersPage() {
     <PageHeading
       eyebrow="PROMO & VOUCHER"
       title={<>Penawaran<br /><em>untuk tamu GGS.</em></>}
-      detail="Atur penawaran, kode, dan masa berlaku. Hanya voucher siap pakai yang tampil di situs."
+      detail="Atur promosi publik dan potongan terstruktur yang dapat dipilih kasir."
       action={<button className="button button-gold" onClick={() => setEditing('new')} data-testid="button-add-voucher"><Plus size={16} /> Tambah voucher</button>}
     />
     <div className="table-tools">
@@ -600,11 +688,12 @@ function VouchersPage() {
     {query.isLoading ? <div className="panel table-panel"><Skeleton rows={5} /></div> :
       query.isError ? <QueryFailure error={query.error} retry={() => void query.refetch()} /> :
         records.length ? <div className="panel table-panel"><table className="data-table service-table product-table voucher-table">
-          <thead><tr><th>PENAWARAN</th><th>KODE</th><th>MASA BERLAKU</th><th>STATUS</th><th><span className="sr-only">Aksi</span></th></tr></thead>
+          <thead><tr><th>PENAWARAN</th><th>POTONGAN KASIR</th><th>KODE</th><th>MASA BERLAKU</th><th>STATUS</th><th><span className="sr-only">Aksi</span></th></tr></thead>
           <tbody>{records.map((voucher) => {
             const status = voucherStatus(voucher);
             return <tr key={voucher.id} data-testid={`row-voucher-${voucher.id}`}>
               <td><div className="service-name-cell"><span className="service-thumb"><Ticket size={15} /></span><span><b>{voucher.name}</b><small>{voucher.value}</small></span></div></td>
+              <td><span className="voucher-discount">{voucher.discountValue > 0 ? `${voucher.discountType === 'percent' ? `${voucher.discountValue}%` : money(voucher.discountValue)} · ${voucher.appliesTo === 'services' ? 'Layanan' : 'Semua item'}` : 'Tanpa potongan'}</span></td>
               <td className="voucher-code-cell">{voucher.code || 'Belum diisi'}</td>
               <td>{voucherPeriod(voucher)}</td>
               <td><span className={`availability ${status.active ? 'available' : 'unavailable'}`}><i />{status.label}</span></td>
@@ -616,7 +705,7 @@ function VouchersPage() {
           })}</tbody>
         </table></div> :
           <EmptyState icon={<Ticket size={20} />} title={search ? 'Voucher tidak ditemukan.' : 'Belum ada voucher.'} body={search ? 'Coba nama atau kode lain.' : 'Tambahkan penawaran dan kode yang benar agar pelanggan dapat menyalinnya dari situs.'} action={!search && <button className="button button-gold" onClick={() => setEditing('new')}><Plus size={15} /> Tambahkan voucher</button>} />}
-    <div className="services-footnote"><span className="eyebrow">TAMPIL DI SITUS</span><span>Kode wajib diisi; tanggal berlaku dicek otomatis memakai waktu Jakarta.</span></div>
+    <div className="services-footnote"><span className="eyebrow">ATURAN KASIR</span><span>Voucher dengan potongan 0 tetap informasional dan tidak dapat diredeem kasir.</span></div>
     {editing && <VoucherDialog voucher={editing === 'new' ? null : editing} saving={saving} onClose={() => setEditing(null)} onSave={(input) => {
       const onSuccess = () => {
         saved();
@@ -651,8 +740,11 @@ function VoucherDialog({
     code: voucher.code,
     startsAt: voucher.startsAt,
     expiresAt: voucher.expiresAt,
+    discountType: voucher.discountType,
+    discountValue: voucher.discountValue,
+    appliesTo: voucher.appliesTo,
     active: voucher.active,
-  } : { ...emptyVoucher });
+  } : { ...voucherDraft });
   const [formError, setFormError] = useState('');
   const set = <K extends keyof GgsVoucherInput>(key: K, value: GgsVoucherInput[K]) =>
     setForm((old) => ({ ...old, [key]: value }));
@@ -665,7 +757,15 @@ function VoucherDialog({
       name: form.name.trim(),
       value: form.value.trim(),
       code: form.code?.trim().replace(/\s+/g, '').toUpperCase() || null,
+      discountValue: Number(form.discountValue),
     };
+    if (!Number.isInteger(normalized.discountValue) || normalized.discountValue < 0 ||
+      (normalized.discountType === 'percent' && normalized.discountValue > 100)) {
+      setFormError(normalized.discountType === 'percent'
+        ? 'Persentase harus berupa bilangan bulat antara 0 dan 100.'
+        : 'Potongan rupiah harus berupa bilangan bulat yang tidak negatif.');
+      return;
+    }
     if (normalized.active && !normalized.code) {
       setFormError('Isi kode sebelum menampilkan voucher di situs.');
       return;
@@ -684,11 +784,20 @@ function VoucherDialog({
         <Field label="Nama voucher" id="voucher-name"><input id="voucher-name" data-testid="input-voucher-name" required maxLength={80} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Contoh: Kenalan di GGS" /></Field>
         <Field label="Penawaran" id="voucher-value"><input id="voucher-value" data-testid="input-voucher-value" required maxLength={80} value={form.value} onChange={(e) => set('value', e.target.value)} placeholder="Contoh: Diskon 10%" /></Field>
         <Field label="Kode voucher" id="voucher-code" hint="Wajib jika status aktif"><input id="voucher-code" data-testid="input-voucher-code" maxLength={40} value={form.code || ''} onChange={(e) => set('code', e.target.value.toUpperCase().replace(/\s+/g, '') || null)} placeholder="Masukkan kode yang berlaku" autoComplete="off" /></Field>
+        <div className="form-divider"><span className="eyebrow">POTONGAN UNTUK KASIR</span><span>0 berarti hanya informasi</span></div>
+        <div className="form-two">
+          <Field label="Jenis potongan" id="voucher-discount-type"><select id="voucher-discount-type" data-testid="select-voucher-discount-type" value={form.discountType} onChange={(e) => set('discountType', e.target.value as GgsVoucherDiscountType)}><option value="percent">Persentase (%)</option><option value="fixed">Nominal rupiah</option></select></Field>
+          <Field label={form.discountType === 'percent' ? 'Persentase' : 'Nominal potongan'} id="voucher-discount-value" hint={form.discountType === 'percent' ? '0–100%' : 'Rupiah bulat'}>
+            <div className="unit-input"><input id="voucher-discount-value" data-testid="input-voucher-discount-value" type="number" min={0} max={form.discountType === 'percent' ? 100 : undefined} step={1} required value={form.discountValue} onChange={(e) => set('discountValue', e.target.value === '' ? 0 : Number(e.target.value))} /><span>{form.discountType === 'percent' ? '%' : 'RP'}</span></div>
+          </Field>
+        </div>
+        <Field label="Berlaku untuk" id="voucher-applies-to"><select id="voucher-applies-to" data-testid="select-voucher-applies-to" value={form.appliesTo} onChange={(e) => set('appliesTo', e.target.value as GgsVoucherAppliesTo)}><option value="services">Semua layanan / treatment</option><option value="all_items">Semua item di keranjang</option></select></Field>
         <div className="form-two">
           <Field label="Mulai berlaku" id="voucher-start"><input id="voucher-start" data-testid="input-voucher-start" type="date" value={form.startsAt || ''} onChange={(e) => set('startsAt', e.target.value || null)} /></Field>
           <Field label="Berakhir" id="voucher-expiry"><input id="voucher-expiry" data-testid="input-voucher-expiry" type="date" value={form.expiresAt || ''} onChange={(e) => set('expiresAt', e.target.value || null)} /></Field>
         </div>
         <label className="toggle-row"><span><b>Tampilkan di situs publik</b><small>Hanya tampil selama masa berlaku dan kode tersedia.</small></span><input type="checkbox" data-testid="input-voucher-active" checked={form.active} onChange={(e) => set('active', e.target.checked)} /><span className="toggle-ui" /></label>
+        {form.discountValue === 0 && <p className="voucher-info-note">Voucher tanpa potongan dapat menjadi catatan promosi, tetapi tidak akan ditawarkan untuk redeem di kasir.</p>}
         {formError && <p className="voucher-form-error" role="alert">{formError}</p>}
         <div className="dialog-actions"><button type="button" className="button button-outline" onClick={onClose}>Batal</button><button type="submit" className="button button-gold" disabled={saving}>{saving ? 'Menyimpan…' : voucher ? 'Simpan perubahan' : 'Tambah voucher'} <ArrowRight size={15} /></button></div>
       </form>
