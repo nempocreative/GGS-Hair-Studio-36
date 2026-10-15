@@ -29,6 +29,8 @@ import {
   CancelGgsEmployeeCashierTransactionBody,
   CancelGgsEmployeeCashierTransactionParams,
   CancelGgsEmployeeCashierTransactionResponse,
+  CreateGgsEmployeeStockMovementBody,
+  CreateGgsEmployeeStockMovementResponse,
   CreateGgsAdminEmployeeBody,
   CreateGgsAdminEmployeeResponse,
   CreateGgsEmployeeCashierTransactionBody,
@@ -39,10 +41,14 @@ import {
   GetGgsEmployeeCashierTransactionsQueryParams,
   GetGgsEmployeeCashierAnnouncementsResponse,
   GetGgsEmployeeCashierVouchersResponse,
+  GetGgsEmployeeStockMovementsResponse,
   GetGgsEmployeeAttendanceHistoryResponse,
   GetGgsAdminEmployeesResponse,
   GetGgsEmployeeReportsQueryParams,
   GetGgsEmployeeReportsResponse,
+  UpdateGgsEmployeeBookingStatusBody,
+  UpdateGgsEmployeeBookingStatusParams,
+  UpdateGgsEmployeeBookingStatusResponse,
   GetGgsEmployeeAttendanceTodayResponse,
   GetGgsEmployeeBookingsResponse,
   GetGgsEmployeeCashierSessionResponse,
@@ -72,6 +78,7 @@ import {
   ggsEmployeeAttendanceChallengesTable,
   ggsEmployeeAttendanceTable,
   ggsEmployeeSessionsTable,
+  ggsProductStockMovementsTable,
   ggsProductsTable,
   ggsServicesTable,
   ggsVouchersTable,
@@ -1344,6 +1351,186 @@ router.get("/ggs/employee/bookings", async (req, res): Promise<void> => {
   res.json(GetGgsEmployeeBookingsResponse.parse(appointments));
 });
 
+router.patch(
+  "/ggs/employee/bookings/:appointmentId/status",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const params = UpdateGgsEmployeeBookingStatusParams.safeParse(req.params);
+    if (!params.success) {
+      res.status(400).json({ error: params.error.message });
+      return;
+    }
+    const parsed = UpdateGgsEmployeeBookingStatusBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const [current] = await db
+      .select()
+      .from(ggsAppointmentsTable)
+      .where(eq(ggsAppointmentsTable.id, params.data.appointmentId))
+      .limit(1);
+    if (!current) {
+      res.status(404).json({ error: "Booking tidak ditemukan." });
+      return;
+    }
+
+    let appointment = current;
+    if (current.status !== parsed.data.status) {
+      const allowedStatuses =
+        current.status === "pending"
+          ? ["confirmed", "cancelled"]
+          : current.status === "confirmed"
+            ? ["completed", "cancelled"]
+            : [];
+      if (!allowedStatuses.includes(parsed.data.status)) {
+        res.status(409).json({
+          error: "Status booking ini sudah final atau perubahan tidak diizinkan.",
+        });
+        return;
+      }
+
+      const [updated] = await db
+        .update(ggsAppointmentsTable)
+        .set({ status: parsed.data.status })
+        .where(
+          and(
+            eq(ggsAppointmentsTable.id, current.id),
+            eq(ggsAppointmentsTable.status, current.status),
+          ),
+        )
+        .returning();
+      if (!updated) {
+        res.status(409).json({
+          error: "Status booking berubah. Perbarui jadwal sebelum mencoba lagi.",
+        });
+        return;
+      }
+      appointment = updated;
+    }
+
+    const response = UpdateGgsEmployeeBookingStatusResponse.parse({
+      id: appointment.id,
+      customerName: appointment.customerName,
+      phone: appointment.phone,
+      serviceName: appointment.serviceName,
+      appointmentDate: appointment.appointmentDate,
+      appointmentTime: appointment.appointmentTime,
+      notes: appointment.notes,
+      status: appointment.status,
+    });
+    res.json({ ...response, appointmentDate: appointment.appointmentDate });
+  },
+);
+
+router.get(
+  "/ggs/employee/stock/movements",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const movements = await db
+      .select()
+      .from(ggsProductStockMovementsTable)
+      .orderBy(
+        desc(ggsProductStockMovementsTable.createdAt),
+        desc(ggsProductStockMovementsTable.id),
+      )
+      .limit(25);
+    res.json(GetGgsEmployeeStockMovementsResponse.parse(movements));
+  },
+);
+
+router.post(
+  "/ggs/employee/stock/movements",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const parsed = CreateGgsEmployeeStockMovementBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const note = parsed.data.note.trim();
+    if (note.length < 3) {
+      res.status(400).json({ error: "Catatan perubahan minimal 3 karakter." });
+      return;
+    }
+    if (parsed.data.movementType === "restock" && parsed.data.quantity < 1) {
+      res.status(400).json({ error: "Jumlah stok masuk harus lebih dari nol." });
+      return;
+    }
+
+    const result = await db.transaction(async (tx) => {
+      const [product] = await tx
+        .select()
+        .from(ggsProductsTable)
+        .where(eq(ggsProductsTable.id, parsed.data.productId))
+        .for("update")
+        .limit(1);
+      if (!product) return { kind: "not_found" as const };
+
+      const previousStock = product.stock;
+      const newStock =
+        parsed.data.movementType === "restock"
+          ? previousStock + parsed.data.quantity
+          : parsed.data.quantity;
+      if (newStock > 2_147_483_647) {
+        return { kind: "overflow" as const };
+      }
+
+      const [updated] = await tx
+        .update(ggsProductsTable)
+        .set({ stock: newStock })
+        .where(eq(ggsProductsTable.id, product.id))
+        .returning({ stock: ggsProductsTable.stock });
+      if (!updated) return { kind: "not_found" as const };
+
+      const [movement] = await tx
+        .insert(ggsProductStockMovementsTable)
+        .values({
+          productId: product.id,
+          productName: product.name,
+          movementType: parsed.data.movementType,
+          quantityChange: newStock - previousStock,
+          previousStock,
+          newStock,
+          note,
+          employeeId: employee.employeeId,
+          employeeName: employee.name,
+        })
+        .returning();
+      return { kind: "saved" as const, movement };
+    });
+
+    if (result.kind === "not_found") {
+      res.status(404).json({ error: "Produk tidak ditemukan." });
+      return;
+    }
+    if (result.kind === "overflow") {
+      res.status(409).json({ error: "Jumlah stok melebihi batas yang diizinkan." });
+      return;
+    }
+
+    res
+      .status(201)
+      .json(CreateGgsEmployeeStockMovementResponse.parse(result.movement));
+  },
+);
+
 router.get("/ggs/employee/reports", async (req, res): Promise<void> => {
   const employee = await getEmployeeForSession(req, res);
   if (!employee) {
@@ -1363,6 +1550,8 @@ router.get("/ggs/employee/reports", async (req, res): Promise<void> => {
 
   const fromDate = parsed.data.fromDate.toISOString().slice(0, 10);
   const toDate = parsed.data.toDate.toISOString().slice(0, 10);
+  const register = parsed.data.register ?? "all";
+  const paymentMethod = parsed.data.paymentMethod ?? "all";
   const startDay = new Date(`${fromDate}T00:00:00.000Z`);
   const endDay = new Date(`${toDate}T00:00:00.000Z`);
   const dayCount =
@@ -1385,6 +1574,16 @@ router.get("/ggs/employee/reports", async (req, res): Promise<void> => {
       new Date(cashierJakartaDateStart(toDate).getTime() + 24 * 60 * 60 * 1000),
     ),
   ];
+  if (register !== "all") {
+    transactionConditions.push(
+      eq(ggsCashierTransactionsTable.register, register),
+    );
+  }
+  if (paymentMethod !== "all") {
+    transactionConditions.push(
+      eq(ggsCashierTransactionsTable.paymentMethod, paymentMethod),
+    );
+  }
   const completedTransactionsCondition = and(
     ...transactionConditions,
     eq(ggsCashierTransactionsTable.status, "completed"),

@@ -515,11 +515,95 @@ export const GetGgsEmployeeBookingsResponse = zod.array(GetGgsEmployeeBookingsRe
 
 
 /**
+ * @summary Update a booking status from a signed-in employee session
+ */
+
+
+
+export const UpdateGgsEmployeeBookingStatusParams = zod.object({
+  "appointmentId": zod.coerce.number().int().min(1)
+})
+
+export const UpdateGgsEmployeeBookingStatusBody = zod.object({
+  "status": zod.enum(['pending', 'confirmed', 'completed', 'cancelled'])
+})
+
+export const UpdateGgsEmployeeBookingStatusResponse = zod.object({
+  "id": zod.number().int(),
+  "customerName": zod.string(),
+  "phone": zod.string(),
+  "serviceName": zod.string(),
+  "appointmentDate": zod.coerce.date(),
+  "appointmentTime": zod.string(),
+  "notes": zod.string(),
+  "status": zod.enum(['pending', 'confirmed', 'completed', 'cancelled'])
+})
+
+
+/**
+ * @summary List recent employee stock additions and stocktake adjustments
+ */
+export const GetGgsEmployeeStockMovementsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "productId": zod.number().int(),
+  "productName": zod.string(),
+  "movementType": zod.enum(['restock', 'stocktake']),
+  "quantityChange": zod.number().int(),
+  "previousStock": zod.number().int(),
+  "newStock": zod.number().int(),
+  "note": zod.string(),
+  "employeeId": zod.string(),
+  "employeeName": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const GetGgsEmployeeStockMovementsResponse = zod.array(GetGgsEmployeeStockMovementsResponseItem)
+
+
+/**
+ * @summary Add product stock or record an audited stocktake
+ */
+
+export const createGgsEmployeeStockMovementBodyQuantityMin = 0;
+export const createGgsEmployeeStockMovementBodyQuantityMax = 2147483647;
+
+export const createGgsEmployeeStockMovementBodyNoteMin = 3;
+export const createGgsEmployeeStockMovementBodyNoteMax = 240;
+
+
+
+export const CreateGgsEmployeeStockMovementBody = zod.object({
+  "productId": zod.number().int().min(1),
+  "movementType": zod.enum(['restock', 'stocktake']),
+  "quantity": zod.number().int().min(createGgsEmployeeStockMovementBodyQuantityMin).max(createGgsEmployeeStockMovementBodyQuantityMax),
+  "note": zod.string().min(createGgsEmployeeStockMovementBodyNoteMin).max(createGgsEmployeeStockMovementBodyNoteMax)
+})
+
+export const CreateGgsEmployeeStockMovementResponse = zod.object({
+  "id": zod.number().int(),
+  "productId": zod.number().int(),
+  "productName": zod.string(),
+  "movementType": zod.enum(['restock', 'stocktake']),
+  "quantityChange": zod.number().int(),
+  "previousStock": zod.number().int(),
+  "newStock": zod.number().int(),
+  "note": zod.string(),
+  "employeeId": zod.string(),
+  "employeeName": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Summarize studio bookings and sales across both cashier registers
  */
+export const getGgsEmployeeReportsQueryRegisterDefault = `all`;
+export const getGgsEmployeeReportsQueryPaymentMethodDefault = `all`;
+
 export const GetGgsEmployeeReportsQueryParams = zod.object({
   "fromDate": zod.date(),
-  "toDate": zod.date()
+  "toDate": zod.date(),
+  "register": zod.enum(['all', 'ggs_beauty', 'barber_ggs']).default(getGgsEmployeeReportsQueryRegisterDefault),
+  "paymentMethod": zod.enum(['all', 'cash', 'qris', 'card']).default(getGgsEmployeeReportsQueryPaymentMethodDefault)
 })
 
 export const GetGgsEmployeeReportsResponse = zod.object({

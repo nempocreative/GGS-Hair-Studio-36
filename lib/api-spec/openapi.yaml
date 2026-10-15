@@ -437,6 +437,80 @@ paths:
                   $ref: "#/components/schemas/GgsEmployeeBooking"
         "401":
           description: No active employee session
+  /ggs/employee/bookings/{appointmentId}/status:
+    patch:
+      operationId: updateGgsEmployeeBookingStatus
+      tags: [ggs-employee]
+      summary: Update a booking status from a signed-in employee session
+      parameters:
+        - name: appointmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsAppointmentStatusUpdate"
+      responses:
+        "200":
+          description: Booking status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeBooking"
+        "400":
+          description: Invalid booking status
+        "401":
+          description: No active employee session
+        "404":
+          description: Booking not found
+        "409":
+          description: Status transition is not allowed
+  /ggs/employee/stock/movements:
+    get:
+      operationId: getGgsEmployeeStockMovements
+      tags: [ggs-employee]
+      summary: List recent employee stock additions and stocktake adjustments
+      responses:
+        "200":
+          description: Latest stock movement records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GgsEmployeeStockMovement"
+        "401":
+          description: No active employee session
+    post:
+      operationId: createGgsEmployeeStockMovement
+      tags: [ggs-employee]
+      summary: Add product stock or record an audited stocktake
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeeStockMovementInput"
+      responses:
+        "201":
+          description: Stock updated and movement recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeStockMovement"
+        "400":
+          description: Invalid stock movement
+        "401":
+          description: No active employee session
+        "404":
+          description: Product not found
+        "409":
+          description: Stock could not be updated
   /ggs/employee/reports:
     get:
       operationId: getGgsEmployeeReports
@@ -455,6 +529,18 @@ paths:
           schema:
             type: string
             format: date
+        - name: register
+          in: query
+          schema:
+            type: string
+            enum: [all, ggs_beauty, barber_ggs]
+            default: all
+        - name: paymentMethod
+          in: query
+          schema:
+            type: string
+            enum: [all, cash, qris, card]
+            default: all
       responses:
         "200":
           description: Date-range summary and daily studio activity
@@ -1667,6 +1753,64 @@ components:
         - appointmentTime
         - notes
         - status
+    GgsEmployeeStockMovementType:
+      type: string
+      enum: [restock, stocktake]
+    GgsEmployeeStockMovementInput:
+      type: object
+      properties:
+        productId:
+          type: integer
+          minimum: 1
+        movementType:
+          $ref: "#/components/schemas/GgsEmployeeStockMovementType"
+        quantity:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        note:
+          type: string
+          minLength: 3
+          maxLength: 240
+      required: [productId, movementType, quantity, note]
+    GgsEmployeeStockMovement:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+        movementType:
+          $ref: "#/components/schemas/GgsEmployeeStockMovementType"
+        quantityChange:
+          type: integer
+        previousStock:
+          type: integer
+        newStock:
+          type: integer
+        note:
+          type: string
+        employeeId:
+          type: string
+        employeeName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - productId
+        - productName
+        - movementType
+        - quantityChange
+        - previousStock
+        - newStock
+        - note
+        - employeeId
+        - employeeName
+        - createdAt
     GgsEmployeeAttendanceStatus:
       type: object
       properties:

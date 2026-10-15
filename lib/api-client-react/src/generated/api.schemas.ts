@@ -463,6 +463,44 @@ export interface GgsEmployeeBooking {
   status: GgsEmployeeBookingStatus;
 }
 
+export type GgsEmployeeStockMovementType = typeof GgsEmployeeStockMovementType[keyof typeof GgsEmployeeStockMovementType];
+
+
+export const GgsEmployeeStockMovementType = {
+  restock: 'restock',
+  stocktake: 'stocktake',
+} as const;
+
+export interface GgsEmployeeStockMovementInput {
+  /** @minimum 1 */
+  productId: number;
+  movementType: GgsEmployeeStockMovementType;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  quantity: number;
+  /**
+     * @minLength 3
+     * @maxLength 240
+     */
+  note: string;
+}
+
+export interface GgsEmployeeStockMovement {
+  id: number;
+  productId: number;
+  productName: string;
+  movementType: GgsEmployeeStockMovementType;
+  quantityChange: number;
+  previousStock: number;
+  newStock: number;
+  note: string;
+  employeeId: string;
+  employeeName: string;
+  createdAt: string;
+}
+
 export type GgsEmployeeAttendanceStatusStatus = typeof GgsEmployeeAttendanceStatusStatus[keyof typeof GgsEmployeeAttendanceStatusStatus];
 
 
@@ -781,5 +819,26 @@ export const GetGgsEmployeeCashierTransactionsStatus = {
 export type GetGgsEmployeeReportsParams = {
 fromDate: string;
 toDate: string;
+register?: GetGgsEmployeeReportsRegister;
+paymentMethod?: GetGgsEmployeeReportsPaymentMethod;
 };
+
+export type GetGgsEmployeeReportsRegister = typeof GetGgsEmployeeReportsRegister[keyof typeof GetGgsEmployeeReportsRegister];
+
+
+export const GetGgsEmployeeReportsRegister = {
+  all: 'all',
+  ggs_beauty: 'ggs_beauty',
+  barber_ggs: 'barber_ggs',
+} as const;
+
+export type GetGgsEmployeeReportsPaymentMethod = typeof GetGgsEmployeeReportsPaymentMethod[keyof typeof GetGgsEmployeeReportsPaymentMethod];
+
+
+export const GetGgsEmployeeReportsPaymentMethod = {
+  all: 'all',
+  cash: 'cash',
+  qris: 'qris',
+  card: 'card',
+} as const;
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, CreditCard, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound, X, Megaphone } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, CreditCard, Download, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound, X, Megaphone } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import {
   getGetGgsEmployeeBookingsQueryKey,
@@ -11,6 +11,7 @@ import {
   getGetGgsEmployeeCashierTransactionsQueryKey,
   getGetGgsEmployeeCashierAnnouncementsQueryKey,
   getGetGgsEmployeeReportsQueryKey,
+  getGetGgsEmployeeStockMovementsQueryKey,
   getGetGgsPublicProductsQueryKey,
   getGetGgsPublicServicesQueryKey,
   getGetGgsEmployeeSessionQueryKey,
@@ -20,17 +21,20 @@ import {
   useGetGgsEmployeeCashierTransactions,
   useGetGgsEmployeeCashierAnnouncements,
   useGetGgsEmployeeReports,
+  useGetGgsEmployeeStockMovements,
   useGetGgsPublicProducts,
   useGetGgsPublicServices,
   useCreateGgsEmployeeCashierTransaction,
+  useCreateGgsEmployeeStockMovement,
   useCancelGgsEmployeeCashierTransaction,
+  useUpdateGgsEmployeeBookingStatus,
   useGetGgsEmployeeSession,
   useLoginGgsEmployee,
   useLogoutGgsEmployeeCashier,
   useLogoutGgsEmployee,
   useUnlockGgsEmployeeCashier,
 } from '@workspace/api-client-react';
-import type { GetGgsEmployeeCashierTransactionsParams, GetGgsEmployeeReportsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsEmployeeCashierVoucher, GgsCashierAnnouncement, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import type { GetGgsEmployeeCashierTransactionsParams, GetGgsEmployeeReportsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsEmployeeCashierVoucher, GgsCashierAnnouncement, GgsEmployeeStockMovement, GgsEmployeeStockMovementInput, GgsProduct, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
 import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
@@ -49,6 +53,19 @@ function displayDate(value: string, options: Intl.DateTimeFormatOptions = { week
   const parsed = new Date(`${value.slice(0, 10)}T00:00:00+07:00`);
   if (Number.isNaN(parsed.getTime())) return value;
   return new Intl.DateTimeFormat('id-ID', { ...options, timeZone: 'Asia/Jakarta' }).format(parsed);
+}
+
+function displayDateTime(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Jakarta',
+  }).format(parsed);
 }
 
 function dateKey(value: string): string {
@@ -863,8 +880,15 @@ function EmployeeModulePlaceholder({ item }: { item: EmployeeMenuItem }) {
 }
 
 function EmployeeStockPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'out'>('all');
+  const [selectedProduct, setSelectedProduct] = useState<GgsProduct | null>(null);
+  const [movementType, setMovementType] = useState<GgsEmployeeStockMovementInput['movementType']>('restock');
+  const [movementQuantity, setMovementQuantity] = useState('');
+  const [movementNote, setMovementNote] = useState('');
+  const [movementError, setMovementError] = useState('');
+  const [movementSuccess, setMovementSuccess] = useState('');
   const productsQuery = useGetGgsPublicProducts({
     query: {
       queryKey: getGetGgsPublicProductsQueryKey(),
@@ -875,6 +899,17 @@ function EmployeeStockPage() {
       refetchOnMount: 'always',
     },
   });
+  const stockMovementsQuery = useGetGgsEmployeeStockMovements({
+    query: {
+      queryKey: getGetGgsEmployeeStockMovementsQueryKey(),
+      retry: false,
+      staleTime: 0,
+      refetchInterval: 60_000,
+      refetchOnWindowFocus: true,
+      refetchOnMount: 'always',
+    },
+  });
+  const createStockMovement = useCreateGgsEmployeeStockMovement();
   const products = productsQuery.data ?? [];
   const lowStockCount = products.filter((product) => product.stock > 0 && product.stock <= LOW_STOCK_LIMIT).length;
   const outOfStockCount = products.filter((product) => product.stock === 0).length;
@@ -887,6 +922,66 @@ function EmployeeStockPage() {
       || (stockFilter === 'out' && product.stock === 0);
     return matchesSearch && matchesStock;
   });
+  const openStockDialog = (product: GgsProduct) => {
+    setSelectedProduct(product);
+    setMovementType('restock');
+    setMovementQuantity('');
+    setMovementNote('');
+    setMovementError('');
+  };
+  const submitStockMovement = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedProduct) return;
+
+    const quantity = Number(movementQuantity);
+    if (
+      !Number.isInteger(quantity)
+      || quantity < 0
+      || quantity > 2_147_483_647
+      || (movementType === 'restock' && quantity === 0)
+    ) {
+      setMovementError(movementType === 'restock'
+        ? 'Jumlah stok masuk harus bilangan bulat lebih dari nol.'
+        : 'Masukkan jumlah stok aktual berupa bilangan bulat nol atau lebih.');
+      return;
+    }
+    if (movementNote.trim().length < 3) {
+      setMovementError('Catatan perubahan minimal 3 karakter.');
+      return;
+    }
+
+    setMovementError('');
+    try {
+      await createStockMovement.mutateAsync({
+        data: {
+          productId: selectedProduct.id,
+          movementType,
+          quantity,
+          note: movementNote.trim(),
+        },
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getGetGgsPublicProductsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeStockMovementsQueryKey() }),
+      ]);
+      setSelectedProduct(null);
+      setMovementSuccess(`Perubahan stok ${selectedProduct.name} tersimpan.`);
+      window.setTimeout(() => setMovementSuccess(''), 5000);
+    } catch (error) {
+      setMovementError(cashierErrorMessage(
+        error,
+        'Stok belum dapat diperbarui. Periksa koneksi lalu coba lagi.',
+      ));
+    }
+  };
+  useEffect(() => {
+    if (!selectedProduct) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !createStockMovement.isPending) setSelectedProduct(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [createStockMovement.isPending, selectedProduct]);
 
   return (
     <div className="employee-schedule__content employee-stock" data-testid="page-employee-stock">
@@ -915,6 +1010,7 @@ function EmployeeStockPage() {
       </section>
 
       <section className="employee-stock__panel" aria-label="Daftar stok produk">
+        {movementSuccess ? <p className="employee-stock__notice" role="status">{movementSuccess}</p> : null}
         <div className="employee-stock__toolbar">
           <div className="employee-stock__title">
             <div className="employee-bookings__title">
@@ -962,6 +1058,14 @@ function EmployeeStockPage() {
                     <h3>{product.name}</h3>
                     {product.description ? <p>{product.description}</p> : null}
                     <small>Rp{new Intl.NumberFormat('id-ID').format(product.price)}</small>
+                    <button
+                      type="button"
+                      className="employee-stock__adjust"
+                      onClick={() => openStockDialog(product)}
+                      data-testid={`button-adjust-stock-${product.id}`}
+                    >
+                      Catat stok
+                    </button>
                   </div>
                   <div className="employee-stock__quantity">
                     <span className={`employee-stock__status employee-stock__status--${stockStatus}`}>{stockLabel}</span>
@@ -982,6 +1086,113 @@ function EmployeeStockPage() {
           </div>
         )}
       </section>
+      <section className="employee-stock__panel employee-stock__history" aria-labelledby="employee-stock-history-title">
+        <div className="employee-stock__history-heading">
+          <div><h2 id="employee-stock-history-title">Riwayat penambahan &amp; opname</h2><p>25 perubahan terakhir yang dicatat oleh karyawan.</p></div>
+          <button
+            type="button"
+            className="employee-refresh-button"
+            onClick={() => void stockMovementsQuery.refetch()}
+            disabled={stockMovementsQuery.isFetching}
+            data-testid="button-refresh-stock-history"
+          >
+            <RefreshCw size={14} aria-hidden="true" className={stockMovementsQuery.isFetching ? 'is-spinning' : ''} />
+            Perbarui riwayat
+          </button>
+        </div>
+        {stockMovementsQuery.isLoading ? (
+          <div className="employee-stock__skeleton" role="status" aria-label="Memuat riwayat stok"><span /><span /></div>
+        ) : stockMovementsQuery.isError ? (
+          <div className="employee-stock__state employee-stock__state--error" role="alert">
+            <div><strong>Riwayat stok belum dapat dimuat.</strong><p>Periksa koneksi lalu coba lagi.</p></div>
+            <button type="button" onClick={() => void stockMovementsQuery.refetch()} disabled={stockMovementsQuery.isFetching}>Coba lagi</button>
+          </div>
+        ) : stockMovementsQuery.data?.length ? (
+          <div className="employee-stock__history-list">
+            {stockMovementsQuery.data.map((movement: GgsEmployeeStockMovement) => (
+              <article className="employee-stock__movement" key={movement.id} data-testid={`row-stock-movement-${movement.id}`}>
+                <div className="employee-stock__movement-product">
+                  <strong>{movement.productName}</strong>
+                  <span>{movement.movementType === 'restock' ? 'Stok masuk' : 'Opname'}</span>
+                </div>
+                <div className="employee-stock__movement-count">
+                  <strong className={movement.quantityChange < 0 ? 'is-negative' : 'is-positive'}>
+                    {movement.quantityChange > 0 ? '+' : ''}{movement.quantityChange.toLocaleString('id-ID')} unit
+                  </strong>
+                  <small>{movement.previousStock.toLocaleString('id-ID')} → {movement.newStock.toLocaleString('id-ID')} unit</small>
+                </div>
+                <p>{movement.note}</p>
+                <small className="employee-stock__movement-meta">{movement.employeeName} · {displayDateTime(movement.createdAt)}</small>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="employee-stock__state" data-testid="status-stock-movements-empty">
+            <div><strong>Belum ada perubahan yang dicatat.</strong><p>Stok masuk dan hasil opname akan muncul di sini.</p></div>
+          </div>
+        )}
+      </section>
+
+      {selectedProduct ? (
+        <div className="employee-stock__dialog-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !createStockMovement.isPending) setSelectedProduct(null);
+        }}>
+          <section className="employee-stock__dialog" role="dialog" aria-modal="true" aria-labelledby="employee-stock-dialog-title">
+            <header>
+              <div><span>PERUBAHAN INVENTARIS</span><h2 id="employee-stock-dialog-title">{selectedProduct.name}</h2></div>
+              <button type="button" onClick={() => setSelectedProduct(null)} disabled={createStockMovement.isPending} aria-label="Tutup catatan stok"><X size={18} /></button>
+            </header>
+            <p className="employee-stock__dialog-current">Stok tercatat saat ini: <strong>{selectedProduct.stock.toLocaleString('id-ID')} unit</strong></p>
+            <form onSubmit={(event) => void submitStockMovement(event)}>
+              <div className="employee-stock__movement-types" role="group" aria-label="Jenis perubahan stok">
+                <button type="button" aria-pressed={movementType === 'restock'} onClick={() => { setMovementType('restock'); setMovementQuantity(''); setMovementError(''); }} data-testid="stock-movement-type-restock">Stok masuk</button>
+                <button type="button" aria-pressed={movementType === 'stocktake'} onClick={() => { setMovementType('stocktake'); setMovementQuantity(''); setMovementError(''); }} data-testid="stock-movement-type-stocktake">Opname</button>
+              </div>
+              <label>
+                <span>{movementType === 'restock' ? 'Jumlah stok masuk' : 'Jumlah stok aktual'}</span>
+                <div className="employee-stock__number-field">
+                  <input
+                    type="number"
+                    min={movementType === 'restock' ? 1 : 0}
+                    max={2_147_483_647}
+                    step="1"
+                    required
+                    value={movementQuantity}
+                    onChange={(event) => setMovementQuantity(event.target.value)}
+                    data-testid="input-stock-movement-quantity"
+                  />
+                  <span>unit</span>
+                </div>
+              </label>
+              <label>
+                <span>Catatan perubahan</span>
+                <textarea
+                  required
+                  minLength={3}
+                  maxLength={240}
+                  rows={3}
+                  value={movementNote}
+                  onChange={(event) => setMovementNote(event.target.value)}
+                  placeholder={movementType === 'restock' ? 'Contoh: stok baru diterima' : 'Contoh: hasil hitung stok rak'}
+                  data-testid="input-stock-movement-note"
+                />
+              </label>
+              <p className="employee-stock__dialog-hint">
+                {movementType === 'restock'
+                  ? 'Jumlah akan ditambahkan ke stok yang tercatat.'
+                  : 'Stok akan disamakan dengan jumlah aktual yang dihitung.'}
+              </p>
+              {movementError ? <p className="employee-stock__dialog-error" role="alert" data-testid="status-stock-movement-error">{movementError}</p> : null}
+              <div className="employee-stock__dialog-actions">
+                <button type="button" onClick={() => setSelectedProduct(null)} disabled={createStockMovement.isPending}>Batal</button>
+                <button type="submit" disabled={createStockMovement.isPending} data-testid="button-submit-stock-movement">
+                  {createStockMovement.isPending ? 'Menyimpan…' : 'Simpan perubahan'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -992,8 +1203,16 @@ const reportPaymentLabels: Record<'cash' | 'qris' | 'card', string> = {
   card: 'Kartu',
 };
 
+const reportRegisterLabels: Record<NonNullable<GetGgsEmployeeReportsParams['register']>, string> = {
+  all: 'Semua kasir',
+  ggs_beauty: 'GGS Beauty',
+  barber_ggs: 'Barber GGS',
+};
+
 function EmployeeReportsPage() {
   const [rangePreset, setRangePreset] = useState<'7' | '30' | 'custom'>('7');
+  const [registerFilter, setRegisterFilter] = useState<NonNullable<GetGgsEmployeeReportsParams['register']>>('all');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<NonNullable<GetGgsEmployeeReportsParams['paymentMethod']>>('all');
   const [dateRange, setDateRange] = useState(() => {
     const toDate = jakartaTodayDate();
     return { fromDate: shiftCalendarDate(toDate, -6), toDate };
@@ -1003,7 +1222,9 @@ function EmployeeReportsPage() {
   const reportParams = useMemo<GetGgsEmployeeReportsParams>(() => ({
     fromDate: dateRange.fromDate,
     toDate: dateRange.toDate,
-  }), [dateRange.fromDate, dateRange.toDate]);
+    register: registerFilter,
+    paymentMethod: paymentMethodFilter,
+  }), [dateRange.fromDate, dateRange.toDate, registerFilter, paymentMethodFilter]);
   const reportQuery = useGetGgsEmployeeReports(reportParams, {
     query: {
       queryKey: getGetGgsEmployeeReportsQueryKey(reportParams),
@@ -1027,6 +1248,52 @@ function EmployeeReportsPage() {
     setRangePreset(String(days) as '7' | '30');
     setDateRange({ fromDate: shiftCalendarDate(toDate, -(days - 1)), toDate });
   };
+  const downloadReportCsv = () => {
+    if (!report) return;
+    const csvCell = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
+    const rows: (string | number)[][] = [
+      ['Laporan GGS Hair Studio'],
+      ['Periode', dateRange.fromDate, 's.d.', dateRange.toDate],
+      ['Kasir', reportRegisterLabels[registerFilter]],
+      ['Metode pembayaran', paymentMethodFilter === 'all' ? 'Semua metode' : reportPaymentLabels[paymentMethodFilter]],
+      [],
+      ['Ringkasan'],
+      ['Total terbayar', report.totalCollected],
+      ['Transaksi selesai', report.completedTransactionCount],
+      ['Transaksi dibatalkan', report.cancelledTransactionCount],
+      ['Booking terjadwal', report.bookingCount],
+      ['Booking selesai', report.completedBookingCount],
+      ['Booking dibatalkan', report.cancelledBookingCount],
+      ['Rata-rata transaksi', report.averageTransactionValue],
+      [],
+      ['Metode pembayaran', 'Jumlah transaksi', 'Total terbayar'],
+      ...report.paymentMethods.map((method) => [
+        reportPaymentLabels[method.paymentMethod],
+        method.transactionCount,
+        method.totalCollected,
+      ]),
+      [],
+      ['Rincian harian', 'Booking', 'Selesai', 'Batal', 'Transaksi', 'Total terbayar'],
+      ...report.daily.map((day) => [
+        dateKey(day.date),
+        day.bookingCount,
+        day.completedBookingCount,
+        day.cancelledBookingCount,
+        day.transactionCount,
+        day.totalCollected,
+      ]),
+    ];
+    const csv = `\uFEFF${rows.map((row) => row.map(csvCell).join(',')).join('\r\n')}`;
+    const file = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(file);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `laporan-ggs-${dateRange.fromDate}-${dateRange.toDate}.csv`;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
 
   return (
     <div className="employee-schedule__content employee-reports" data-testid="page-employee-reports">
@@ -1034,18 +1301,30 @@ function EmployeeReportsPage() {
         <div>
           <p className="employee-kicker">RINGKASAN STUDIO</p>
           <h1>Laporan <em>studio.</em></h1>
-          <p className="employee-schedule__welcome">Rekap booking dan transaksi dari kedua kasir.</p>
+          <p className="employee-schedule__welcome">Rekap booking dan transaksi sesuai periode dan filter.</p>
         </div>
-        <button
-          type="button"
-          className="employee-refresh-button"
-          onClick={() => void reportQuery.refetch()}
-          disabled={reportQuery.isFetching || !rangeIsValid}
-          data-testid="button-refresh-employee-reports"
-        >
-          <RefreshCw size={15} aria-hidden="true" className={reportQuery.isFetching ? 'is-spinning' : ''} />
-          Perbarui laporan
-        </button>
+        <div className="employee-reports__actions">
+          <button
+            type="button"
+            className="employee-refresh-button employee-reports__download"
+            onClick={downloadReportCsv}
+            disabled={!report || reportQuery.isError}
+            data-testid="button-download-employee-report"
+          >
+            <Download size={15} aria-hidden="true" />
+            Unduh CSV
+          </button>
+          <button
+            type="button"
+            className="employee-refresh-button"
+            onClick={() => void reportQuery.refetch()}
+            disabled={reportQuery.isFetching || !rangeIsValid}
+            data-testid="button-refresh-employee-reports"
+          >
+            <RefreshCw size={15} aria-hidden="true" className={reportQuery.isFetching ? 'is-spinning' : ''} />
+            Perbarui laporan
+          </button>
+        </div>
       </section>
 
       <section className="employee-reports__filters" aria-label="Periode laporan">
@@ -1083,7 +1362,26 @@ function EmployeeReportsPage() {
             />
           </label>
         </div>
-        <p className="employee-reports__note">Booking dihitung menurut tanggal jadwal. Pendapatan mencakup transaksi selesai setelah diskon dan termasuk pajak.</p>
+        <div className="employee-reports__select-fields">
+          <label>
+            <span>Kasir</span>
+            <select value={registerFilter} onChange={(event) => setRegisterFilter(event.target.value as NonNullable<GetGgsEmployeeReportsParams['register']>)} data-testid="select-report-register">
+              <option value="all">Semua kasir</option>
+              <option value="ggs_beauty">GGS Beauty</option>
+              <option value="barber_ggs">Barber GGS</option>
+            </select>
+          </label>
+          <label>
+            <span>Metode bayar</span>
+            <select value={paymentMethodFilter} onChange={(event) => setPaymentMethodFilter(event.target.value as NonNullable<GetGgsEmployeeReportsParams['paymentMethod']>)} data-testid="select-report-payment-method">
+              <option value="all">Semua metode</option>
+              <option value="cash">Tunai</option>
+              <option value="qris">QRIS</option>
+              <option value="card">Kartu</option>
+            </select>
+          </label>
+        </div>
+        <p className="employee-reports__note">Booking dihitung menurut tanggal jadwal dan tetap mencakup semua booking. Filter kasir/metode hanya memengaruhi transaksi. Pendapatan mencakup transaksi selesai setelah diskon dan termasuk pajak.</p>
       </section>
 
       {!rangeIsValid ? (
@@ -1616,7 +1914,17 @@ function EmployeeBookingsSkeleton() {
   );
 }
 
-function BookingCard({ booking }: { booking: GgsEmployeeBooking }) {
+type EmployeeBookingStatusAction = Extract<GgsEmployeeBooking['status'], 'confirmed' | 'completed' | 'cancelled'>;
+
+function BookingCard({
+  booking,
+  onStatusChange,
+  isUpdating = false,
+}: {
+  booking: GgsEmployeeBooking;
+  onStatusChange?: (booking: GgsEmployeeBooking, status: EmployeeBookingStatusAction) => void;
+  isUpdating?: boolean;
+}) {
   return (
     <article className="employee-booking-card" data-testid={`card-employee-booking-${booking.id}`}>
       <div className="employee-booking-card__time">
@@ -1635,6 +1943,40 @@ function BookingCard({ booking }: { booking: GgsEmployeeBooking }) {
           <span><Clock3 size={14} aria-hidden="true" /> {booking.phone}</span>
           {booking.notes.trim() && <p>{booking.notes}</p>}
         </div>
+        {onStatusChange && (booking.status === 'pending' || booking.status === 'confirmed') ? (
+          <div className="employee-booking-card__actions" role="group" aria-label={`Aksi booking ${booking.customerName}`}>
+            {booking.status === 'pending' ? (
+              <button
+                type="button"
+                className="employee-booking-card__confirm"
+                onClick={() => onStatusChange(booking, 'confirmed')}
+                disabled={isUpdating}
+                data-testid={`button-confirm-booking-${booking.id}`}
+              >
+                {isUpdating ? 'Menyimpan…' : 'Konfirmasi'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="employee-booking-card__confirm"
+                onClick={() => onStatusChange(booking, 'completed')}
+                disabled={isUpdating}
+                data-testid={`button-complete-booking-${booking.id}`}
+              >
+                {isUpdating ? 'Menyimpan…' : 'Tandai selesai'}
+              </button>
+            )}
+            <button
+              type="button"
+              className="employee-booking-card__cancel"
+              onClick={() => onStatusChange(booking, 'cancelled')}
+              disabled={isUpdating}
+              data-testid={`button-cancel-booking-${booking.id}`}
+            >
+              Batalkan
+            </button>
+          </div>
+        ) : null}
       </div>
     </article>
   );
@@ -1659,10 +2001,15 @@ export function EmployeeSchedulePage() {
     },
   });
   const logout = useLogoutGgsEmployee();
+  const updateBookingStatus = useUpdateGgsEmployeeBookingStatus();
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'upcoming'>('all');
   const [logoutError, setLogoutError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [bookingStatusError, setBookingStatusError] = useState('');
+  const [bookingStatusSuccess, setBookingStatusSuccess] = useState('');
+  const [savingBookingId, setSavingBookingId] = useState<number | null>(null);
+  const [pendingBookingCancellation, setPendingBookingCancellation] = useState<GgsEmployeeBooking | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches,
   );
@@ -1688,6 +2035,57 @@ export function EmployeeSchedulePage() {
       queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeBookingsQueryKey() }),
     ]);
     setRefreshing(false);
+  };
+
+  const saveBookingStatus = async (
+    booking: GgsEmployeeBooking,
+    status: EmployeeBookingStatusAction,
+  ) => {
+    setBookingStatusError('');
+    setBookingStatusSuccess('');
+    setSavingBookingId(booking.id);
+    try {
+      const updated = await updateBookingStatus.mutateAsync({
+        appointmentId: booking.id,
+        data: { status },
+      });
+      queryClient.setQueryData<GgsEmployeeBooking[]>(
+        getGetGgsEmployeeBookingsQueryKey(),
+        (current) => current?.map((item) => item.id === updated.id ? updated : item),
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeBookingsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeReportsQueryKey() }),
+      ]);
+      setPendingBookingCancellation(null);
+      setBookingStatusSuccess(
+        status === 'confirmed'
+          ? 'Booking berhasil dikonfirmasi.'
+          : status === 'completed'
+            ? 'Booking ditandai selesai.'
+            : 'Booking berhasil dibatalkan.',
+      );
+    } catch (error) {
+      setBookingStatusError(cashierErrorMessage(
+        error,
+        'Status booking belum dapat diperbarui. Muat ulang jadwal lalu coba lagi.',
+      ));
+    } finally {
+      setSavingBookingId(null);
+    }
+  };
+
+  const requestBookingStatusChange = (
+    booking: GgsEmployeeBooking,
+    status: EmployeeBookingStatusAction,
+  ) => {
+    setBookingStatusError('');
+    setBookingStatusSuccess('');
+    if (status === 'cancelled') {
+      setPendingBookingCancellation(booking);
+      return;
+    }
+    void saveBookingStatus(booking, status);
   };
 
   const signOut = () => {
@@ -1856,6 +2254,9 @@ export function EmployeeSchedulePage() {
               <p>Semua booking tampil untuk tim studio. Booking belum ditetapkan ke karyawan tertentu.</p>
             </section>
 
+            {bookingStatusError ? <div className="employee-booking-action__feedback employee-booking-action__feedback--error" role="alert">{bookingStatusError}</div> : null}
+            {bookingStatusSuccess ? <div className="employee-booking-action__feedback" role="status">{bookingStatusSuccess}</div> : null}
+
             <section className="employee-bookings" aria-label="Daftar booking studio">
               <div className="employee-bookings__toolbar">
                 <div className="employee-bookings__title">
@@ -1895,7 +2296,12 @@ export function EmployeeSchedulePage() {
               ) : sortedBookings.length ? (
                 <div className="employee-booking-list">
                   {sortedBookings.map((booking) => (
-                    <BookingCard key={booking.id} booking={booking} />
+                    <BookingCard
+                      key={booking.id}
+                      booking={booking}
+                      onStatusChange={requestBookingStatusChange}
+                      isUpdating={savingBookingId === booking.id}
+                    />
                   ))}
                 </div>
               ) : (
@@ -1927,6 +2333,27 @@ export function EmployeeSchedulePage() {
         ) : (
           <EmployeeModulePlaceholder item={currentMenu} />
         )}
+
+        {authenticated && pendingBookingCancellation ? (
+          <div className="employee-booking-action__backdrop" role="presentation">
+            <section className="employee-booking-action__dialog" role="dialog" aria-modal="true" aria-labelledby="employee-booking-cancel-title">
+              <p className="employee-kicker">KONFIRMASI PEMBATALAN</p>
+              <h2 id="employee-booking-cancel-title">Batalkan booking ini?</h2>
+              <p>{pendingBookingCancellation.customerName} · {pendingBookingCancellation.serviceName} · {displayDate(pendingBookingCancellation.appointmentDate, { day: 'numeric', month: 'short' })}</p>
+              <div>
+                <button type="button" onClick={() => setPendingBookingCancellation(null)} disabled={savingBookingId !== null}>Kembali</button>
+                <button
+                  type="button"
+                  onClick={() => void saveBookingStatus(pendingBookingCancellation, 'cancelled')}
+                  disabled={savingBookingId !== null}
+                  data-testid="button-confirm-booking-cancellation"
+                >
+                  {savingBookingId === pendingBookingCancellation.id ? 'Membatalkan…' : 'Ya, batalkan booking'}
+                </button>
+              </div>
+            </section>
+          </div>
+        ) : null}
 
         {authenticated && logoutError && <p className="employee-form-error employee-schedule__logout-error" role="alert">{logoutError}</p>}
       </div>

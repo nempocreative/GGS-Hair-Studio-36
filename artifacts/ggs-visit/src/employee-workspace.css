@@ -6692,3 +6692,531 @@
     flex-direction: column;
   }
 }
+
+.employee-reports__heading {
+  align-items: center;
+}
+
+.employee-reports__actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.employee-reports__download {
+  border-color: #d9a5bb;
+  background: #fff8fb;
+  color: var(--ew-pink);
+}
+
+.employee-reports__download:hover:not(:disabled) {
+  border-color: var(--ew-pink);
+  background: #faedf2;
+}
+
+.employee-reports__filters {
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.employee-reports__select-fields {
+  display: flex;
+  align-items: end;
+  gap: 9px;
+}
+
+.employee-reports__select-fields label {
+  display: grid;
+  min-width: 138px;
+  gap: 5px;
+}
+
+.employee-reports__select-fields label > span {
+  color: var(--ew-muted);
+  font: 7px var(--ew-mono);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.employee-reports__select-fields select {
+  min-height: 36px;
+  border: 1px solid var(--ew-line);
+  border-radius: 0;
+  background: var(--ew-surface);
+  padding: 0 9px;
+  color: var(--ew-ink);
+  font: 10px var(--ew-sans);
+}
+
+.employee-booking-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.employee-booking-card__actions button,
+.employee-booking-action__dialog button {
+  min-height: 33px;
+  border: 1px solid var(--ew-line);
+  border-radius: 0;
+  background: #fff;
+  padding: 0 11px;
+  color: var(--ew-ink);
+  font: 600 9px var(--ew-sans);
+  cursor: pointer;
+}
+
+.employee-booking-card__actions .employee-booking-card__confirm {
+  border-color: var(--ew-pink);
+  background: var(--ew-pink);
+  color: #fff;
+}
+
+.employee-booking-card__actions .employee-booking-card__cancel {
+  color: #8b394b;
+}
+
+.employee-booking-card__actions button:disabled,
+.employee-booking-action__dialog button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
+.employee-booking-action__feedback {
+  margin: -8px 0 14px;
+  border: 1px solid #c7dfcf;
+  background: #f2f8f3;
+  padding: 10px 12px;
+  color: #2e6541;
+  font-size: 10px;
+}
+
+.employee-booking-action__feedback--error {
+  border-color: #e7c3c8;
+  background: #fff4f5;
+  color: #8b394b;
+}
+
+.employee-booking-action__backdrop,
+.employee-stock__dialog-backdrop {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: grid;
+  overflow-y: auto;
+  place-items: center;
+  background: rgb(19 15 17 / 54%);
+  padding: 20px;
+}
+
+.employee-booking-action__dialog {
+  width: min(100%, 420px);
+  border: 1px solid var(--ew-line);
+  background: var(--ew-surface);
+  padding: 24px;
+  box-shadow: 0 20px 60px rgb(20 12 16 / 20%);
+}
+
+.employee-booking-action__dialog h2 {
+  margin: 5px 0 9px;
+  color: var(--ew-ink);
+  font-size: 21px;
+}
+
+.employee-booking-action__dialog > p:not(.employee-kicker) {
+  margin: 0;
+  color: var(--ew-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.employee-booking-action__dialog > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.employee-booking-action__dialog > div button:last-child {
+  border-color: #8b394b;
+  background: #8b394b;
+  color: #fff;
+}
+
+.employee-stock__notice {
+  margin: 0 0 14px;
+  border: 1px solid #c7dfcf;
+  background: #f2f8f3;
+  padding: 10px 12px;
+  color: #2e6541;
+  font-size: 10px;
+}
+
+.employee-stock__adjust {
+  min-height: 29px;
+  margin-top: 8px;
+  border: 1px solid #d9a5bb;
+  background: #fff8fb;
+  padding: 0 9px;
+  color: var(--ew-pink);
+  font: 600 9px var(--ew-sans);
+  cursor: pointer;
+}
+
+.employee-stock__adjust:hover {
+  border-color: var(--ew-pink);
+  background: #faedf2;
+}
+
+.employee-stock__history {
+  margin-top: 14px;
+}
+
+.employee-stock__history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.employee-stock__history-heading h2 {
+  margin: 0;
+  color: var(--ew-ink);
+  font-size: 16px;
+}
+
+.employee-stock__history-heading p {
+  margin: 5px 0 0;
+  color: var(--ew-muted);
+  font-size: 9px;
+}
+
+.employee-stock__history-heading .employee-refresh-button {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 9px;
+}
+
+.employee-stock__history-list {
+  display: grid;
+  border: 1px solid var(--ew-line);
+}
+
+.employee-stock__movement {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(115px, .7fr) minmax(160px, 1.2fr);
+  align-items: center;
+  gap: 8px 16px;
+  border-bottom: 1px solid var(--ew-line);
+  padding: 12px 14px;
+}
+
+.employee-stock__movement:last-child {
+  border-bottom: 0;
+}
+
+.employee-stock__movement-product {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.employee-stock__movement-product strong {
+  overflow: hidden;
+  color: var(--ew-ink);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.employee-stock__movement-product span {
+  width: max-content;
+  border: 1px solid var(--ew-line);
+  padding: 3px 6px;
+  color: var(--ew-pink);
+  font-size: 8px;
+}
+
+.employee-stock__movement-count {
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+}
+
+.employee-stock__movement-count strong {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.employee-stock__movement-count .is-positive {
+  color: #2e6541;
+}
+
+.employee-stock__movement-count .is-negative {
+  color: #8b394b;
+}
+
+.employee-stock__movement-count small,
+.employee-stock__movement-meta {
+  color: var(--ew-muted);
+  font-size: 8px;
+}
+
+.employee-stock__movement > p {
+  margin: 0;
+  color: var(--ew-ink);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.employee-stock__movement-meta {
+  grid-column: 1 / -1;
+}
+
+.employee-stock__dialog {
+  width: min(100%, 470px);
+  border: 1px solid var(--ew-line);
+  background: var(--ew-surface);
+  padding: 22px;
+  box-shadow: 0 20px 60px rgb(20 12 16 / 20%);
+}
+
+.employee-stock__dialog > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.employee-stock__dialog > header span {
+  color: var(--ew-pink);
+  font: 8px var(--ew-mono);
+  letter-spacing: .08em;
+}
+
+.employee-stock__dialog > header h2 {
+  margin: 5px 0 0;
+  color: var(--ew-ink);
+  font-size: 20px;
+}
+
+.employee-stock__dialog > header > button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--ew-line);
+  background: #fff;
+  color: var(--ew-ink);
+  cursor: pointer;
+}
+
+.employee-stock__dialog-current {
+  margin: 14px 0 18px;
+  color: var(--ew-muted);
+  font-size: 10px;
+}
+
+.employee-stock__dialog-current strong {
+  color: var(--ew-ink);
+}
+
+.employee-stock__dialog form {
+  display: grid;
+  gap: 14px;
+}
+
+.employee-stock__movement-types {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--ew-line);
+}
+
+.employee-stock__movement-types button {
+  min-height: 38px;
+  border: 0;
+  background: #fff;
+  color: var(--ew-muted);
+  font: 600 10px var(--ew-sans);
+  cursor: pointer;
+}
+
+.employee-stock__movement-types button + button {
+  border-left: 1px solid var(--ew-line);
+}
+
+.employee-stock__movement-types button[aria-pressed="true"] {
+  background: #faedf2;
+  color: var(--ew-pink);
+}
+
+.employee-stock__dialog form > label {
+  display: grid;
+  gap: 6px;
+}
+
+.employee-stock__dialog form > label > span {
+  color: var(--ew-ink);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.employee-stock__number-field {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--ew-line);
+  background: #fff;
+}
+
+.employee-stock__number-field input {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  outline: 0;
+  padding: 0 11px;
+  color: var(--ew-ink);
+  font: 14px var(--ew-sans);
+}
+
+.employee-stock__number-field > span {
+  padding: 0 11px;
+  color: var(--ew-muted);
+  font-size: 9px;
+}
+
+.employee-stock__dialog textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  border: 1px solid var(--ew-line);
+  padding: 9px 10px;
+  color: var(--ew-ink);
+  font: 10px/1.5 var(--ew-sans);
+}
+
+.employee-stock__dialog-hint {
+  margin: -5px 0 0;
+  color: var(--ew-muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.employee-stock__dialog-error {
+  margin: -4px 0 0;
+  border: 1px solid #e7c3c8;
+  background: #fff4f5;
+  padding: 8px 10px;
+  color: #8b394b;
+  font-size: 9px;
+}
+
+.employee-stock__dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.employee-stock__dialog-actions button {
+  min-height: 38px;
+  border: 1px solid var(--ew-line);
+  background: #fff;
+  padding: 0 12px;
+  color: var(--ew-ink);
+  font: 600 9px var(--ew-sans);
+  cursor: pointer;
+}
+
+.employee-stock__dialog-actions button[type="submit"] {
+  border-color: var(--ew-pink);
+  background: var(--ew-pink);
+  color: #fff;
+}
+
+.employee-stock__dialog-actions button:disabled {
+  cursor: wait;
+  opacity: .6;
+}
+
+@media (max-width: 760px) {
+  .employee-reports__heading {
+    align-items: flex-start;
+  }
+
+  .employee-reports__actions {
+    width: 100%;
+  }
+
+  .employee-reports__actions .employee-refresh-button {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .employee-stock__history-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .employee-stock__movement {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+
+  .employee-stock__movement-product {
+    grid-column: 1;
+  }
+
+  .employee-stock__movement-count {
+    grid-column: 2;
+    grid-row: 1;
+    justify-items: end;
+    text-align: right;
+  }
+
+  .employee-stock__movement > p {
+    grid-column: 1 / -1;
+  }
+
+  .employee-stock__movement-meta {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 500px) {
+  .employee-reports__actions {
+    flex-direction: column;
+  }
+
+  .employee-reports__actions .employee-refresh-button {
+    width: 100%;
+  }
+
+  .employee-reports__select-fields {
+    width: 100%;
+  }
+
+  .employee-reports__select-fields label {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  .employee-stock__history-heading .employee-refresh-button {
+    width: 100%;
+  }
+
+  .employee-stock__dialog {
+    padding: 17px;
+  }
+
+  .employee-booking-action__dialog {
+    padding: 18px;
+  }
+
+  .employee-booking-action__dialog > div {
+    flex-direction: column-reverse;
+  }
+}
