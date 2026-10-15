@@ -531,7 +531,7 @@ export function EmployeeAttendancePage({ employeeName }: { employeeName: string 
             <p className="employee-attendance__qr-instruction">Tampilkan layar ini di tablet salon. Setiap karyawan memindai QR dari akun dan HP masing-masing; kode diperbarui otomatis.</p>
             {qrChallenge && qrSecondsLeft > 0 ? (
               <div className="employee-attendance__qr-code" data-testid="employee-attendance-qr-code">
-                <QRCodeSVG value={challengeUrl} size={264} level="M" includeMargin />
+                <QRCodeSVG value={challengeUrl} size={440} level="M" includeMargin title="QR absensi GGS" />
               </div>
             ) : (
               <div className="employee-attendance__qr-placeholder" role="status">

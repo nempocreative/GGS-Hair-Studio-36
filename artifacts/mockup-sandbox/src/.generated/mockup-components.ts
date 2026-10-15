@@ -9,11 +9,11 @@ export const modules: ModuleMap = {
   "./components/mockups/ggs-homepage/Current.tsx": () => import("../components/mockups/ggs-homepage/Current.tsx"),
   "./components/mockups/ggs-mens-icon/Current.tsx": () => import("../components/mockups/ggs-mens-icon/Current.tsx"),
   "./components/mockups/ggs-mens-icon/RoundHair.tsx": () => import("../components/mockups/ggs-mens-icon/RoundHair.tsx"),
-  "./components/mockups/ggs-voucher-ticket/Current.tsx": () => import("../components/mockups/ggs-voucher-ticket/Current.tsx"),
-  "./components/mockups/ggs-voucher-ticket/PrintedTicket.tsx": () => import("../components/mockups/ggs-voucher-ticket/PrintedTicket.tsx"),
   "./components/mockups/ggs-profile/Current.tsx": () => import("../components/mockups/ggs-profile/Current.tsx"),
   "./components/mockups/ggs-profile/DemoLogin.tsx": () => import("../components/mockups/ggs-profile/DemoLogin.tsx"),
   "./components/mockups/ggs-profile/Professional.tsx": () => import("../components/mockups/ggs-profile/Professional.tsx"),
+  "./components/mockups/ggs-voucher-ticket/Current.tsx": () => import("../components/mockups/ggs-voucher-ticket/Current.tsx"),
+  "./components/mockups/ggs-voucher-ticket/PrintedTicket.tsx": () => import("../components/mockups/ggs-voucher-ticket/PrintedTicket.tsx"),
   "./components/mockups/ggs-why/Current.tsx": () => import("../components/mockups/ggs-why/Current.tsx"),
   "./components/mockups/ggs-why/Refined.tsx": () => import("../components/mockups/ggs-why/Refined.tsx")
 };

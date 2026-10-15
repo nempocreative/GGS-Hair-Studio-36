@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, CreditCard, Download, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound, X, Megaphone } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, CreditCard, Download, House, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound, X, Megaphone } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import {
   getGetGgsEmployeeBookingsQueryKey,
@@ -151,6 +151,34 @@ const employeeMenuItems = [
   { href: '/employee/reports', label: 'Laporan', icon: BarChart3, description: 'Rekap kegiatan dan performa studio.' },
   { href: '/employee/profile', label: 'Profil', icon: UserRound, description: 'Detail akun dan keamanan kata sandi.' },
 ] as const;
+
+const COMPACT_EMPLOYEE_LAYOUT_QUERY = '(max-width: 900px), (max-width: 1180px) and (orientation: portrait)';
+const employeeFooterMenuItems = [
+  { href: '/', label: 'Home', icon: House },
+  { href: '/services', label: 'Services', icon: Scissors },
+  { href: '/book', label: 'Booking', icon: CalendarDays },
+  { href: '/my-ggs', label: 'My GGS', icon: UserRound },
+] as const;
+
+function EmployeeFooterTabbar() {
+  const [location] = useLocation();
+
+  return (
+    <nav className="employee-footer-tabbar" aria-label="Navigasi bawah">
+      {employeeFooterMenuItems.map((item) => (
+        <Link
+          href={item.href}
+          key={item.href}
+          aria-current={location === item.href ? 'page' : undefined}
+          data-testid={`link-employee-footer-${item.href.slice(1) || 'home'}`}
+        >
+          <item.icon size={16} strokeWidth={1.8} aria-hidden="true" />
+          <span>{item.label}</span>
+        </Link>
+      ))}
+    </nav>
+  );
+}
 
 const cashierRegisters: {
   value: GgsEmployeeCashierRegister;
@@ -1836,6 +1864,7 @@ export function EmployeeSignInPage() {
         <span>GGS HAIR STUDIO</span>
         <span>INTERNAL / STAFF ONLY</span>
       </footer>
+      <EmployeeFooterTabbar />
     </main>
   );
 }
@@ -2113,8 +2142,14 @@ export function EmployeeSchedulePage() {
   const [savingBookingId, setSavingBookingId] = useState<number | null>(null);
   const [pendingBookingCancellation, setPendingBookingCancellation] = useState<GgsEmployeeBooking | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches,
+    () => typeof window !== 'undefined' && window.matchMedia(COMPACT_EMPLOYEE_LAYOUT_QUERY).matches,
   );
+  useEffect(() => {
+    const compactLayout = window.matchMedia(COMPACT_EMPLOYEE_LAYOUT_QUERY);
+    const syncSidebarWithViewport = (event: MediaQueryListEvent) => setSidebarCollapsed(event.matches);
+    compactLayout.addEventListener('change', syncSidebarWithViewport);
+    return () => compactLayout.removeEventListener('change', syncSidebarWithViewport);
+  }, []);
   const normalizedLocation = location.length > 1 ? location.replace(/\/+$/, '') : location;
   const matchedMenu = employeeMenuItems.find((item) => item.href === normalizedLocation);
   const currentMenu = matchedMenu ?? employeeMenuItems[0];
@@ -2212,7 +2247,7 @@ export function EmployeeSchedulePage() {
 
   const needsSignIn = session.isError || (session.isSuccess && !session.data.active);
   const closeSidebarAfterNavigation = () => {
-    if (window.matchMedia('(max-width: 900px)').matches) setSidebarCollapsed(true);
+    if (window.matchMedia(COMPACT_EMPLOYEE_LAYOUT_QUERY).matches) setSidebarCollapsed(true);
   };
 
   return (
@@ -2473,6 +2508,7 @@ export function EmployeeSchedulePage() {
 
         {authenticated && logoutError && <p className="employee-form-error employee-schedule__logout-error" role="alert">{logoutError}</p>}
       </div>
+      <EmployeeFooterTabbar />
     </main>
   );
 }
