@@ -22,7 +22,7 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
-GGS_ADMIN_EMAIL = "ggs@gmail.com"
+GGS_ADMIN_EMAIL = "Gak usah pakai email pakai id dan passowrd aja"
 
 [nix]
 channel = "stable-25_05"
