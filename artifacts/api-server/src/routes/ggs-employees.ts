@@ -14,6 +14,7 @@ import {
   isNull,
   lt,
   lte,
+  ne,
   or,
   sql,
   sum,
@@ -56,6 +57,7 @@ import {
   CheckInGgsEmployeeAttendanceResponse,
   CheckOutGgsEmployeeAttendanceBody,
   CheckOutGgsEmployeeAttendanceResponse,
+  ChangeGgsEmployeePasswordBody,
   LoginGgsEmployeeBody,
   LoginGgsEmployeeResponse,
   LogoutGgsEmployeeCashierResponse,
@@ -487,6 +489,110 @@ router.get("/ggs/employee/session", async (req, res): Promise<void> => {
     return;
   }
   res.json(GetGgsEmployeeSessionResponse.parse(serializeEmployee(employee)));
+});
+
+router.patch("/ggs/employee/password", async (req, res): Promise<void> => {
+  const parsed = ChangeGgsEmployeePasswordBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const employee = await getEmployeeForSession(req, res);
+  if (!employee) {
+    res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+    return;
+  }
+
+  const token = req.cookies?.[employeeCookieName];
+  if (typeof token !== "string" || token.length === 0) {
+    res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+    return;
+  }
+
+  const [account] = await db
+    .select({
+      passwordHash: ggsEmployeeAccountsTable.passwordHash,
+      active: ggsEmployeeAccountsTable.active,
+    })
+    .from(ggsEmployeeAccountsTable)
+    .where(eq(ggsEmployeeAccountsTable.id, employee.id))
+    .limit(1);
+
+  if (!account?.active) {
+    res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+    return;
+  }
+
+  const currentPasswordMatches = await verifyPassword(
+    parsed.data.currentPassword,
+    account.passwordHash,
+  );
+  if (!currentPasswordMatches) {
+    res.status(400).json({ error: "Kata sandi saat ini tidak sesuai." });
+    return;
+  }
+
+  if (parsed.data.currentPassword === parsed.data.newPassword) {
+    res.status(400).json({
+      error: "Kata sandi baru harus berbeda dari kata sandi saat ini.",
+    });
+    return;
+  }
+
+  const currentTokenHash = hashSessionToken(token);
+  const newPasswordHash = await hashPassword(parsed.data.newPassword);
+  const changed = await db.transaction(async (tx) => {
+    const [currentSession] = await tx
+      .select({ tokenHash: ggsEmployeeSessionsTable.tokenHash })
+      .from(ggsEmployeeSessionsTable)
+      .where(
+        and(
+          eq(ggsEmployeeSessionsTable.tokenHash, currentTokenHash),
+          eq(ggsEmployeeSessionsTable.employeeId, employee.id),
+          gt(ggsEmployeeSessionsTable.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+    if (!currentSession) return false;
+
+    const [updatedAccount] = await tx
+      .update(ggsEmployeeAccountsTable)
+      .set({ passwordHash: newPasswordHash })
+      .where(
+        and(
+          eq(ggsEmployeeAccountsTable.id, employee.id),
+          eq(ggsEmployeeAccountsTable.passwordHash, account.passwordHash),
+          eq(ggsEmployeeAccountsTable.active, true),
+        ),
+      )
+      .returning({ id: ggsEmployeeAccountsTable.id });
+    if (!updatedAccount) return false;
+
+    await tx
+      .delete(ggsEmployeeSessionsTable)
+      .where(
+        and(
+          eq(ggsEmployeeSessionsTable.employeeId, employee.id),
+          ne(ggsEmployeeSessionsTable.tokenHash, currentTokenHash),
+        ),
+      );
+    await tx
+      .update(ggsEmployeeSessionsTable)
+      .set({ cashierRegister: null, cashierExpiresAt: null })
+      .where(eq(ggsEmployeeSessionsTable.tokenHash, currentTokenHash));
+
+    return true;
+  });
+
+  if (!changed) {
+    res.status(409).json({
+      error: "Sesi atau akun berubah. Muat ulang halaman lalu coba lagi.",
+    });
+    return;
+  }
+
+  res.sendStatus(204);
 });
 
 router.post("/ggs/employee/logout", async (req, res): Promise<void> => {

@@ -403,6 +403,19 @@ export interface GgsEmployeeLoginInput {
   password: string;
 }
 
+export interface GgsEmployeePasswordChangeInput {
+  /**
+     * @minLength 1
+     * @maxLength 128
+     */
+  currentPassword: string;
+  /**
+     * @minLength 8
+     * @maxLength 128
+     */
+  newPassword: string;
+}
+
 export interface GgsEmployeeAccountInput {
   /**
      * @minLength 2

@@ -57,6 +57,7 @@ export * from './ggsEmployeeCashierTransactionStatus';
 export * from './ggsEmployeeCashierTransactionStatusFilter';
 export * from './ggsEmployeeCashierVoucher';
 export * from './ggsEmployeeLoginInput';
+export * from './ggsEmployeePasswordChangeInput';
 export * from './ggsEmployeeReportDailySummary';
 export * from './ggsEmployeeReportPaymentSummary';
 export * from './ggsEmployeeReportsSummary';

@@ -3,15 +3,17 @@ type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/ggs-cashier/Current.tsx": () => import("../components/mockups/ggs-cashier/Current.tsx"),
   "./components/mockups/ggs-cashier/Professional.tsx": () => import("../components/mockups/ggs-cashier/Professional.tsx"),
+  "./components/mockups/ggs-employee/Current.tsx": () => import("../components/mockups/ggs-employee/Current.tsx"),
+  "./components/mockups/ggs-employee/ProfileSettings.tsx": () => import("../components/mockups/ggs-employee/ProfileSettings.tsx"),
   "./components/mockups/ggs-homepage/Clearer.tsx": () => import("../components/mockups/ggs-homepage/Clearer.tsx"),
   "./components/mockups/ggs-homepage/Current.tsx": () => import("../components/mockups/ggs-homepage/Current.tsx"),
   "./components/mockups/ggs-mens-icon/Current.tsx": () => import("../components/mockups/ggs-mens-icon/Current.tsx"),
   "./components/mockups/ggs-mens-icon/RoundHair.tsx": () => import("../components/mockups/ggs-mens-icon/RoundHair.tsx"),
+  "./components/mockups/ggs-voucher-ticket/Current.tsx": () => import("../components/mockups/ggs-voucher-ticket/Current.tsx"),
+  "./components/mockups/ggs-voucher-ticket/PrintedTicket.tsx": () => import("../components/mockups/ggs-voucher-ticket/PrintedTicket.tsx"),
   "./components/mockups/ggs-profile/Current.tsx": () => import("../components/mockups/ggs-profile/Current.tsx"),
   "./components/mockups/ggs-profile/DemoLogin.tsx": () => import("../components/mockups/ggs-profile/DemoLogin.tsx"),
   "./components/mockups/ggs-profile/Professional.tsx": () => import("../components/mockups/ggs-profile/Professional.tsx"),
-  "./components/mockups/ggs-voucher-ticket/Current.tsx": () => import("../components/mockups/ggs-voucher-ticket/Current.tsx"),
-  "./components/mockups/ggs-voucher-ticket/PrintedTicket.tsx": () => import("../components/mockups/ggs-voucher-ticket/PrintedTicket.tsx"),
   "./components/mockups/ggs-why/Current.tsx": () => import("../components/mockups/ggs-why/Current.tsx"),
   "./components/mockups/ggs-why/Refined.tsx": () => import("../components/mockups/ggs-why/Refined.tsx")
 };

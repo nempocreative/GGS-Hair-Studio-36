@@ -214,6 +214,26 @@ paths:
                 $ref: "#/components/schemas/GgsEmployeeAccount"
         "401":
           description: No active employee session
+  /ggs/employee/password:
+    patch:
+      operationId: changeGgsEmployeePassword
+      tags: [ggs-employee]
+      summary: Change the current employee's password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeePasswordChangeInput"
+      responses:
+        "204":
+          description: Password changed; other employee sessions are revoked
+        "400":
+          description: Current password is incorrect or the new password is invalid
+        "401":
+          description: No active employee session
+        "409":
+          description: Employee account changed while processing the request
   /ggs/employee/logout:
     post:
       operationId: logoutGgsEmployee
@@ -1684,6 +1704,20 @@ components:
       required:
         - employeeId
         - password
+    GgsEmployeePasswordChangeInput:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          minLength: 1
+          maxLength: 128
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+        - currentPassword
+        - newPassword
     GgsEmployeeAccountInput:
       type: object
       properties:

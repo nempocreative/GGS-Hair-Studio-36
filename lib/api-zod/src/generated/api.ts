@@ -233,6 +233,24 @@ export const GetGgsEmployeeSessionResponse = zod.object({
 
 
 /**
+ * @summary Change the current employee's password
+ */
+export const changeGgsEmployeePasswordBodyCurrentPasswordMax = 128;
+
+export const changeGgsEmployeePasswordBodyNewPasswordMin = 8;
+export const changeGgsEmployeePasswordBodyNewPasswordMax = 128;
+
+
+
+export const ChangeGgsEmployeePasswordBody = zod.object({
+  "currentPassword": zod.string().min(1).max(changeGgsEmployeePasswordBodyCurrentPasswordMax),
+  "newPassword": zod.string().min(changeGgsEmployeePasswordBodyNewPasswordMin).max(changeGgsEmployeePasswordBodyNewPasswordMax)
+})
+
+export const ChangeGgsEmployeePasswordResponse = zod.void()
+
+
+/**
  * @summary Sign out of the current employee account
  */
 export const LogoutGgsEmployeeResponse = zod.void()

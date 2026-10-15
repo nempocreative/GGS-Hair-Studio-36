@@ -29,12 +29,13 @@ import {
   useCancelGgsEmployeeCashierTransaction,
   useUpdateGgsEmployeeBookingStatus,
   useGetGgsEmployeeSession,
+  useChangeGgsEmployeePassword,
   useLoginGgsEmployee,
   useLogoutGgsEmployeeCashier,
   useLogoutGgsEmployee,
   useUnlockGgsEmployeeCashier,
 } from '@workspace/api-client-react';
-import type { GetGgsEmployeeCashierTransactionsParams, GetGgsEmployeeReportsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsEmployeeCashierVoucher, GgsCashierAnnouncement, GgsEmployeeStockMovement, GgsEmployeeStockMovementInput, GgsProduct, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import type { GetGgsEmployeeCashierTransactionsParams, GetGgsEmployeeReportsParams, GgsEmployeeAccount, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsEmployeeCashierVoucher, GgsCashierAnnouncement, GgsEmployeeStockMovement, GgsEmployeeStockMovementInput, GgsProduct, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
 import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
@@ -148,6 +149,7 @@ const employeeMenuItems = [
   { href: '/employee/customers', label: 'Pelanggan', icon: UsersRound, description: 'Informasi dan riwayat kunjungan pelanggan.' },
   { href: '/employee/stock', label: 'Stok produk', icon: Package, description: 'Pemantauan ketersediaan produk studio.' },
   { href: '/employee/reports', label: 'Laporan', icon: BarChart3, description: 'Rekap kegiatan dan performa studio.' },
+  { href: '/employee/profile', label: 'Profil', icon: UserRound, description: 'Detail akun dan keamanan kata sandi.' },
 ] as const;
 
 const cashierRegisters: {
@@ -1966,6 +1968,122 @@ function BookingCard({
   );
 }
 
+function employeePasswordError(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'data' in error) {
+    const data = (error as { data?: unknown }).data;
+    if (typeof data === 'object' && data !== null && 'error' in data) {
+      const message = (data as { error?: unknown }).error;
+      if (typeof message === 'string' && message.trim()) return message;
+    }
+  }
+  return 'Kata sandi belum dapat diperbarui. Periksa kata sandi saat ini lalu coba lagi.';
+}
+
+function EmployeeProfilePage({ employee }: { employee: GgsEmployeeAccount }) {
+  const queryClient = useQueryClient();
+  const changePassword = useChangeGgsEmployeePassword();
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [formError, setFormError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const submitPasswordChange = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError('');
+    setSuccess('');
+    if (newPassword.length < 8) {
+      setFormError('Kata sandi baru minimal 8 karakter.');
+      return;
+    }
+    if (newPassword.length > 128) {
+      setFormError('Kata sandi baru maksimal 128 karakter.');
+      return;
+    }
+    if (newPassword !== confirmation) {
+      setFormError('Konfirmasi kata sandi belum sama.');
+      return;
+    }
+    try {
+      await changePassword.mutateAsync({ data: { currentPassword, newPassword } });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmation('');
+      setSuccess('Kata sandi berhasil diperbarui. Masuk kembali ke kasir untuk melanjutkan.');
+      await queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierSessionQueryKey() });
+    } catch (error) {
+      setFormError(employeePasswordError(error));
+    }
+  };
+
+  const createdDate = new Date(employee.createdAt);
+  const createdLabel = Number.isNaN(createdDate.getTime())
+    ? employee.createdAt
+    : new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' }).format(createdDate);
+
+  return (
+    <div className="employee-profile" data-testid="page-employee-profile">
+      <section className="employee-profile__heading">
+        <div>
+          <p className="employee-kicker">AKUN KARYAWAN</p>
+          <h1>Profil <em>akun.</em></h1>
+          <p>Periksa detail akun dan perbarui kata sandi Anda.</p>
+        </div>
+        <span className={`employee-profile__status${employee.active ? '' : ' employee-profile__status--inactive'}`}>
+          <span aria-hidden="true" />{employee.active ? 'Akun aktif' : 'Akun tidak aktif'}
+        </span>
+      </section>
+
+      <div className="employee-profile__grid">
+        <section className="employee-profile__card" aria-labelledby="employee-profile-details-title">
+          <div className="employee-profile__card-heading">
+            <div><p className="employee-kicker">INFORMASI AKUN</p><h2 id="employee-profile-details-title">Detail karyawan</h2></div>
+          </div>
+          <dl className="employee-profile__details">
+            <div><dt>Nama</dt><dd data-testid="text-employee-profile-name">{employee.name}</dd></div>
+            <div><dt>ID karyawan</dt><dd data-testid="text-employee-profile-id">{employee.employeeId}</dd></div>
+            <div><dt>ID akun</dt><dd data-testid="text-employee-profile-account-id">{employee.id}</dd></div>
+            <div><dt>Akun dibuat</dt><dd data-testid="text-employee-profile-created">{createdLabel}</dd></div>
+          </dl>
+          <p className="employee-profile__note">Nama dan ID karyawan dikelola oleh administrator. Hubungi pengelola studio jika detail ini perlu diperbaiki.</p>
+        </section>
+
+        <section className="employee-profile__card employee-profile__security" aria-labelledby="employee-profile-password-title">
+          <div className="employee-profile__card-heading">
+            <div><p className="employee-kicker">KEAMANAN</p><h2 id="employee-profile-password-title">Ubah kata sandi</h2></div>
+            <LockKeyhole size={18} aria-hidden="true" />
+          </div>
+          <form className="employee-profile__form" onSubmit={submitPasswordChange}>
+            <input
+              className="employee-profile__username"
+              type="text"
+              name="username"
+              autoComplete="username"
+              value={employee.employeeId}
+              readOnly
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+            <label htmlFor="employee-profile-current-password">Kata sandi saat ini</label>
+            <input id="employee-profile-current-password" name="currentPassword" type="password" autoComplete="current-password" required maxLength={128} value={currentPassword} onChange={(event) => { setCurrentPassword(event.target.value); setFormError(''); setSuccess(''); }} data-testid="input-employee-current-password" />
+            <label htmlFor="employee-profile-new-password">Kata sandi baru</label>
+            <input id="employee-profile-new-password" name="newPassword" type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={newPassword} onChange={(event) => { setNewPassword(event.target.value); setFormError(''); setSuccess(''); }} aria-describedby="employee-profile-password-help" data-testid="input-employee-new-password" />
+            <label htmlFor="employee-profile-confirm-password">Konfirmasi kata sandi baru</label>
+            <input id="employee-profile-confirm-password" name="confirmation" type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={confirmation} onChange={(event) => { setConfirmation(event.target.value); setFormError(''); setSuccess(''); }} data-testid="input-employee-confirm-password" />
+            <p className="employee-profile__hint" id="employee-profile-password-help">Gunakan 8–128 karakter. Kasir akan terkunci setelah kata sandi diperbarui.</p>
+            {formError && <p className="employee-profile__feedback employee-profile__feedback--error" role="alert" data-testid="status-employee-password-error">{formError}</p>}
+            {success && <p className="employee-profile__feedback" role="status" data-testid="status-employee-password-success">{success}</p>}
+            <button className="employee-primary-button" type="submit" disabled={changePassword.isPending} data-testid="button-change-employee-password">
+              <span>{changePassword.isPending ? 'Memperbarui…' : 'Simpan kata sandi'}</span>
+              <ArrowRight size={15} aria-hidden="true" />
+            </button>
+          </form>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export function EmployeeSchedulePage() {
   const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -2248,8 +2366,7 @@ export function EmployeeSchedulePage() {
             </section>
 
             <section className="employee-schedule__summary" aria-label="Ringkasan jadwal">
-              <div className="employee-schedule__summary-icon"><CalendarDays size={19} aria-hidden="true" /></div>
-              <div><span>BOOKING TERLIHAT</span><strong>{bookings.isLoading ? '—' : (bookings.data?.length ?? 0).toString().padStart(2, '0')}</strong></div>
+              <div><span>BOOKING TERLIHAT</span><strong>{bookings.isLoading ? '—' : (bookings.data?.length ?? 0)}</strong></div>
               <p>Semua booking tampil untuk tim studio. Booking belum ditetapkan ke karyawan tertentu.</p>
             </section>
 
@@ -2329,6 +2446,8 @@ export function EmployeeSchedulePage() {
           <EmployeeStockPage />
         ) : currentMenu.href === '/employee/reports' ? (
           <EmployeeReportsPage />
+        ) : currentMenu.href === '/employee/profile' ? (
+          <EmployeeProfilePage employee={session.data!} />
         ) : null}
 
         {authenticated && pendingBookingCancellation ? (
