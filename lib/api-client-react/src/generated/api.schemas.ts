@@ -124,6 +124,87 @@ export interface GgsEmployeeCashierAccess {
   expiresAt: string;
 }
 
+export type GgsEmployeeCashierPaymentMethod = typeof GgsEmployeeCashierPaymentMethod[keyof typeof GgsEmployeeCashierPaymentMethod];
+
+
+export const GgsEmployeeCashierPaymentMethod = {
+  cash: 'cash',
+  qris: 'qris',
+  card: 'card',
+} as const;
+
+export type GgsEmployeeCashierTransactionItemInputItemType = typeof GgsEmployeeCashierTransactionItemInputItemType[keyof typeof GgsEmployeeCashierTransactionItemInputItemType];
+
+
+export const GgsEmployeeCashierTransactionItemInputItemType = {
+  service: 'service',
+  product: 'product',
+} as const;
+
+export interface GgsEmployeeCashierTransactionItemInput {
+  itemType: GgsEmployeeCashierTransactionItemInputItemType;
+  /** @minimum 1 */
+  itemId: number;
+  /**
+     * @minimum 1
+     * @maximum 99
+     */
+  quantity: number;
+}
+
+export interface GgsEmployeeCashierTransactionInput {
+  /** @maxLength 120 */
+  customerName?: string;
+  paymentMethod: GgsEmployeeCashierPaymentMethod;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  amountReceived: number;
+  /**
+     * @minItems 1
+     * @maxItems 40
+     */
+  items: GgsEmployeeCashierTransactionItemInput[];
+}
+
+export type GgsEmployeeCashierTransactionItemItemType = typeof GgsEmployeeCashierTransactionItemItemType[keyof typeof GgsEmployeeCashierTransactionItemItemType];
+
+
+export const GgsEmployeeCashierTransactionItemItemType = {
+  service: 'service',
+  product: 'product',
+} as const;
+
+export interface GgsEmployeeCashierTransactionItem {
+  itemType: GgsEmployeeCashierTransactionItemItemType;
+  itemId: number;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface GgsEmployeeCashierTransaction {
+  receiptNumber: string;
+  register: GgsEmployeeCashierRegister;
+  customerName: string;
+  paymentMethod: GgsEmployeeCashierPaymentMethod;
+  subtotal: number;
+  amountReceived: number;
+  changeAmount: number;
+  createdAt: string;
+  items: GgsEmployeeCashierTransactionItem[];
+}
+
+export interface GgsEmployeeCashierTransactionsSummary {
+  register: GgsEmployeeCashierRegister;
+  date: string;
+  totalCollected: number;
+  transactionCount: number;
+  transactions: GgsEmployeeCashierTransaction[];
+}
+
 export interface GgsEmployeeLoginInput {
   /**
      * @minLength 2

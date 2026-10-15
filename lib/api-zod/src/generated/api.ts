@@ -274,6 +274,81 @@ export const LogoutGgsEmployeeCashierResponse = zod.void()
 
 
 /**
+ * @summary List today's transactions for the active cashier register
+ */
+export const GetGgsEmployeeCashierTransactionsResponse = zod.object({
+  "register": zod.enum(['ggs_beauty', 'barber_ggs']),
+  "date": zod.coerce.date(),
+  "totalCollected": zod.number().int(),
+  "transactionCount": zod.number().int(),
+  "transactions": zod.array(zod.object({
+  "receiptNumber": zod.string(),
+  "register": zod.enum(['ggs_beauty', 'barber_ggs']),
+  "customerName": zod.string(),
+  "paymentMethod": zod.enum(['cash', 'qris', 'card']),
+  "subtotal": zod.number().int(),
+  "amountReceived": zod.number().int(),
+  "changeAmount": zod.number().int(),
+  "createdAt": zod.coerce.date(),
+  "items": zod.array(zod.object({
+  "itemType": zod.enum(['service', 'product']),
+  "itemId": zod.number().int(),
+  "name": zod.string(),
+  "quantity": zod.number().int(),
+  "unitPrice": zod.number().int(),
+  "lineTotal": zod.number().int()
+}))
+}))
+})
+
+
+/**
+ * @summary Record a payment on the active cashier register
+ */
+export const createGgsEmployeeCashierTransactionBodyCustomerNameMax = 120;
+
+export const createGgsEmployeeCashierTransactionBodyAmountReceivedMin = 0;
+export const createGgsEmployeeCashierTransactionBodyAmountReceivedMax = 2147483647;
+
+
+export const createGgsEmployeeCashierTransactionBodyItemsItemQuantityMax = 99;
+
+export const createGgsEmployeeCashierTransactionBodyItemsMax = 40;
+
+
+
+export const CreateGgsEmployeeCashierTransactionBody = zod.object({
+  "customerName": zod.string().max(createGgsEmployeeCashierTransactionBodyCustomerNameMax).optional(),
+  "paymentMethod": zod.enum(['cash', 'qris', 'card']),
+  "amountReceived": zod.number().int().min(createGgsEmployeeCashierTransactionBodyAmountReceivedMin).max(createGgsEmployeeCashierTransactionBodyAmountReceivedMax),
+  "items": zod.array(zod.object({
+  "itemType": zod.enum(['service', 'product']),
+  "itemId": zod.number().int().min(1),
+  "quantity": zod.number().int().min(1).max(createGgsEmployeeCashierTransactionBodyItemsItemQuantityMax)
+})).min(1).max(createGgsEmployeeCashierTransactionBodyItemsMax)
+})
+
+export const CreateGgsEmployeeCashierTransactionResponse = zod.object({
+  "receiptNumber": zod.string(),
+  "register": zod.enum(['ggs_beauty', 'barber_ggs']),
+  "customerName": zod.string(),
+  "paymentMethod": zod.enum(['cash', 'qris', 'card']),
+  "subtotal": zod.number().int(),
+  "amountReceived": zod.number().int(),
+  "changeAmount": zod.number().int(),
+  "createdAt": zod.coerce.date(),
+  "items": zod.array(zod.object({
+  "itemType": zod.enum(['service', 'product']),
+  "itemId": zod.number().int(),
+  "name": zod.string(),
+  "quantity": zod.number().int(),
+  "unitPrice": zod.number().int(),
+  "lineTotal": zod.number().int()
+}))
+})
+
+
+/**
  * @summary List bookings visible to a signed-in employee
  */
 export const GetGgsEmployeeBookingsResponseItem = zod.object({

@@ -18,6 +18,7 @@
 //   export type Post = typeof postsTable.$inferSelect;
 
 export * from "./ggs";
+export * from "./ggs-cashier";
 export * from "./ggs-accounts";
 export * from "./ggs-employee-attendance";
 export * from "./ggs-employees";

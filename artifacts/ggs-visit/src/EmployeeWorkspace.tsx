@@ -1,22 +1,29 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, Clock3, LayoutDashboard, LockKeyhole, LogOut, Menu, Package, RefreshCw, Search, ShieldCheck, Store, UserRound, UsersRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, Clock3, CreditCard, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import {
   getGetGgsEmployeeBookingsQueryKey,
   getGetGgsEmployeeAttendanceHistoryQueryKey,
   getGetGgsEmployeeAttendanceTodayQueryKey,
   getGetGgsEmployeeCashierSessionQueryKey,
+  getGetGgsEmployeeCashierTransactionsQueryKey,
+  getGetGgsPublicProductsQueryKey,
+  getGetGgsPublicServicesQueryKey,
   getGetGgsEmployeeSessionQueryKey,
   useGetGgsEmployeeBookings,
   useGetGgsEmployeeCashierSession,
+  useGetGgsEmployeeCashierTransactions,
+  useGetGgsPublicProducts,
+  useGetGgsPublicServices,
+  useCreateGgsEmployeeCashierTransaction,
   useGetGgsEmployeeSession,
   useLoginGgsEmployee,
   useLogoutGgsEmployeeCashier,
   useLogoutGgsEmployee,
   useUnlockGgsEmployeeCashier,
 } from '@workspace/api-client-react';
-import type { GgsEmployeeBooking, GgsEmployeeCashierRegister, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import type { GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
 import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
@@ -113,16 +120,76 @@ function EmployeeCashierPage() {
       staleTime: 0,
     },
   });
+  const isCashierActive = Boolean(cashierSession.data?.active && cashierSession.data.register);
+  const servicesQuery = useGetGgsPublicServices({
+    query: { queryKey: getGetGgsPublicServicesQueryKey(), retry: false, enabled: isCashierActive },
+  });
+  const productsQuery = useGetGgsPublicProducts({
+    query: { queryKey: getGetGgsPublicProductsQueryKey(), retry: false, enabled: isCashierActive },
+  });
+  const transactionsQuery = useGetGgsEmployeeCashierTransactions({
+    query: { queryKey: getGetGgsEmployeeCashierTransactionsQueryKey(), retry: false, enabled: isCashierActive },
+  });
+  const createTransaction = useCreateGgsEmployeeCashierTransaction();
   const unlockCashier = useUnlockGgsEmployeeCashier();
   const lockCashier = useLogoutGgsEmployeeCashier();
   const [selectedRegister, setSelectedRegister] = useState<GgsEmployeeCashierRegister>('ggs_beauty');
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState('');
   const [lockError, setLockError] = useState('');
+  const [checkoutError, setCheckoutError] = useState('');
+  const [catalogTab, setCatalogTab] = useState<'service' | 'product'>('service');
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris' | 'card'>('cash');
+  const [amountReceived, setAmountReceived] = useState('');
+  const [cart, setCart] = useState<{ itemType: 'service' | 'product'; itemId: number; quantity: number }[]>([]);
+  const [receipt, setReceipt] = useState<GgsEmployeeCashierTransaction | null>(null);
   const activeRegister = cashierRegisters.find(
     (register) => register.value === cashierSession.data?.register,
   );
   const hasActiveAccess = Boolean(cashierSession.data?.active && activeRegister);
+  const services = servicesQuery.data?.filter((service) => service.active) ?? [];
+  const products = productsQuery.data?.filter((product) => product.active) ?? [];
+  const subtotal = cart.reduce((sum, line) => {
+    const item = line.itemType === 'service'
+      ? services.find((service) => service.id === line.itemId)
+      : products.find((product) => product.id === line.itemId);
+    return sum + (item?.price ?? 0) * line.quantity;
+  }, 0);
+  const receivedValue = Number(amountReceived) || 0;
+  const changeAmount = paymentMethod === 'cash' ? Math.max(0, receivedValue - subtotal) : 0;
+  const visibleCatalog = (catalogTab === 'service' ? services : products).filter((item) => {
+    const query = catalogSearch.trim().toLocaleLowerCase('id-ID');
+    return !query || `${item.name} ${item.category} ${item.description}`.toLocaleLowerCase('id-ID').includes(query);
+  });
+
+  const addItem = (itemType: 'service' | 'product', itemId: number) => {
+    setCheckoutError('');
+    setReceipt(null);
+    setCart((current) => {
+      const existing = current.find((line) => line.itemType === itemType && line.itemId === itemId);
+      const product = itemType === 'product' ? products.find((entry) => entry.id === itemId) : undefined;
+      if (existing) {
+        if (product && existing.quantity >= product.stock) return current;
+        return current.map((line) => line.itemType === itemType && line.itemId === itemId
+          ? { ...line, quantity: Math.min(99, line.quantity + 1) }
+          : line);
+      }
+      if (product && product.stock < 1) return current;
+      return [...current, { itemType, itemId, quantity: 1 }];
+    });
+  };
+
+  const adjustItem = (itemType: 'service' | 'product', itemId: number, delta: number) => {
+    setCart((current) => current.flatMap((line) => {
+      if (line.itemType !== itemType || line.itemId !== itemId) return [line];
+      const product = itemType === 'product' ? products.find((entry) => entry.id === itemId) : undefined;
+      const next = line.quantity + delta;
+      if (next < 1) return [];
+      return [{ ...line, quantity: Math.min(99, product ? Math.min(next, product.stock) : next) }];
+    }));
+  };
 
   const submitUnlock = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -150,6 +217,10 @@ function EmployeeCashierPage() {
     if (activeRegister) setSelectedRegister(activeRegister.value);
     lockCashier.mutate(undefined, {
       onSuccess: async () => {
+        setCart([]);
+        setReceipt(null);
+        setCustomerName('');
+        setAmountReceived('');
         await queryClient.invalidateQueries({
           queryKey: getGetGgsEmployeeCashierSessionQueryKey(),
         });
@@ -158,15 +229,53 @@ function EmployeeCashierPage() {
     });
   };
 
+  const submitPayment = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setCheckoutError('');
+    if (!cart.length) {
+      setCheckoutError('Tambahkan layanan atau produk sebelum menyelesaikan pembayaran.');
+      return;
+    }
+    if (paymentMethod === 'cash' && receivedValue < subtotal) {
+      setCheckoutError('Jumlah uang diterima belum mencukupi total pembayaran.');
+      return;
+    }
+    const input: GgsEmployeeCashierTransactionInput = {
+      ...(customerName.trim() ? { customerName: customerName.trim() } : {}),
+      paymentMethod,
+      amountReceived: paymentMethod === 'cash' ? receivedValue : subtotal,
+      items: cart,
+    };
+    createTransaction.mutate({ data: input }, {
+      onSuccess: async (completedReceipt) => {
+        setReceipt(completedReceipt);
+        setCart([]);
+        setCustomerName('');
+        setAmountReceived('');
+        setCheckoutError('');
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeCashierTransactionsQueryKey() }),
+          queryClient.invalidateQueries({ queryKey: getGetGgsPublicProductsQueryKey() }),
+        ]);
+      },
+      onError: (error) => {
+        setCheckoutError(cashierErrorMessage(error));
+        void productsQuery.refetch();
+      },
+    });
+  };
+
+  const formatMoney = (value: number) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`;
+
   return (
     <div className="employee-cashier" data-testid="employee-cashier">
       <header className="employee-cashier__heading">
         <div>
-          <p className="employee-kicker">AKSES KASIR</p>
-          <h1>Kasir <em>GGS.</em></h1>
-          <p>Pilih unit kasir, lalu masukkan kata sandi khusus unit tersebut.</p>
+          <p className="employee-kicker">{hasActiveAccess ? 'PEMBAYARAN RESEPSIONIS' : 'AKSES KASIR'}</p>
+          <h1>{hasActiveAccess ? <>Meja <em>kasir.</em></> : <>Kasir <em>GGS.</em></>}</h1>
+          <p>{hasActiveAccess ? 'Pilih layanan atau produk, periksa total, lalu konfirmasi pembayaran.' : 'Pilih unit kasir, lalu masukkan kata sandi khusus unit tersebut.'}</p>
         </div>
-        <span className="employee-cashier__secure-label"><LockKeyhole size={15} aria-hidden="true" /> Akses terlindungi</span>
+        <span className="employee-cashier__secure-label"><LockKeyhole size={15} aria-hidden="true" /> {hasActiveAccess ? activeRegister?.label : 'Akses terlindungi'}</span>
       </header>
 
       {cashierSession.isLoading ? (
@@ -184,28 +293,132 @@ function EmployeeCashierPage() {
           </button>
         </section>
       ) : hasActiveAccess && activeRegister ? (
-        <section className="employee-cashier__unlocked" aria-labelledby="employee-cashier-active-title">
-          <div className="employee-cashier__unlocked-icon"><Store size={21} aria-hidden="true" /></div>
-          <p className="employee-kicker">AKSES AKTIF</p>
-          <h2 id="employee-cashier-active-title">{activeRegister.label}</h2>
-          <p>{activeRegister.description}. Akses akan terkunci otomatis saat sesi berakhir.</p>
-          {cashierSession.data?.expiresAt && (
-            <p className="employee-cashier__expiry">
-              Berlaku sampai {new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(cashierSession.data.expiresAt))}
-            </p>
-          )}
-          {lockError && <p className="employee-form-error" role="alert">{lockError}</p>}
-          <button
-            type="button"
-            className="employee-cashier__lock-button"
-            onClick={submitLock}
-            disabled={lockCashier.isPending}
-            data-testid="button-lock-employee-cashier"
-          >
-            <LockKeyhole size={15} aria-hidden="true" />
-            {lockCashier.isPending ? 'Mengunci kasir…' : 'Kunci kasir'}
-          </button>
-        </section>
+        <div className="cashier-workspace">
+          <div className="cashier-workspace__bar">
+            <div className="cashier-workspace__register">
+              <span className="cashier-workspace__register-mark"><Store size={17} aria-hidden="true" /></span>
+              <div><span>REGISTER AKTIF</span><strong id="employee-cashier-active-title">{activeRegister.label}</strong></div>
+              {cashierSession.data?.expiresAt && <small>Sesi berakhir {new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(new Date(cashierSession.data.expiresAt))}</small>}
+            </div>
+            <div className="cashier-workspace__bar-actions">
+              {lockError && <span className="employee-form-error" role="alert">{lockError}</span>}
+              <button type="button" className="employee-cashier__lock-button" onClick={submitLock} disabled={lockCashier.isPending} data-testid="button-lock-employee-cashier">
+                <LockKeyhole size={14} aria-hidden="true" />{lockCashier.isPending ? 'Mengunci…' : 'Kunci kasir'}
+              </button>
+            </div>
+          </div>
+
+          <section className="cashier-day-summary" aria-label="Ringkasan transaksi hari ini" data-testid="summary-cashier-today">
+            <div className="cashier-day-summary__intro"><span>HARI INI</span><strong>{transactionsQuery.data?.date ? displayDate(transactionsQuery.data.date, { day: 'numeric', month: 'long' }) : 'Ringkasan register'}</strong></div>
+            <div className="cashier-day-summary__metric"><span>Total penjualan</span><strong>{transactionsQuery.isLoading ? 'Memuat…' : transactionsQuery.isError ? '—' : formatMoney(transactionsQuery.data?.totalCollected ?? 0)}</strong></div>
+            <div className="cashier-day-summary__metric"><span>Transaksi</span><strong>{transactionsQuery.isLoading ? '—' : transactionsQuery.isError ? '—' : transactionsQuery.data?.transactionCount ?? 0}</strong></div>
+            <button type="button" className="cashier-day-summary__refresh" onClick={() => void transactionsQuery.refetch()} disabled={transactionsQuery.isFetching} aria-label="Perbarui ringkasan"><RefreshCw size={15} className={transactionsQuery.isFetching ? 'is-spinning' : ''} aria-hidden="true" /></button>
+          </section>
+
+          {transactionsQuery.isError && <div className="cashier-inline-error" role="alert"><span>Ringkasan transaksi belum dapat dimuat.</span><button type="button" onClick={() => void transactionsQuery.refetch()}>Coba lagi</button></div>}
+
+          <div className="cashier-layout">
+            <section className="cashier-catalog" aria-label="Katalog layanan dan produk">
+              <div className="cashier-section-heading"><div><span>LANGKAH 01</span><h2>Pilih item</h2></div><small>Harga katalog</small></div>
+              <div className="cashier-catalog__tools">
+                <div className="cashier-tabs" role="tablist" aria-label="Jenis katalog">
+                  <button type="button" role="tab" aria-selected={catalogTab === 'service'} className={catalogTab === 'service' ? 'is-active' : ''} onClick={() => setCatalogTab('service')} data-testid="tab-cashier-services"><Scissors size={15} aria-hidden="true" /> Layanan</button>
+                  <button type="button" role="tab" aria-selected={catalogTab === 'product'} className={catalogTab === 'product' ? 'is-active' : ''} onClick={() => setCatalogTab('product')} data-testid="tab-cashier-products"><ShoppingBag size={15} aria-hidden="true" /> Produk</button>
+                </div>
+                <label className="cashier-search"><Search size={15} aria-hidden="true" /><span className="sr-only">Cari item</span><input type="search" value={catalogSearch} onChange={(event) => setCatalogSearch(event.target.value)} placeholder="Cari item…" data-testid="input-cashier-catalog-search" /></label>
+              </div>
+              {(catalogTab === 'service' ? servicesQuery.isLoading : productsQuery.isLoading) ? (
+                <div className="cashier-catalog-skeleton" role="status" aria-label="Memuat katalog"><span /><span /><span /><span /></div>
+              ) : (catalogTab === 'service' ? servicesQuery.isError : productsQuery.isError) ? (
+                <div className="cashier-empty cashier-empty--error" role="alert"><strong>Katalog belum tersedia</strong><p>Periksa koneksi, lalu coba muat ulang.</p><button type="button" onClick={() => void (catalogTab === 'service' ? servicesQuery.refetch() : productsQuery.refetch())}>Coba lagi</button></div>
+              ) : visibleCatalog.length ? (
+                <div className="cashier-catalog__list">
+                  {visibleCatalog.map((item) => {
+                    const itemType = catalogTab;
+                    const line = cart.find((entry) => entry.itemType === itemType && entry.itemId === item.id);
+                    const outOfStock = itemType === 'product' && (item as typeof products[number]).stock < 1;
+                    return <article className="cashier-item" key={`${itemType}-${item.id}`} data-testid={`card-cashier-${itemType}-${item.id}`}>
+                      <div className="cashier-item__type">{itemType === 'service' ? <Scissors size={16} aria-hidden="true" /> : <Package size={16} aria-hidden="true" />}</div>
+                      <div className="cashier-item__copy"><strong>{item.name}</strong><span>{item.category}{itemType === 'service' ? ` · ${(item as typeof services[number]).durationMinutes} menit` : ` · Stok ${(item as typeof products[number]).stock}`}</span></div>
+                      <strong className="cashier-item__price">{formatMoney(item.price)}</strong>
+                      <button type="button" className={`cashier-item__add${line ? ' is-added' : ''}`} onClick={() => addItem(itemType, item.id)} disabled={outOfStock || Boolean(line && itemType === 'product' && line.quantity >= (item as typeof products[number]).stock)} aria-label={`${line ? 'Tambah lagi' : 'Tambah'} ${item.name}`} data-testid={`button-add-cashier-${itemType}-${item.id}`}>
+                        {line ? <><CheckCircle2 size={14} aria-hidden="true" /> {line.quantity}</> : <><Plus size={15} aria-hidden="true" /> Tambah</>}
+                      </button>
+                    </article>;
+                  })}
+                </div>
+              ) : (
+                <div className="cashier-empty"><div className="cashier-empty__icon">{catalogTab === 'service' ? <Scissors size={19} /> : <Package size={19} />}</div><strong>{catalogSearch ? 'Tidak ada hasil' : `Belum ada ${catalogTab === 'service' ? 'layanan aktif' : 'produk aktif'}`}</strong><p>{catalogSearch ? 'Coba kata pencarian lain.' : 'Item aktif akan tampil di sini.'}</p></div>
+              )}
+            </section>
+
+            <aside className="cashier-checkout" aria-label="Rincian pembayaran">
+              <div className="cashier-section-heading"><div><span>LANGKAH 02</span><h2>Rincian</h2></div><span className="cashier-checkout__count">{cart.reduce((count, item) => count + item.quantity, 0)} item</span></div>
+              <label className="cashier-field">Nama pelanggan <span>Opsional</span><input type="text" maxLength={120} value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Contoh: Nadia" data-testid="input-cashier-customer-name" /></label>
+              <div className="cashier-cart" aria-live="polite">
+                {cart.length ? cart.map((line) => {
+                  const item = line.itemType === 'service' ? services.find((entry) => entry.id === line.itemId) : products.find((entry) => entry.id === line.itemId);
+                  if (!item) return null;
+                  return <article className="cashier-cart-line" key={`${line.itemType}-${line.itemId}`}>
+                    <div className="cashier-cart-line__copy"><strong>{item.name}</strong><span>{formatMoney(item.price)} / item</span></div>
+                    <div className="cashier-quantity">
+                      <button type="button" aria-label={`Kurangi ${item.name}`} onClick={() => adjustItem(line.itemType, line.itemId, -1)} data-testid={`button-decrease-cashier-${line.itemType}-${line.itemId}`}><Minus size={13} /></button>
+                      <span>{line.quantity}</span>
+                      <button type="button" aria-label={`Tambah ${item.name}`} disabled={line.quantity >= 99 || (line.itemType === 'product' && line.quantity >= (item as typeof products[number]).stock)} onClick={() => adjustItem(line.itemType, line.itemId, 1)} data-testid={`button-increase-cashier-${line.itemType}-${line.itemId}`}><Plus size={13} /></button>
+                      <button type="button" className="cashier-quantity__remove" aria-label={`Hapus ${item.name}`} onClick={() => setCart((current) => current.filter((entry) => entry.itemType !== line.itemType || entry.itemId !== line.itemId))} data-testid={`button-remove-cashier-${line.itemType}-${line.itemId}`}><Trash2 size={13} /></button>
+                    </div>
+                    <strong className="cashier-cart-line__total">{formatMoney(item.price * line.quantity)}</strong>
+                  </article>;
+                }) : <div className="cashier-cart__empty"><ReceiptText size={21} aria-hidden="true" /><strong>Belum ada item</strong><span>Pilih layanan atau produk di samping.</span></div>}
+              </div>
+              <div className="cashier-total"><span>Total pembayaran</span><strong>{formatMoney(subtotal)}</strong></div>
+              <form onSubmit={submitPayment}>
+                <fieldset className="cashier-payment-method">
+                  <legend>Metode pembayaran</legend>
+                  {([
+                    { value: 'cash', label: 'Tunai', icon: Banknote },
+                    { value: 'qris', label: 'QRIS', icon: QrCode },
+                    { value: 'card', label: 'Kartu', icon: CreditCard },
+                  ] as const).map((method) => <button type="button" key={method.value} className={paymentMethod === method.value ? 'is-selected' : ''} aria-pressed={paymentMethod === method.value} onClick={() => { setPaymentMethod(method.value); setCheckoutError(''); }} data-testid={`button-cashier-payment-${method.value}`}>
+                    <method.icon size={15} aria-hidden="true" />{method.label}
+                  </button>)}
+                </fieldset>
+                {paymentMethod === 'cash' ? (
+                  <label className="cashier-field cashier-field--amount">Uang diterima<input type="number" min={0} max={2147483647} step={1} inputMode="numeric" value={amountReceived} onChange={(event) => setAmountReceived(event.target.value)} placeholder="Masukkan jumlah" data-testid="input-cashier-amount-received" />
+                    {receivedValue >= subtotal && subtotal > 0 && <span className="cashier-change"><span>Kembalian</span><strong>{formatMoney(changeAmount)}</strong></span>}
+                  </label>
+                ) : <p className="cashier-record-note">Pembayaran {paymentMethod === 'qris' ? 'QRIS' : 'kartu'} diterima di resepsionis dan dicatat di sini. Aplikasi ini tidak memproses pembayaran.</p>}
+                {checkoutError && <p className="cashier-form-error" role="alert" data-testid="status-cashier-checkout-error">{checkoutError}</p>}
+                <button type="submit" className="cashier-submit" disabled={createTransaction.isPending || !cart.length || (paymentMethod === 'cash' && receivedValue < subtotal)} data-testid="button-submit-cashier-payment">
+                  {createTransaction.isPending ? <><span className="cashier-submit__pending" />Menyimpan pembayaran…</> : <>Konfirmasi pembayaran <ArrowRight size={16} aria-hidden="true" /></>}
+                </button>
+                <p className="cashier-checkout__footnote"><ShieldCheck size={13} aria-hidden="true" /> Harga akhir dan stok dikonfirmasi oleh sistem.</p>
+              </form>
+            </aside>
+          </div>
+
+          {receipt && <section className="cashier-receipt" aria-labelledby="cashier-receipt-title" data-testid="status-cashier-payment-success">
+            <div className="cashier-receipt__heading"><span className="cashier-receipt__success"><CheckCircle2 size={19} aria-hidden="true" /></span><div><p className="employee-kicker">PEMBAYARAN BERHASIL</p><h2 id="cashier-receipt-title">Transaksi tercatat</h2></div><button type="button" className="cashier-print-button" onClick={() => window.print()} data-testid="button-print-cashier-receipt"><Printer size={15} aria-hidden="true" /> Cetak struk</button></div>
+            <div className="cashier-receipt__body">
+              <div className="cashier-receipt__meta"><span>No. struk<strong>{receipt.receiptNumber}</strong></span><span>Register<strong>{activeRegister.label}</strong></span><span>Waktu<strong>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(receipt.createdAt))}</strong></span><span>Pelanggan<strong>{receipt.customerName || 'Pelanggan umum'}</strong></span></div>
+              <div className="cashier-receipt__items">{receipt.items.map((item, index) => <div key={`${item.itemType}-${item.itemId}-${index}`}><span>{item.name} <small>× {item.quantity}</small></span><strong>{formatMoney(item.lineTotal)}</strong></div>)}</div>
+              <div className="cashier-receipt__totals"><span>Total <strong>{formatMoney(receipt.subtotal)}</strong></span><span>Metode <strong>{receipt.paymentMethod === 'cash' ? 'Tunai' : receipt.paymentMethod === 'qris' ? 'QRIS' : 'Kartu'}</strong></span>{receipt.paymentMethod === 'cash' && <><span>Diterima <strong>{formatMoney(receipt.amountReceived)}</strong></span><span>Kembalian <strong>{formatMoney(receipt.changeAmount)}</strong></span></>}</div>
+            </div>
+            <button type="button" className="cashier-receipt__dismiss" onClick={() => setReceipt(null)}>Tutup struk</button>
+          </section>}
+
+          <section className="cashier-recent" aria-labelledby="cashier-recent-title">
+            <div className="cashier-section-heading"><div><span>REGISTER · HARI INI</span><h2 id="cashier-recent-title">Transaksi terbaru</h2></div><span className="cashier-recent__date">{transactionsQuery.data?.transactions.length ?? 0} tercatat</span></div>
+            {transactionsQuery.isLoading ? <div className="cashier-recent-skeleton" role="status"><span /><span /><span /></div> : transactionsQuery.isError ? <div className="cashier-empty cashier-empty--compact"><strong>Daftar transaksi belum tersedia</strong><button type="button" onClick={() => void transactionsQuery.refetch()}>Coba lagi</button></div> : transactionsQuery.data?.transactions.length ? (
+              <div className="cashier-recent__list">{transactionsQuery.data.transactions.slice(0, 6).map((transaction) => <article className="cashier-recent-row" key={transaction.receiptNumber}>
+                <span className="cashier-recent-row__icon"><ReceiptText size={16} aria-hidden="true" /></span>
+                <div className="cashier-recent-row__main"><strong>{transaction.customerName || 'Pelanggan umum'}</strong><span>{transaction.receiptNumber} · {new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(new Date(transaction.createdAt))} · {transaction.items.length} item</span></div>
+                <span className="cashier-recent-row__method">{transaction.paymentMethod === 'cash' ? 'Tunai' : transaction.paymentMethod === 'qris' ? 'QRIS' : 'Kartu'}</span>
+                <strong className="cashier-recent-row__amount">{formatMoney(transaction.subtotal)}</strong>
+              </article>)}</div>
+            ) : <div className="cashier-empty cashier-empty--compact"><strong>Belum ada transaksi hari ini</strong><p>Pembayaran yang selesai akan muncul di sini.</p></div>}
+          </section>
+        </div>
       ) : (
         <section className="employee-cashier__access" aria-label="Buka akses kasir">
           <div className="employee-cashier__registers" role="group" aria-label="Pilih unit kasir">

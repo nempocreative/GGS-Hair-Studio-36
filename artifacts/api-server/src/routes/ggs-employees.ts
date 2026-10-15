@@ -1,5 +1,17 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { and, asc, desc, eq, gt, isNull, lt } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  gt,
+  inArray,
+  isNull,
+  lt,
+  sum,
+} from "drizzle-orm";
 import {
   Router,
   type IRouter,
@@ -10,8 +22,11 @@ import {
   CheckInGgsEmployeeAttendanceBody,
   CreateGgsAdminEmployeeBody,
   CreateGgsAdminEmployeeResponse,
+  CreateGgsEmployeeCashierTransactionBody,
+  CreateGgsEmployeeCashierTransactionResponse,
   CreateGgsEmployeeAttendanceChallengeBody,
   CreateGgsEmployeeAttendanceChallengeResponse,
+  GetGgsEmployeeCashierTransactionsResponse,
   GetGgsEmployeeAttendanceHistoryResponse,
   GetGgsAdminEmployeesResponse,
   GetGgsEmployeeAttendanceTodayResponse,
@@ -34,11 +49,15 @@ import {
 import {
   db,
   ggsAppointmentsTable,
+  ggsCashierTransactionItemsTable,
+  ggsCashierTransactionsTable,
   ggsEmployeeAccountsTable,
   ggsEmployeeAttendanceChallengeUsesTable,
   ggsEmployeeAttendanceChallengesTable,
   ggsEmployeeAttendanceTable,
   ggsEmployeeSessionsTable,
+  ggsProductsTable,
+  ggsServicesTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -73,10 +92,28 @@ class AttendanceMutationFailure extends Error {
   }
 }
 
+class CashierPaymentFailure extends Error {
+  constructor(
+    message: string,
+    readonly status: 400 | 409,
+  ) {
+    super(message);
+  }
+}
+
 type AttendanceLocation = {
   latitude: number;
   longitude: number;
   accuracy: number;
+};
+
+type PricedCashierItem = {
+  itemType: "service" | "product";
+  itemId: number;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
 };
 
 function distanceToSalonMeters(latitude: number, longitude: number) {
@@ -145,6 +182,16 @@ function jakartaAttendanceDate(date = new Date()) {
   return new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Asia/Jakarta",
   }).format(date);
+}
+
+function jakartaCashierDateRange(date = new Date()) {
+  const day = jakartaAttendanceDate(date);
+  const startAt = new Date(`${day}T00:00:00.000+07:00`);
+  return {
+    day,
+    startAt,
+    endAt: new Date(startAt.getTime() + 24 * 60 * 60 * 1000),
+  };
 }
 
 function serializeAttendance(
@@ -254,6 +301,78 @@ async function getEmployeeForSession(
     return null;
   }
   return employee;
+}
+
+async function requireActiveCashier(
+  req: Request,
+  res: Response,
+): Promise<{
+  employee: EmployeeRecord;
+  register: GgsEmployeeCashierRegister;
+} | null> {
+  const employee = await getEmployeeForSession(req, res);
+  if (!employee) {
+    res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+    return null;
+  }
+
+  const token = req.cookies?.[employeeCookieName];
+  if (typeof token !== "string" || token.length === 0) {
+    res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+    return null;
+  }
+
+  const tokenHash = hashSessionToken(token);
+  const [session] = await db
+    .select({
+      cashierRegister: ggsEmployeeSessionsTable.cashierRegister,
+      cashierExpiresAt: ggsEmployeeSessionsTable.cashierExpiresAt,
+    })
+    .from(ggsEmployeeSessionsTable)
+    .where(eq(ggsEmployeeSessionsTable.tokenHash, tokenHash))
+    .limit(1);
+
+  if (
+    !session ||
+    !isCashierRegister(session.cashierRegister) ||
+    !session.cashierExpiresAt ||
+    session.cashierExpiresAt.getTime() <= Date.now()
+  ) {
+    if (session?.cashierRegister !== null && session) {
+      await db
+        .update(ggsEmployeeSessionsTable)
+        .set({ cashierRegister: null, cashierExpiresAt: null })
+        .where(eq(ggsEmployeeSessionsTable.tokenHash, tokenHash));
+    }
+    res.status(403).json({ error: "Buka akses kasir dengan kata sandi unit." });
+    return null;
+  }
+
+  return { employee, register: session.cashierRegister };
+}
+
+function serializeCashierTransaction(
+  transaction: typeof ggsCashierTransactionsTable.$inferSelect,
+  items: (typeof ggsCashierTransactionItemsTable.$inferSelect)[],
+) {
+  return {
+    receiptNumber: transaction.receiptNumber,
+    register: transaction.register,
+    customerName: transaction.customerName,
+    paymentMethod: transaction.paymentMethod,
+    subtotal: transaction.subtotal,
+    amountReceived: transaction.amountReceived,
+    changeAmount: transaction.changeAmount,
+    createdAt: transaction.createdAt.toISOString(),
+    items: items.map((item) => ({
+      itemType: item.itemType,
+      itemId: item.itemId,
+      name: item.itemName,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineTotal: item.lineTotal,
+    })),
+  };
 }
 
 router.post("/ggs/employee/login", async (req, res): Promise<void> => {
@@ -473,6 +592,261 @@ router.post(
     }
     LogoutGgsEmployeeCashierResponse.parse(undefined);
     res.sendStatus(204);
+  },
+);
+
+router.get(
+  "/ggs/employee/cashier/transactions",
+  async (req, res): Promise<void> => {
+    const cashier = await requireActiveCashier(req, res);
+    if (!cashier) return;
+
+    const { day, startAt, endAt } = jakartaCashierDateRange();
+    const conditions = and(
+      eq(ggsCashierTransactionsTable.register, cashier.register),
+      gte(ggsCashierTransactionsTable.createdAt, startAt),
+      lt(ggsCashierTransactionsTable.createdAt, endAt),
+    );
+    const [totals] = await db
+      .select({
+        transactionCount: count(),
+        totalCollected: sum(ggsCashierTransactionsTable.subtotal),
+      })
+      .from(ggsCashierTransactionsTable)
+      .where(conditions);
+    const transactions = await db
+      .select()
+      .from(ggsCashierTransactionsTable)
+      .where(conditions)
+      .orderBy(desc(ggsCashierTransactionsTable.createdAt))
+      .limit(20);
+    const transactionIds = transactions.map((transaction) => transaction.id);
+    const items = transactionIds.length
+      ? await db
+          .select()
+          .from(ggsCashierTransactionItemsTable)
+          .where(inArray(ggsCashierTransactionItemsTable.transactionId, transactionIds))
+          .orderBy(asc(ggsCashierTransactionItemsTable.id))
+      : [];
+    const itemsByTransaction = new Map<
+      number,
+      (typeof ggsCashierTransactionItemsTable.$inferSelect)[]
+    >();
+    for (const item of items) {
+      const transactionItems = itemsByTransaction.get(item.transactionId) ?? [];
+      transactionItems.push(item);
+      itemsByTransaction.set(item.transactionId, transactionItems);
+    }
+
+    res.json(
+      GetGgsEmployeeCashierTransactionsResponse.parse({
+        register: cashier.register,
+        date: day,
+        totalCollected: Number(totals?.totalCollected ?? 0),
+        transactionCount: Number(totals?.transactionCount ?? 0),
+        transactions: transactions.map((transaction) =>
+          serializeCashierTransaction(
+            transaction,
+            itemsByTransaction.get(transaction.id) ?? [],
+          ),
+        ),
+      }),
+    );
+  },
+);
+
+router.post(
+  "/ggs/employee/cashier/transactions",
+  async (req, res): Promise<void> => {
+    const cashier = await requireActiveCashier(req, res);
+    if (!cashier) return;
+
+    const parsed = CreateGgsEmployeeCashierTransactionBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const mergedItems = new Map<
+      string,
+      { itemType: "service" | "product"; itemId: number; quantity: number }
+    >();
+    for (const item of parsed.data.items) {
+      const key = `${item.itemType}:${item.itemId}`;
+      const existing = mergedItems.get(key);
+      const quantity = (existing?.quantity ?? 0) + item.quantity;
+      if (quantity > 99) {
+        res.status(400).json({ error: "Jumlah item tidak boleh lebih dari 99." });
+        return;
+      }
+      mergedItems.set(key, {
+        itemType: item.itemType,
+        itemId: item.itemId,
+        quantity,
+      });
+    }
+    const requestedItems = [...mergedItems.values()];
+    const serviceIds = requestedItems
+      .filter((item) => item.itemType === "service")
+      .map((item) => item.itemId);
+    const productIds = requestedItems
+      .filter((item) => item.itemType === "product")
+      .map((item) => item.itemId);
+
+    try {
+      const transaction = await db.transaction(async (tx) => {
+        const services = serviceIds.length
+          ? await tx
+              .select()
+              .from(ggsServicesTable)
+              .where(inArray(ggsServicesTable.id, serviceIds))
+          : [];
+        const products = productIds.length
+          ? await tx
+              .select()
+              .from(ggsProductsTable)
+              .where(inArray(ggsProductsTable.id, productIds))
+              .for("update")
+          : [];
+        const servicesById = new Map(services.map((service) => [service.id, service]));
+        const productsById = new Map(products.map((product) => [product.id, product]));
+        const pricedItems: PricedCashierItem[] = [];
+
+        for (const item of requestedItems) {
+          if (item.itemType === "service") {
+            const service = servicesById.get(item.itemId);
+            if (!service || !service.active) {
+              throw new CashierPaymentFailure(
+                "Salah satu layanan sudah tidak tersedia. Perbarui katalog lalu coba lagi.",
+                400,
+              );
+            }
+            pricedItems.push({
+              itemType: "service",
+              itemId: service.id,
+              name: service.name,
+              quantity: item.quantity,
+              unitPrice: service.price,
+              lineTotal: service.price * item.quantity,
+            });
+          } else {
+            const product = productsById.get(item.itemId);
+            if (!product || !product.active) {
+              throw new CashierPaymentFailure(
+                "Salah satu produk sudah tidak tersedia. Perbarui katalog lalu coba lagi.",
+                400,
+              );
+            }
+            if (product.stock < item.quantity) {
+              throw new CashierPaymentFailure(
+                `Stok ${product.name} tidak mencukupi. Stok tersedia: ${product.stock}.`,
+                409,
+              );
+            }
+            pricedItems.push({
+              itemType: "product",
+              itemId: product.id,
+              name: product.name,
+              quantity: item.quantity,
+              unitPrice: product.price,
+              lineTotal: product.price * item.quantity,
+            });
+          }
+        }
+
+        const subtotal = pricedItems.reduce(
+          (total, item) => total + item.lineTotal,
+          0,
+        );
+        if (
+          !Number.isSafeInteger(subtotal) ||
+          subtotal > 2_147_483_647 ||
+          parsed.data.amountReceived > 2_147_483_647
+        ) {
+          throw new CashierPaymentFailure(
+            "Total pembayaran melewati batas yang dapat dicatat.",
+            400,
+          );
+        }
+        if (
+          parsed.data.paymentMethod === "cash" &&
+          parsed.data.amountReceived < subtotal
+        ) {
+          throw new CashierPaymentFailure(
+            "Uang yang diterima belum mencukupi total pembayaran.",
+            400,
+          );
+        }
+        if (
+          parsed.data.paymentMethod !== "cash" &&
+          parsed.data.amountReceived !== subtotal
+        ) {
+          throw new CashierPaymentFailure(
+            "Untuk pembayaran non-tunai, jumlah yang diterima harus sama dengan total.",
+            400,
+          );
+        }
+
+        for (const item of requestedItems) {
+          if (item.itemType !== "product") continue;
+          const product = productsById.get(item.itemId);
+          if (!product) continue;
+          await tx
+            .update(ggsProductsTable)
+            .set({ stock: product.stock - item.quantity })
+            .where(eq(ggsProductsTable.id, product.id));
+        }
+
+        const receiptNumber = `GGS-${jakartaAttendanceDate().replaceAll("-", "")}-${randomBytes(4).toString("hex").toUpperCase()}`;
+        const [savedTransaction] = await tx
+          .insert(ggsCashierTransactionsTable)
+          .values({
+            receiptNumber,
+            register: cashier.register,
+            employeeId: cashier.employee.id,
+            employeeName: cashier.employee.name,
+            customerName: parsed.data.customerName?.trim() ?? "",
+            paymentMethod: parsed.data.paymentMethod,
+            subtotal,
+            amountReceived: parsed.data.amountReceived,
+            changeAmount:
+              parsed.data.paymentMethod === "cash"
+                ? parsed.data.amountReceived - subtotal
+                : 0,
+          })
+          .returning();
+        if (!savedTransaction) {
+          throw new Error("Cashier transaction was not saved.");
+        }
+
+        const savedItems = await tx
+          .insert(ggsCashierTransactionItemsTable)
+          .values(
+            pricedItems.map((item) => ({
+              transactionId: savedTransaction.id,
+              itemType: item.itemType,
+              itemId: item.itemId,
+              itemName: item.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              lineTotal: item.lineTotal,
+            })),
+          )
+          .returning();
+
+        return serializeCashierTransaction(savedTransaction, savedItems);
+      });
+
+      res
+        .status(201)
+        .json(CreateGgsEmployeeCashierTransactionResponse.parse(transaction));
+    } catch (error) {
+      if (error instanceof CashierPaymentFailure) {
+        res.status(error.status).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
   },
 );
 

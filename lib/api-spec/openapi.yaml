@@ -272,6 +272,47 @@ paths:
       responses:
         "204":
           description: Cashier register locked
+  /ggs/employee/cashier/transactions:
+    get:
+      operationId: getGgsEmployeeCashierTransactions
+      tags: [ggs-employee]
+      summary: List today's transactions for the active cashier register
+      responses:
+        "200":
+          description: Today's totals and recent transactions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeCashierTransactionsSummary"
+        "401":
+          description: No active employee session
+        "403":
+          description: Cashier register is locked
+    post:
+      operationId: createGgsEmployeeCashierTransaction
+      tags: [ggs-employee]
+      summary: Record a payment on the active cashier register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GgsEmployeeCashierTransactionInput"
+      responses:
+        "201":
+          description: Payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeCashierTransaction"
+        "400":
+          description: Invalid payment or item details
+        "401":
+          description: No active employee session
+        "403":
+          description: Cashier register is locked
+        "409":
+          description: Product stock is insufficient
   /ggs/employee/bookings:
     get:
       operationId: getGgsEmployeeBookings
@@ -887,6 +928,127 @@ components:
       required:
         - register
         - expiresAt
+    GgsEmployeeCashierPaymentMethod:
+      type: string
+      enum: [cash, qris, card]
+    GgsEmployeeCashierTransactionItemInput:
+      type: object
+      properties:
+        itemType:
+          type: string
+          enum: [service, product]
+        itemId:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 99
+      required:
+        - itemType
+        - itemId
+        - quantity
+    GgsEmployeeCashierTransactionInput:
+      type: object
+      properties:
+        customerName:
+          type: string
+          maxLength: 120
+        paymentMethod:
+          $ref: "#/components/schemas/GgsEmployeeCashierPaymentMethod"
+        amountReceived:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        items:
+          type: array
+          minItems: 1
+          maxItems: 40
+          items:
+            $ref: "#/components/schemas/GgsEmployeeCashierTransactionItemInput"
+      required:
+        - paymentMethod
+        - amountReceived
+        - items
+    GgsEmployeeCashierTransactionItem:
+      type: object
+      properties:
+        itemType:
+          type: string
+          enum: [service, product]
+        itemId:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: integer
+        lineTotal:
+          type: integer
+      required:
+        - itemType
+        - itemId
+        - name
+        - quantity
+        - unitPrice
+        - lineTotal
+    GgsEmployeeCashierTransaction:
+      type: object
+      properties:
+        receiptNumber:
+          type: string
+        register:
+          $ref: "#/components/schemas/GgsEmployeeCashierRegister"
+        customerName:
+          type: string
+        paymentMethod:
+          $ref: "#/components/schemas/GgsEmployeeCashierPaymentMethod"
+        subtotal:
+          type: integer
+        amountReceived:
+          type: integer
+        changeAmount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsEmployeeCashierTransactionItem"
+      required:
+        - receiptNumber
+        - register
+        - customerName
+        - paymentMethod
+        - subtotal
+        - amountReceived
+        - changeAmount
+        - createdAt
+        - items
+    GgsEmployeeCashierTransactionsSummary:
+      type: object
+      properties:
+        register:
+          $ref: "#/components/schemas/GgsEmployeeCashierRegister"
+        date:
+          type: string
+          format: date
+        totalCollected:
+          type: integer
+        transactionCount:
+          type: integer
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsEmployeeCashierTransaction"
+      required:
+        - register
+        - date
+        - totalCollected
+        - transactionCount
+        - transactions
     GgsEmployeeLoginInput:
       type: object
       properties:
