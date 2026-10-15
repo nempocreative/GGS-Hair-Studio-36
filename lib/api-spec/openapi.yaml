@@ -437,6 +437,35 @@ paths:
                   $ref: "#/components/schemas/GgsEmployeeBooking"
         "401":
           description: No active employee session
+  /ggs/employee/reports:
+    get:
+      operationId: getGgsEmployeeReports
+      tags: [ggs-employee]
+      summary: Summarize studio bookings and sales across both cashier registers
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Date-range summary and daily studio activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GgsEmployeeReportsSummary"
+        "400":
+          description: Invalid date range
+        "401":
+          description: No active employee session
   /ggs/employee/attendance/today:
     get:
       operationId: getGgsEmployeeAttendanceToday
@@ -1476,6 +1505,85 @@ components:
         - pageSize
         - pageCount
         - transactions
+    GgsEmployeeReportPaymentSummary:
+      type: object
+      properties:
+        paymentMethod:
+          $ref: "#/components/schemas/GgsEmployeeCashierPaymentMethod"
+        transactionCount:
+          type: integer
+        totalCollected:
+          type: integer
+      required:
+        - paymentMethod
+        - transactionCount
+        - totalCollected
+    GgsEmployeeReportDailySummary:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        totalCollected:
+          type: integer
+        transactionCount:
+          type: integer
+        bookingCount:
+          type: integer
+        completedBookingCount:
+          type: integer
+        cancelledBookingCount:
+          type: integer
+      required:
+        - date
+        - totalCollected
+        - transactionCount
+        - bookingCount
+        - completedBookingCount
+        - cancelledBookingCount
+    GgsEmployeeReportsSummary:
+      type: object
+      properties:
+        fromDate:
+          type: string
+          format: date
+        toDate:
+          type: string
+          format: date
+        totalCollected:
+          type: integer
+        completedTransactionCount:
+          type: integer
+        cancelledTransactionCount:
+          type: integer
+        bookingCount:
+          type: integer
+        completedBookingCount:
+          type: integer
+        cancelledBookingCount:
+          type: integer
+        averageTransactionValue:
+          type: integer
+        paymentMethods:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsEmployeeReportPaymentSummary"
+        daily:
+          type: array
+          items:
+            $ref: "#/components/schemas/GgsEmployeeReportDailySummary"
+      required:
+        - fromDate
+        - toDate
+        - totalCollected
+        - completedTransactionCount
+        - cancelledTransactionCount
+        - bookingCount
+        - completedBookingCount
+        - cancelledBookingCount
+        - averageTransactionValue
+        - paymentMethods
+        - daily
     GgsEmployeeLoginInput:
       type: object
       properties:

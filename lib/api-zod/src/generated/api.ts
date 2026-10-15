@@ -515,6 +515,40 @@ export const GetGgsEmployeeBookingsResponse = zod.array(GetGgsEmployeeBookingsRe
 
 
 /**
+ * @summary Summarize studio bookings and sales across both cashier registers
+ */
+export const GetGgsEmployeeReportsQueryParams = zod.object({
+  "fromDate": zod.date(),
+  "toDate": zod.date()
+})
+
+export const GetGgsEmployeeReportsResponse = zod.object({
+  "fromDate": zod.coerce.date(),
+  "toDate": zod.coerce.date(),
+  "totalCollected": zod.number().int(),
+  "completedTransactionCount": zod.number().int(),
+  "cancelledTransactionCount": zod.number().int(),
+  "bookingCount": zod.number().int(),
+  "completedBookingCount": zod.number().int(),
+  "cancelledBookingCount": zod.number().int(),
+  "averageTransactionValue": zod.number().int(),
+  "paymentMethods": zod.array(zod.object({
+  "paymentMethod": zod.enum(['cash', 'qris', 'card']),
+  "transactionCount": zod.number().int(),
+  "totalCollected": zod.number().int()
+})),
+  "daily": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "totalCollected": zod.number().int(),
+  "transactionCount": zod.number().int(),
+  "bookingCount": zod.number().int(),
+  "completedBookingCount": zod.number().int(),
+  "cancelledBookingCount": zod.number().int()
+}))
+})
+
+
+/**
  * @summary Get the signed-in employee's attendance status for today
  */
 export const getGgsEmployeeAttendanceTodayResponseAttendanceDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');

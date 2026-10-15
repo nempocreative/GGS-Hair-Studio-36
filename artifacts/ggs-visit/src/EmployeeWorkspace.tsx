@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, CreditCard, LayoutDashboard, LockKeyhole, LogOut, Menu, Minus, Package, Plus, Printer, QrCode, ReceiptText, RefreshCw, Search, ShieldCheck, ShoppingBag, Scissors, Store, Trash2, UserRound, UsersRound, X, Megaphone } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
@@ -10,6 +10,7 @@ import {
   getGetGgsEmployeeCashierVouchersQueryKey,
   getGetGgsEmployeeCashierTransactionsQueryKey,
   getGetGgsEmployeeCashierAnnouncementsQueryKey,
+  getGetGgsEmployeeReportsQueryKey,
   getGetGgsPublicProductsQueryKey,
   getGetGgsPublicServicesQueryKey,
   getGetGgsEmployeeSessionQueryKey,
@@ -18,6 +19,7 @@ import {
   useGetGgsEmployeeCashierVouchers,
   useGetGgsEmployeeCashierTransactions,
   useGetGgsEmployeeCashierAnnouncements,
+  useGetGgsEmployeeReports,
   useGetGgsPublicProducts,
   useGetGgsPublicServices,
   useCreateGgsEmployeeCashierTransaction,
@@ -28,7 +30,7 @@ import {
   useLogoutGgsEmployee,
   useUnlockGgsEmployeeCashier,
 } from '@workspace/api-client-react';
-import type { GetGgsEmployeeCashierTransactionsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsEmployeeCashierVoucher, GgsCashierAnnouncement, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import type { GetGgsEmployeeCashierTransactionsParams, GetGgsEmployeeReportsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsEmployeeCashierVoucher, GgsCashierAnnouncement, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
 import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
@@ -53,9 +55,22 @@ function dateKey(value: string): string {
   return value.slice(0, 10);
 }
 
+function jakartaTodayDate(): string {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
+}
+
+function shiftCalendarDate(value: string, days: number): string {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function formatRupiah(value: number): string {
+  return `Rp${new Intl.NumberFormat('id-ID').format(value)}`;
+}
+
 function isSameDayAsJakarta(value: string): boolean {
-  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
-  return dateKey(value) === today;
+  return dateKey(value) === jakartaTodayDate();
 }
 
 function normalizeCashAmount(value: string): string {
@@ -105,6 +120,8 @@ const statusLabels: Record<GgsEmployeeBooking['status'], string> = {
   completed: 'Selesai',
   cancelled: 'Dibatalkan',
 };
+
+const LOW_STOCK_LIMIT = 5;
 
 const employeeMenuItems = [
   { href: '/employee/overview', label: 'Ringkasan', icon: LayoutDashboard, description: 'Ringkasan studio.' },
@@ -845,6 +862,312 @@ function EmployeeModulePlaceholder({ item }: { item: EmployeeMenuItem }) {
   );
 }
 
+function EmployeeStockPage() {
+  const [search, setSearch] = useState('');
+  const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'out'>('all');
+  const productsQuery = useGetGgsPublicProducts({
+    query: {
+      queryKey: getGetGgsPublicProductsQueryKey(),
+      retry: false,
+      staleTime: 0,
+      refetchInterval: 30_000,
+      refetchOnWindowFocus: true,
+      refetchOnMount: 'always',
+    },
+  });
+  const products = productsQuery.data ?? [];
+  const lowStockCount = products.filter((product) => product.stock > 0 && product.stock <= LOW_STOCK_LIMIT).length;
+  const outOfStockCount = products.filter((product) => product.stock === 0).length;
+  const searchQuery = search.trim().toLocaleLowerCase('id-ID');
+  const visibleProducts = products.filter((product) => {
+    const matchesSearch = !searchQuery
+      || `${product.name} ${product.category} ${product.description}`.toLocaleLowerCase('id-ID').includes(searchQuery);
+    const matchesStock = stockFilter === 'all'
+      || (stockFilter === 'low' && product.stock > 0 && product.stock <= LOW_STOCK_LIMIT)
+      || (stockFilter === 'out' && product.stock === 0);
+    return matchesSearch && matchesStock;
+  });
+
+  return (
+    <div className="employee-schedule__content employee-stock" data-testid="page-employee-stock">
+      <section className="employee-schedule__heading employee-stock__heading">
+        <div>
+          <p className="employee-kicker">INVENTARIS STUDIO</p>
+          <h1>Stok <em>produk.</em></h1>
+          <p className="employee-schedule__welcome">Stok produk aktif. Menipis berarti 1–{LOW_STOCK_LIMIT} unit.</p>
+        </div>
+        <button
+          type="button"
+          className="employee-refresh-button"
+          onClick={() => void productsQuery.refetch()}
+          disabled={productsQuery.isFetching}
+          data-testid="button-refresh-employee-stock"
+        >
+          <RefreshCw size={15} aria-hidden="true" className={productsQuery.isFetching ? 'is-spinning' : ''} />
+          Perbarui stok
+        </button>
+      </section>
+
+      <section className="employee-stock__metrics" aria-label="Ringkasan stok produk">
+        <article><span>PRODUK AKTIF</span><strong>{productsQuery.isLoading || productsQuery.isError ? '—' : products.length.toLocaleString('id-ID')}</strong></article>
+        <article><span>STOK MENIPIS</span><strong>{productsQuery.isLoading || productsQuery.isError ? '—' : lowStockCount.toLocaleString('id-ID')}</strong></article>
+        <article><span>HABIS</span><strong>{productsQuery.isLoading || productsQuery.isError ? '—' : outOfStockCount.toLocaleString('id-ID')}</strong></article>
+      </section>
+
+      <section className="employee-stock__panel" aria-label="Daftar stok produk">
+        <div className="employee-stock__toolbar">
+          <div className="employee-stock__title">
+            <div className="employee-bookings__title">
+              <h2>Daftar produk</h2>
+              <span>{productsQuery.isLoading || productsQuery.isError ? '—' : `${visibleProducts.length} produk`}</span>
+            </div>
+            <div className="employee-stock__filters" role="group" aria-label="Filter status stok">
+              <button type="button" aria-pressed={stockFilter === 'all'} onClick={() => setStockFilter('all')} data-testid="filter-employee-stock-all">Semua</button>
+              <button type="button" aria-pressed={stockFilter === 'low'} onClick={() => setStockFilter('low')} data-testid="filter-employee-stock-low">Menipis <span>{productsQuery.isLoading || productsQuery.isError ? '—' : lowStockCount}</span></button>
+              <button type="button" aria-pressed={stockFilter === 'out'} onClick={() => setStockFilter('out')} data-testid="filter-employee-stock-out">Habis <span>{productsQuery.isLoading || productsQuery.isError ? '—' : outOfStockCount}</span></button>
+            </div>
+          </div>
+          <label className="employee-search">
+            <Search size={15} aria-hidden="true" />
+            <span className="sr-only">Cari produk</span>
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Cari nama atau kategori produk"
+              data-testid="input-search-employee-stock"
+            />
+          </label>
+        </div>
+
+        {productsQuery.isLoading ? (
+          <div className="employee-stock__skeleton" role="status" aria-label="Memuat stok produk"><span /><span /><span /></div>
+        ) : productsQuery.isError ? (
+          <div className="employee-stock__state employee-stock__state--error" role="alert" data-testid="status-employee-stock-error">
+            <div><strong>Stok produk belum dapat dimuat.</strong><p>Periksa koneksi lalu coba perbarui data.</p></div>
+            <button type="button" onClick={() => void productsQuery.refetch()} disabled={productsQuery.isFetching}>Coba lagi</button>
+          </div>
+        ) : visibleProducts.length ? (
+          <div className="employee-stock__list" role="list">
+            {visibleProducts.map((product) => {
+              const stockStatus = product.stock === 0 ? 'out' : product.stock <= LOW_STOCK_LIMIT ? 'low' : 'available';
+              const stockLabel = stockStatus === 'out' ? 'Habis' : stockStatus === 'low' ? 'Menipis' : 'Tersedia';
+              return (
+                <article className="employee-stock__item" key={product.id} role="listitem" data-testid={`row-employee-stock-${product.id}`}>
+                  <div className="employee-stock__image">
+                    {product.imageUrl ? <img src={product.imageUrl} alt="" loading="lazy" /> : <Package size={20} aria-hidden="true" />}
+                  </div>
+                  <div className="employee-stock__copy">
+                    <span className="employee-stock__category">{product.category || 'Produk GGS'}</span>
+                    <h3>{product.name}</h3>
+                    {product.description ? <p>{product.description}</p> : null}
+                    <small>Rp{new Intl.NumberFormat('id-ID').format(product.price)}</small>
+                  </div>
+                  <div className="employee-stock__quantity">
+                    <span className={`employee-stock__status employee-stock__status--${stockStatus}`}>{stockLabel}</span>
+                    <strong>{product.stock.toLocaleString('id-ID')}</strong>
+                    <small>unit</small>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="employee-stock__state" data-testid="status-employee-stock-empty">
+            <div className="employee-stock__empty-mark"><Package size={20} aria-hidden="true" /></div>
+            <div>
+              <strong>{products.length ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'}</strong>
+              <p>{products.length ? 'Coba kata pencarian atau filter stok lain.' : 'Produk aktif akan muncul di daftar stok.'}</p>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+const reportPaymentLabels: Record<'cash' | 'qris' | 'card', string> = {
+  cash: 'Tunai',
+  qris: 'QRIS',
+  card: 'Kartu',
+};
+
+function EmployeeReportsPage() {
+  const [rangePreset, setRangePreset] = useState<'7' | '30' | 'custom'>('7');
+  const [dateRange, setDateRange] = useState(() => {
+    const toDate = jakartaTodayDate();
+    return { fromDate: shiftCalendarDate(toDate, -6), toDate };
+  });
+  const rangeIsValid = Boolean(dateRange.fromDate && dateRange.toDate)
+    && dateRange.fromDate <= dateRange.toDate;
+  const reportParams = useMemo<GetGgsEmployeeReportsParams>(() => ({
+    fromDate: dateRange.fromDate,
+    toDate: dateRange.toDate,
+  }), [dateRange.fromDate, dateRange.toDate]);
+  const reportQuery = useGetGgsEmployeeReports(reportParams, {
+    query: {
+      queryKey: getGetGgsEmployeeReportsQueryKey(reportParams),
+      enabled: rangeIsValid,
+      retry: false,
+      staleTime: 0,
+      refetchInterval: 60_000,
+      refetchOnWindowFocus: true,
+    },
+  });
+  const report = rangeIsValid ? reportQuery.data : undefined;
+  const hasActivity = Boolean(
+    report &&
+    (report.completedTransactionCount > 0
+      || report.cancelledTransactionCount > 0
+      || report.bookingCount > 0),
+  );
+
+  const setPreset = (days: 7 | 30) => {
+    const toDate = jakartaTodayDate();
+    setRangePreset(String(days) as '7' | '30');
+    setDateRange({ fromDate: shiftCalendarDate(toDate, -(days - 1)), toDate });
+  };
+
+  return (
+    <div className="employee-schedule__content employee-reports" data-testid="page-employee-reports">
+      <section className="employee-schedule__heading employee-reports__heading">
+        <div>
+          <p className="employee-kicker">RINGKASAN STUDIO</p>
+          <h1>Laporan <em>studio.</em></h1>
+          <p className="employee-schedule__welcome">Rekap booking dan transaksi dari kedua kasir.</p>
+        </div>
+        <button
+          type="button"
+          className="employee-refresh-button"
+          onClick={() => void reportQuery.refetch()}
+          disabled={reportQuery.isFetching || !rangeIsValid}
+          data-testid="button-refresh-employee-reports"
+        >
+          <RefreshCw size={15} aria-hidden="true" className={reportQuery.isFetching ? 'is-spinning' : ''} />
+          Perbarui laporan
+        </button>
+      </section>
+
+      <section className="employee-reports__filters" aria-label="Periode laporan">
+        <div className="employee-reports__presets" role="group" aria-label="Pilih periode cepat">
+          <button type="button" aria-pressed={rangePreset === '7'} onClick={() => setPreset(7)} data-testid="filter-report-7-days">7 hari</button>
+          <button type="button" aria-pressed={rangePreset === '30'} onClick={() => setPreset(30)} data-testid="filter-report-30-days">30 hari</button>
+          <button type="button" aria-pressed={rangePreset === 'custom'} onClick={() => setRangePreset('custom')} data-testid="filter-report-custom">Pilih tanggal</button>
+        </div>
+        <div className="employee-reports__date-fields">
+          <label>
+            <span>Dari</span>
+            <input
+              type="date"
+              value={dateRange.fromDate}
+              max={dateRange.toDate || undefined}
+              onChange={(event) => {
+                setRangePreset('custom');
+                setDateRange((current) => ({ ...current, fromDate: event.target.value }));
+              }}
+              data-testid="input-report-from-date"
+            />
+          </label>
+          <span className="employee-reports__date-separator" aria-hidden="true">—</span>
+          <label>
+            <span>Sampai</span>
+            <input
+              type="date"
+              value={dateRange.toDate}
+              min={dateRange.fromDate || undefined}
+              onChange={(event) => {
+                setRangePreset('custom');
+                setDateRange((current) => ({ ...current, toDate: event.target.value }));
+              }}
+              data-testid="input-report-to-date"
+            />
+          </label>
+        </div>
+        <p className="employee-reports__note">Booking dihitung menurut tanggal jadwal. Pendapatan mencakup transaksi selesai setelah diskon dan termasuk pajak.</p>
+      </section>
+
+      {!rangeIsValid ? (
+        <div className="employee-reports__state" role="alert" data-testid="status-employee-reports-invalid-range">
+          Tanggal awal harus sebelum atau sama dengan tanggal akhir.
+        </div>
+      ) : null}
+
+      <section className="employee-reports__metrics" aria-label="Ringkasan periode laporan">
+        <article><span>TOTAL TERBAYAR</span><strong>{report ? formatRupiah(report.totalCollected) : reportQuery.isLoading ? '…' : '—'}</strong></article>
+        <article>
+          <span>TRANSAKSI SELESAI</span>
+          <strong>{report ? report.completedTransactionCount.toLocaleString('id-ID') : reportQuery.isLoading ? '…' : '—'}</strong>
+          {report ? <small>{report.cancelledTransactionCount.toLocaleString('id-ID')} dibatalkan</small> : null}
+        </article>
+        <article>
+          <span>BOOKING TERJADWAL</span>
+          <strong>{report ? report.bookingCount.toLocaleString('id-ID') : reportQuery.isLoading ? '…' : '—'}</strong>
+          {report ? <small>{report.completedBookingCount.toLocaleString('id-ID')} selesai · {report.cancelledBookingCount.toLocaleString('id-ID')} batal</small> : null}
+        </article>
+        <article><span>RATA-RATA TRANSAKSI</span><strong>{report ? formatRupiah(report.averageTransactionValue) : reportQuery.isLoading ? '…' : '—'}</strong></article>
+      </section>
+
+      {reportQuery.isLoading ? (
+        <div className="employee-reports__skeleton" role="status" aria-label="Memuat laporan">
+          <span /><span /><span />
+        </div>
+      ) : reportQuery.isError && rangeIsValid ? (
+        <div className="employee-reports__state employee-reports__state--error" role="alert" data-testid="status-employee-reports-error">
+          <div><strong>Laporan belum dapat dimuat.</strong><p>{cashierErrorMessage(reportQuery.error, 'Periksa koneksi lalu coba lagi.')}</p></div>
+          <button type="button" onClick={() => void reportQuery.refetch()} disabled={reportQuery.isFetching}>Coba lagi</button>
+        </div>
+      ) : report ? (
+        hasActivity ? (
+          <div className="employee-reports__sections">
+            <section className="employee-reports__panel" aria-labelledby="employee-report-payment-title">
+              <div className="employee-reports__panel-heading">
+                <div><h2 id="employee-report-payment-title">Metode pembayaran</h2><p>Transaksi yang selesai pada periode ini.</p></div>
+              </div>
+              <div className="employee-reports__payment-list">
+                {report.paymentMethods.length ? report.paymentMethods.map((method) => (
+                  <div className="employee-reports__payment-row" key={method.paymentMethod} data-testid={`report-payment-${method.paymentMethod}`}>
+                    <span>{reportPaymentLabels[method.paymentMethod]}</span>
+                    <small>{method.transactionCount.toLocaleString('id-ID')} transaksi</small>
+                    <strong>{formatRupiah(method.totalCollected)}</strong>
+                  </div>
+                )) : <p className="employee-reports__muted">Belum ada transaksi selesai.</p>}
+              </div>
+            </section>
+
+            <section className="employee-reports__panel" aria-labelledby="employee-report-daily-title">
+              <div className="employee-reports__panel-heading">
+                <div><h2 id="employee-report-daily-title">Rincian harian</h2><p>Booking mengikuti tanggal jadwal; transaksi mengikuti tanggal pembayaran.</p></div>
+              </div>
+              <div className="employee-reports__table-wrap">
+                <table className="employee-reports__table">
+                  <thead><tr><th scope="col">Tanggal</th><th scope="col">Booking</th><th scope="col">Selesai</th><th scope="col">Batal</th><th scope="col">Transaksi</th><th scope="col">Total terbayar</th></tr></thead>
+                  <tbody>
+                    {report.daily.map((day) => (
+                      <tr key={day.date} data-testid={`report-daily-${dateKey(day.date)}`}>
+                        <th scope="row">{displayDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' })}</th>
+                        <td>{day.bookingCount.toLocaleString('id-ID')}</td>
+                        <td>{day.completedBookingCount.toLocaleString('id-ID')}</td>
+                        <td>{day.cancelledBookingCount.toLocaleString('id-ID')}</td>
+                        <td>{day.transactionCount.toLocaleString('id-ID')}</td>
+                        <td>{formatRupiah(day.totalCollected)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        ) : (
+          <div className="employee-reports__state" data-testid="status-employee-reports-empty">
+            <strong>Belum ada aktivitas pada periode ini.</strong>
+            <p>Booking terjadwal dan transaksi yang selesai atau dibatalkan akan tercatat di sini.</p>
+          </div>
+        )
+      ) : null}
+    </div>
+  );
+}
+
 type EmployeeCustomerSummary = {
   key: string;
   name: string;
@@ -852,6 +1175,7 @@ type EmployeeCustomerSummary = {
   bookingCount: number;
   latestBooking: GgsEmployeeBooking;
   serviceNames: string[];
+  history: GgsEmployeeBooking[];
 };
 
 function EmployeeCustomersPage({
@@ -868,6 +1192,17 @@ function EmployeeCustomersPage({
   onRefresh: () => void;
 }) {
   const [search, setSearch] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<EmployeeCustomerSummary | null>(null);
+
+  useEffect(() => {
+    if (!selectedCustomer) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedCustomer(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedCustomer]);
+
   const customers = useMemo(() => {
     const byIdentity = new Map<string, {
       key: string;
@@ -877,6 +1212,7 @@ function EmployeeCustomersPage({
       latestBooking: GgsEmployeeBooking;
       latestBookingKey: string;
       serviceNames: Set<string>;
+      history: GgsEmployeeBooking[];
     }>();
 
     for (const booking of bookings) {
@@ -895,12 +1231,14 @@ function EmployeeCustomersPage({
           latestBooking: booking,
           latestBookingKey: bookingKey,
           serviceNames: new Set([booking.serviceName]),
+          history: [booking],
         });
         continue;
       }
 
       existing.bookingCount += 1;
       existing.serviceNames.add(booking.serviceName);
+      existing.history.push(booking);
       if (bookingKey > existing.latestBookingKey) {
         existing.name = booking.customerName;
         existing.phone = booking.phone;
@@ -985,15 +1323,26 @@ function EmployeeCustomersPage({
         ) : visibleCustomers.length ? (
           <div className="employee-customers__table-wrap">
             <table className="employee-customers__table">
-              <thead><tr><th>Pelanggan</th><th>Telepon</th><th>Booking</th><th>Booking terakhir</th><th>Status</th></tr></thead>
+              <thead><tr><th>Pelanggan</th><th>Telepon</th><th>Booking</th><th>Booking terakhir</th><th>Status</th><th>Detail</th></tr></thead>
               <tbody>
                 {visibleCustomers.map((customer) => (
                   <tr key={customer.key} data-testid={`row-employee-customer-${customer.key.replace(/[^a-zA-Z0-9_-]/g, '-')}`}>
-                    <td><strong>{customer.name}</strong><small>{customer.latestBooking.serviceName}</small></td>
+                    <td>
+                      <button
+                        type="button"
+                        className="employee-customers__name-button"
+                        onClick={() => setSelectedCustomer(customer)}
+                        data-testid={`button-employee-customer-history-${customer.key.replace(/[^a-zA-Z0-9_-]/g, '-')}`}
+                      >
+                        <strong>{customer.name}</strong>
+                        <small>{customer.latestBooking.serviceName}</small>
+                      </button>
+                    </td>
                     <td>{customer.phone ? <a href={`tel:${customer.phone.replace(/[^\d+]/g, '')}`}>{customer.phone}</a> : '—'}</td>
                     <td>{customer.bookingCount}</td>
                     <td><strong>{displayDate(customer.latestBooking.appointmentDate, { day: 'numeric', month: 'short', year: 'numeric' })}</strong><small>{customer.latestBooking.appointmentTime}</small></td>
                     <td><span className={`employee-status employee-status--${customer.latestBooking.status}`}>{statusLabels[customer.latestBooking.status] ?? customer.latestBooking.status}</span></td>
+                    <td><button type="button" className="employee-customers__detail-button" onClick={() => setSelectedCustomer(customer)}>Riwayat</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -1007,6 +1356,81 @@ function EmployeeCustomersPage({
           </div>
         )}
       </section>
+
+      {selectedCustomer && (
+        <div
+          className="employee-customer-detail-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setSelectedCustomer(null);
+          }}
+        >
+          <section
+            className="employee-customer-detail"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="employee-customer-detail-title"
+            data-testid="dialog-employee-customer-history"
+          >
+            <header className="employee-customer-detail__header">
+              <div>
+                <span>PROFIL PELANGGAN</span>
+                <h2 id="employee-customer-detail-title">{selectedCustomer.name}</h2>
+              </div>
+              <button type="button" onClick={() => setSelectedCustomer(null)} aria-label="Tutup riwayat pelanggan" data-testid="button-close-employee-customer-history">
+                <X size={18} aria-hidden="true" />
+              </button>
+            </header>
+
+            <dl className="employee-customer-detail__facts">
+              <div>
+                <dt>Telepon</dt>
+                <dd>{selectedCustomer.phone ? <a href={`tel:${selectedCustomer.phone.replace(/[^\d+]/g, '')}`}>{selectedCustomer.phone}</a> : 'Belum tersedia'}</dd>
+              </div>
+              <div>
+                <dt>Total booking</dt>
+                <dd>{selectedCustomer.bookingCount.toLocaleString('id-ID')}</dd>
+              </div>
+              <div>
+                <dt>Kunjungan terakhir</dt>
+                <dd>{displayDate(selectedCustomer.latestBooking.appointmentDate, { day: 'numeric', month: 'long', year: 'numeric' })}</dd>
+              </div>
+              <div>
+                <dt>Layanan tercatat</dt>
+                <dd>{selectedCustomer.serviceNames.join(', ')}</dd>
+              </div>
+            </dl>
+
+            <section className="employee-customer-detail__history" aria-labelledby="employee-customer-history-title">
+              <div className="employee-customer-detail__section-heading">
+                <h3 id="employee-customer-history-title">Riwayat booking</h3>
+                <span>{selectedCustomer.history.length} kunjungan</span>
+              </div>
+              <ol>
+                {[...selectedCustomer.history]
+                  .sort((first, second) => {
+                    const firstKey = `${dateKey(first.appointmentDate)} ${first.appointmentTime}`;
+                    const secondKey = `${dateKey(second.appointmentDate)} ${second.appointmentTime}`;
+                    return secondKey.localeCompare(firstKey);
+                  })
+                  .map((booking) => (
+                    <li key={booking.id}>
+                      <div className="employee-customer-detail__visit-date">
+                        <strong>{displayDate(booking.appointmentDate, { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+                        <span>{booking.appointmentTime}</span>
+                      </div>
+                      <div className="employee-customer-detail__visit-copy">
+                        <strong>{booking.serviceName}</strong>
+                        {booking.notes.trim() ? <p>{booking.notes}</p> : null}
+                      </div>
+                      <span className={`employee-status employee-status--${booking.status}`}>{statusLabels[booking.status] ?? booking.status}</span>
+                    </li>
+                  ))}
+              </ol>
+            </section>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
@@ -1496,6 +1920,10 @@ export function EmployeeSchedulePage() {
             isRefreshing={refreshing || bookings.isFetching}
             onRefresh={() => void refreshSchedule()}
           />
+        ) : currentMenu.href === '/employee/stock' ? (
+          <EmployeeStockPage />
+        ) : currentMenu.href === '/employee/reports' ? (
+          <EmployeeReportsPage />
         ) : (
           <EmployeeModulePlaceholder item={currentMenu} />
         )}

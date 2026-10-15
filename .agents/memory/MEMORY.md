@@ -9,3 +9,4 @@
 - [Cashier voucher placement](cashier-voucher-placement.md) — keep voucher choices in a separate panel above, not inside, order details.
 - [Cashier announcement dates](cashier-announcement-dates.md) — interpret announcement start and end values as Jakarta calendar dates, with the end date inclusive.
 - [Cashier password stability](cashier-password.md) — switching employee or Replit accounts must not change the cashier password.
+- [Date-only API queries](date-only-api-queries.md) — normalize strict `YYYY-MM-DD` query strings before validating generated Zod date schemas.

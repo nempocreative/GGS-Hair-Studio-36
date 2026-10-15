@@ -8,6 +8,7 @@
 
 export * from './getGgsEmployeeCashierTransactionsParams';
 export * from './getGgsEmployeeCashierTransactionsStatus';
+export * from './getGgsEmployeeReportsParams';
 export * from './ggsAccount';
 export * from './ggsAccountIdentifierType';
 export * from './ggsAccountLoginInput';
@@ -54,6 +55,9 @@ export * from './ggsEmployeeCashierTransactionStatus';
 export * from './ggsEmployeeCashierTransactionStatusFilter';
 export * from './ggsEmployeeCashierVoucher';
 export * from './ggsEmployeeLoginInput';
+export * from './ggsEmployeeReportDailySummary';
+export * from './ggsEmployeeReportPaymentSummary';
+export * from './ggsEmployeeReportsSummary';
 export * from './ggsProduct';
 export * from './ggsProductInput';
 export * from './ggsPublicVoucher';

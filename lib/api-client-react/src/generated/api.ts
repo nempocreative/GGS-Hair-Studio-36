@@ -21,6 +21,7 @@ import type {
 
 import type {
   GetGgsEmployeeCashierTransactionsParams,
+  GetGgsEmployeeReportsParams,
   GgsAccount,
   GgsAccountLoginInput,
   GgsAccountRegistrationInput,
@@ -49,6 +50,7 @@ import type {
   GgsEmployeeCashierTransactionsSummary,
   GgsEmployeeCashierVoucher,
   GgsEmployeeLoginInput,
+  GgsEmployeeReportsSummary,
   GgsProduct,
   GgsProductInput,
   GgsPublicVoucher,
@@ -1847,6 +1849,90 @@ export function useGetGgsEmployeeBookings<TData = Awaited<ReturnType<typeof getG
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetGgsEmployeeBookingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGgsEmployeeReportsUrl = (params: GetGgsEmployeeReportsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/ggs/employee/reports?${stringifiedParams}` : `/api/ggs/employee/reports`
+}
+
+/**
+ * @summary Summarize studio bookings and sales across both cashier registers
+ */
+export const getGgsEmployeeReports = async (params: GetGgsEmployeeReportsParams, options?: Parameters<typeof customFetch>[1]): Promise<GgsEmployeeReportsSummary> => {
+
+  return customFetch<GgsEmployeeReportsSummary>(getGetGgsEmployeeReportsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGgsEmployeeReportsQueryKey = (params?: GetGgsEmployeeReportsParams,) => {
+    return [
+    `/api/ggs/employee/reports`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetGgsEmployeeReportsQueryOptions = <TData = Awaited<ReturnType<typeof getGgsEmployeeReports>>, TError = ErrorType<void>>(params: GetGgsEmployeeReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGgsEmployeeReportsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGgsEmployeeReports>>> = ({ signal }) => getGgsEmployeeReports(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeReports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGgsEmployeeReportsQueryResult = NonNullable<Awaited<ReturnType<typeof getGgsEmployeeReports>>>
+export type GetGgsEmployeeReportsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Summarize studio bookings and sales across both cashier registers
+ */
+
+export function useGetGgsEmployeeReports<TData = Awaited<ReturnType<typeof getGgsEmployeeReports>>, TError = ErrorType<void>>(
+ params: GetGgsEmployeeReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGgsEmployeeReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGgsEmployeeReportsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

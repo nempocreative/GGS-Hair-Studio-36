@@ -361,6 +361,35 @@ export interface GgsEmployeeCashierTransactionsSummary {
   transactions: GgsEmployeeCashierTransaction[];
 }
 
+export interface GgsEmployeeReportPaymentSummary {
+  paymentMethod: GgsEmployeeCashierPaymentMethod;
+  transactionCount: number;
+  totalCollected: number;
+}
+
+export interface GgsEmployeeReportDailySummary {
+  date: string;
+  totalCollected: number;
+  transactionCount: number;
+  bookingCount: number;
+  completedBookingCount: number;
+  cancelledBookingCount: number;
+}
+
+export interface GgsEmployeeReportsSummary {
+  fromDate: string;
+  toDate: string;
+  totalCollected: number;
+  completedTransactionCount: number;
+  cancelledTransactionCount: number;
+  bookingCount: number;
+  completedBookingCount: number;
+  cancelledBookingCount: number;
+  averageTransactionValue: number;
+  paymentMethods: GgsEmployeeReportPaymentSummary[];
+  daily: GgsEmployeeReportDailySummary[];
+}
+
 export interface GgsEmployeeLoginInput {
   /**
      * @minLength 2
@@ -748,4 +777,9 @@ export const GetGgsEmployeeCashierTransactionsStatus = {
   completed: 'completed',
   cancelled: 'cancelled',
 } as const;
+
+export type GetGgsEmployeeReportsParams = {
+fromDate: string;
+toDate: string;
+};
 

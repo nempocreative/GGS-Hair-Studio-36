@@ -41,6 +41,8 @@ import {
   GetGgsEmployeeCashierVouchersResponse,
   GetGgsEmployeeAttendanceHistoryResponse,
   GetGgsAdminEmployeesResponse,
+  GetGgsEmployeeReportsQueryParams,
+  GetGgsEmployeeReportsResponse,
   GetGgsEmployeeAttendanceTodayResponse,
   GetGgsEmployeeBookingsResponse,
   GetGgsEmployeeCashierSessionResponse,
@@ -212,6 +214,16 @@ function jakartaCashierDateRange(date = new Date()) {
 
 function cashierJakartaDateStart(date: string) {
   return new Date(`${date}T00:00:00.000+07:00`);
+}
+
+function parseDateOnlyQuery(value: unknown) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value
+    ? value
+    : parsed;
 }
 
 function serializeAttendance(
@@ -1330,6 +1342,208 @@ router.get("/ggs/employee/bookings", async (req, res): Promise<void> => {
     );
 
   res.json(GetGgsEmployeeBookingsResponse.parse(appointments));
+});
+
+router.get("/ggs/employee/reports", async (req, res): Promise<void> => {
+  const employee = await getEmployeeForSession(req, res);
+  if (!employee) {
+    res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+    return;
+  }
+
+  const parsed = GetGgsEmployeeReportsQueryParams.safeParse({
+    ...req.query,
+    fromDate: parseDateOnlyQuery(req.query.fromDate),
+    toDate: parseDateOnlyQuery(req.query.toDate),
+  });
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const fromDate = parsed.data.fromDate.toISOString().slice(0, 10);
+  const toDate = parsed.data.toDate.toISOString().slice(0, 10);
+  const startDay = new Date(`${fromDate}T00:00:00.000Z`);
+  const endDay = new Date(`${toDate}T00:00:00.000Z`);
+  const dayCount =
+    Math.floor((endDay.getTime() - startDay.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+
+  if (fromDate > toDate || dayCount > 366) {
+    res.status(400).json({
+      error: "Pilih rentang tanggal yang benar, maksimal 366 hari.",
+    });
+    return;
+  }
+
+  const transactionConditions = [
+    gte(
+      ggsCashierTransactionsTable.createdAt,
+      cashierJakartaDateStart(fromDate),
+    ),
+    lt(
+      ggsCashierTransactionsTable.createdAt,
+      new Date(cashierJakartaDateStart(toDate).getTime() + 24 * 60 * 60 * 1000),
+    ),
+  ];
+  const completedTransactionsCondition = and(
+    ...transactionConditions,
+    eq(ggsCashierTransactionsTable.status, "completed"),
+  );
+  const cancelledTransactionsCondition = and(
+    ...transactionConditions,
+    eq(ggsCashierTransactionsTable.status, "cancelled"),
+  );
+  const collectedAmount = sql<number>`
+    ${ggsCashierTransactionsTable.subtotal}
+    - ${ggsCashierTransactionsTable.discountAmount}
+    + ${ggsCashierTransactionsTable.taxAmount}
+  `;
+  const [transactionTotals] = await db
+    .select({
+      transactionCount: count(),
+      totalCollected: sum(collectedAmount),
+    })
+    .from(ggsCashierTransactionsTable)
+    .where(completedTransactionsCondition);
+  const [cancelledTransactionTotals] = await db
+    .select({ transactionCount: count() })
+    .from(ggsCashierTransactionsTable)
+    .where(cancelledTransactionsCondition);
+  const paymentMethods = await db
+    .select({
+      paymentMethod: ggsCashierTransactionsTable.paymentMethod,
+      transactionCount: count(),
+      totalCollected: sum(collectedAmount),
+    })
+    .from(ggsCashierTransactionsTable)
+    .where(completedTransactionsCondition)
+    .groupBy(ggsCashierTransactionsTable.paymentMethod)
+    .orderBy(asc(ggsCashierTransactionsTable.paymentMethod));
+
+  const bookingConditions = [
+    gte(ggsAppointmentsTable.appointmentDate, fromDate),
+    lte(ggsAppointmentsTable.appointmentDate, toDate),
+  ];
+  const [bookingTotals] = await db
+    .select({
+      bookingCount: count(),
+      completedBookingCount: sql<number>`
+        count(*) filter (where ${ggsAppointmentsTable.status} = 'completed')
+      `,
+      cancelledBookingCount: sql<number>`
+        count(*) filter (where ${ggsAppointmentsTable.status} = 'cancelled')
+      `,
+    })
+    .from(ggsAppointmentsTable)
+    .where(and(...bookingConditions));
+
+  const transactionDay = sql<string>`
+    to_char(
+      ${ggsCashierTransactionsTable.createdAt} at time zone 'Asia/Jakarta',
+      'YYYY-MM-DD'
+    )
+  `;
+  const dailyTransactions = await db
+    .select({
+      date: transactionDay,
+      transactionCount: count(),
+      totalCollected: sum(collectedAmount),
+    })
+    .from(ggsCashierTransactionsTable)
+    .where(completedTransactionsCondition)
+    .groupBy(transactionDay)
+    .orderBy(asc(transactionDay));
+  const dailyBookings = await db
+    .select({
+      date: ggsAppointmentsTable.appointmentDate,
+      bookingCount: count(),
+      completedBookingCount: sql<number>`
+        count(*) filter (where ${ggsAppointmentsTable.status} = 'completed')
+      `,
+      cancelledBookingCount: sql<number>`
+        count(*) filter (where ${ggsAppointmentsTable.status} = 'cancelled')
+      `,
+    })
+    .from(ggsAppointmentsTable)
+    .where(and(...bookingConditions))
+    .groupBy(ggsAppointmentsTable.appointmentDate)
+    .orderBy(asc(ggsAppointmentsTable.appointmentDate));
+
+  const dailyByDate = new Map<
+    string,
+    {
+      date: string;
+      totalCollected: number;
+      transactionCount: number;
+      bookingCount: number;
+      completedBookingCount: number;
+      cancelledBookingCount: number;
+    }
+  >();
+  for (
+    let day = new Date(startDay);
+    day <= endDay;
+    day.setUTCDate(day.getUTCDate() + 1)
+  ) {
+    const date = day.toISOString().slice(0, 10);
+    dailyByDate.set(date, {
+      date,
+      totalCollected: 0,
+      transactionCount: 0,
+      bookingCount: 0,
+      completedBookingCount: 0,
+      cancelledBookingCount: 0,
+    });
+  }
+  for (const day of dailyTransactions) {
+    const summary = dailyByDate.get(day.date);
+    if (summary) {
+      summary.totalCollected = Number(day.totalCollected ?? 0);
+      summary.transactionCount = Number(day.transactionCount);
+    }
+  }
+  for (const day of dailyBookings) {
+    const summary = dailyByDate.get(day.date);
+    if (summary) {
+      summary.bookingCount = Number(day.bookingCount);
+      summary.completedBookingCount = Number(day.completedBookingCount);
+      summary.cancelledBookingCount = Number(day.cancelledBookingCount);
+    }
+  }
+
+  const totalCollected = Number(transactionTotals?.totalCollected ?? 0);
+  const completedTransactionCount = Number(transactionTotals?.transactionCount ?? 0);
+  const response = GetGgsEmployeeReportsResponse.parse({
+      fromDate,
+      toDate,
+      totalCollected,
+      completedTransactionCount,
+      cancelledTransactionCount: Number(
+        cancelledTransactionTotals?.transactionCount ?? 0,
+      ),
+      bookingCount: Number(bookingTotals?.bookingCount ?? 0),
+      completedBookingCount: Number(bookingTotals?.completedBookingCount ?? 0),
+      cancelledBookingCount: Number(bookingTotals?.cancelledBookingCount ?? 0),
+      averageTransactionValue:
+        completedTransactionCount > 0
+          ? Math.round(totalCollected / completedTransactionCount)
+          : 0,
+      paymentMethods: paymentMethods.map((method) => ({
+        paymentMethod: method.paymentMethod,
+        transactionCount: Number(method.transactionCount),
+        totalCollected: Number(method.totalCollected ?? 0),
+      })),
+      daily: [...dailyByDate.values()],
+    });
+  res.json({
+    ...response,
+    fromDate,
+    toDate,
+    daily: response.daily.map((day) => ({
+      ...day,
+      date: day.date.toISOString().slice(0, 10),
+    })),
+  });
 });
 
 router.get(
