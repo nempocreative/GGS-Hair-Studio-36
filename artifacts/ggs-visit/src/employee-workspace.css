@@ -1091,37 +1091,60 @@
   }
 }
 
-.cashier-voucher-field {
-  grid-template-columns: minmax(0, 1fr);
-  display: grid;
-  gap: 7px;
-  margin: 17px 0 0;
-  color: var(--cashier-ink);
-  font-size: 10px;
-  font-weight: 700;
+.cashier-voucher-panel {
+  min-width: 0;
+  margin: 0 0 14px;
+  border: 1px solid var(--cashier-line);
+  background: var(--cashier-panel);
+  padding: 14px 19px;
+  box-shadow: 0 1px 2px rgb(47 32 38 / 3%);
 }
 
-.cashier-voucher-field > span:first-of-type {
+.cashier-voucher-panel__heading {
   display: flex;
-  align-items: baseline;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
+}
+
+.cashier-voucher-panel__heading > div {
+  display: grid;
+  gap: 4px;
+}
+
+.cashier-voucher-panel__heading > div > span {
+  color: var(--cashier-muted);
+  font-family: var(--app-font-mono, 'Space Mono', monospace);
+  font-size: 8px;
+  letter-spacing: .08em;
+}
+
+.cashier-voucher-panel__heading h2 {
   margin: 0;
   color: var(--cashier-ink);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -.035em;
 }
 
-.cashier-voucher-field > span:first-of-type > span {
+.cashier-voucher-panel__heading > small {
   color: var(--cashier-muted);
-  font-size: 8px;
-  font-weight: 400;
+  font-size: 9px;
+}
+
+.cashier-voucher-field {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: var(--cashier-ink);
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .cashier-voucher-list {
   display: grid;
-  max-height: 232px;
-  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  max-height: 190px;
+  gap: 7px;
   overflow: auto;
   padding-right: 2px;
 }
@@ -1226,6 +1249,22 @@
   font-weight: 700;
   text-decoration: underline;
   cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .cashier-voucher-panel {
+    padding: 13px;
+  }
+
+  .cashier-voucher-panel__heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cashier-voucher-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .cashier-breakdown,

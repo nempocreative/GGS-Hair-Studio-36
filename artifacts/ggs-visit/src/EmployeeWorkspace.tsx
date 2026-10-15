@@ -164,7 +164,13 @@ function EmployeeCashierPage() {
     query: { queryKey: getGetGgsPublicProductsQueryKey(), retry: false, enabled: isCashierActive },
   });
   const vouchersQuery = useGetGgsEmployeeCashierVouchers({
-    query: { queryKey: getGetGgsEmployeeCashierVouchersQueryKey(), retry: false, enabled: isCashierActive },
+    query: {
+      queryKey: getGetGgsEmployeeCashierVouchersQueryKey(),
+      retry: false,
+      enabled: isCashierActive,
+      refetchInterval: 60_000,
+      refetchOnWindowFocus: true,
+    },
   });
   const transactionsQuery = useGetGgsEmployeeCashierTransactions(historyParams, {
     query: {
@@ -475,6 +481,49 @@ function EmployeeCashierPage() {
             </footer>}
           </section>
 
+          <section className="cashier-voucher-panel" aria-labelledby="cashier-voucher-heading">
+            <div className="cashier-voucher-panel__heading">
+              <div><span>PROMO KASIR</span><h2 id="cashier-voucher-heading">Voucher atau diskon</h2></div>
+              <small>Pilih satu untuk transaksi ini</small>
+            </div>
+            <div className="cashier-voucher-field">
+              {vouchersQuery.isLoading ? <span className="cashier-voucher-state" role="status">Memuat voucher…</span> :
+                vouchersQuery.isError ? <span className="cashier-voucher-state cashier-voucher-state--error" role="alert">Voucher belum dapat dimuat. <button type="button" onClick={() => void vouchersQuery.refetch()}>Coba lagi</button></span> :
+                  vouchers.length ? <div className="cashier-voucher-list" role="group" aria-label="Pilih voucher atau diskon">
+                    <button
+                      type="button"
+                      className={`cashier-voucher-choice cashier-voucher-choice--none${voucherCode ? '' : ' is-selected'}`}
+                      aria-pressed={!voucherCode}
+                      onClick={() => { setVoucherCode(''); setCheckoutError(''); }}
+                      data-testid="button-cashier-voucher-none"
+                    >
+                      <span className="cashier-voucher-choice__copy"><strong>Tanpa voucher</strong><small>Harga normal</small></span>
+                    </button>
+                    {vouchers.map((voucher) => {
+                      const voucherDiscount = calculateVoucherDiscount(voucher);
+                      return <button
+                        type="button"
+                        key={voucher.id}
+                        className={`cashier-voucher-choice${voucherCode === voucher.code ? ' is-selected' : ''}`}
+                        aria-pressed={voucherCode === voucher.code}
+                        onClick={() => { setVoucherCode(voucher.code); setCheckoutError(''); }}
+                        data-testid={`button-cashier-voucher-${voucher.id}`}
+                      >
+                        <span className="cashier-voucher-choice__copy">
+                          <strong>{voucher.name}</strong>
+                          <small>{voucher.code} · {voucher.appliesTo === 'services' ? 'Layanan' : 'Semua item'}{voucher.expiresAt ? ` · Sampai ${displayDate(voucher.expiresAt)}` : ''}</small>
+                        </span>
+                        <span className="cashier-voucher-choice__discount">
+                          <strong>{voucher.discountType === 'percent' ? `${voucher.discountValue}%` : formatMoney(voucher.discountValue)}</strong>
+                          {subtotal > 0 && voucherDiscount > 0 && <small>−{formatMoney(voucherDiscount)}</small>}
+                        </span>
+                      </button>;
+                    })}
+                  </div> : <span className="cashier-voucher-state">Belum ada voucher aktif.</span>}
+              {selectedVoucher && <small className="cashier-voucher-field__note">{selectedVoucher.value}</small>}
+            </div>
+          </section>
+
           <div className="cashier-layout">
             <section className="cashier-catalog" aria-label="Katalog layanan dan produk">
               <div className="cashier-section-heading"><div><span>KATALOG</span><h2>Pilih item</h2></div><small>Harga katalog</small></div>
@@ -529,43 +578,6 @@ function EmployeeCashierPage() {
                   </article>;
                 }) : <div className="cashier-cart__empty"><ReceiptText size={21} aria-hidden="true" /><strong>Belum ada item</strong><span>Pilih layanan atau produk di samping.</span></div>}
               </div>
-              <section className="cashier-field cashier-voucher-field" aria-labelledby="cashier-voucher-heading">
-                <span id="cashier-voucher-heading">Voucher atau diskon <span>Opsional · pilih satu</span></span>
-                {vouchersQuery.isLoading ? <span className="cashier-voucher-state" role="status">Memuat voucher…</span> :
-                  vouchersQuery.isError ? <span className="cashier-voucher-state cashier-voucher-state--error" role="alert">Voucher belum dapat dimuat. <button type="button" onClick={() => void vouchersQuery.refetch()}>Coba lagi</button></span> :
-                    vouchers.length ? <div className="cashier-voucher-list" role="group" aria-label="Pilih voucher atau diskon">
-                      <button
-                        type="button"
-                        className={`cashier-voucher-choice cashier-voucher-choice--none${voucherCode ? '' : ' is-selected'}`}
-                        aria-pressed={!voucherCode}
-                        onClick={() => { setVoucherCode(''); setCheckoutError(''); }}
-                        data-testid="button-cashier-voucher-none"
-                      >
-                        <span className="cashier-voucher-choice__copy"><strong>Tanpa voucher</strong><small>Harga normal</small></span>
-                      </button>
-                      {vouchers.map((voucher) => {
-                        const voucherDiscount = calculateVoucherDiscount(voucher);
-                        return <button
-                          type="button"
-                          key={voucher.id}
-                          className={`cashier-voucher-choice${voucherCode === voucher.code ? ' is-selected' : ''}`}
-                          aria-pressed={voucherCode === voucher.code}
-                          onClick={() => { setVoucherCode(voucher.code); setCheckoutError(''); }}
-                          data-testid={`button-cashier-voucher-${voucher.id}`}
-                        >
-                          <span className="cashier-voucher-choice__copy">
-                            <strong>{voucher.name}</strong>
-                            <small>{voucher.code} · {voucher.appliesTo === 'services' ? 'Layanan' : 'Semua item'}{voucher.expiresAt ? ` · Sampai ${displayDate(voucher.expiresAt)}` : ''}</small>
-                          </span>
-                          <span className="cashier-voucher-choice__discount">
-                            <strong>{voucher.discountType === 'percent' ? `${voucher.discountValue}%` : formatMoney(voucher.discountValue)}</strong>
-                            {subtotal > 0 && voucherDiscount > 0 && <small>−{formatMoney(voucherDiscount)}</small>}
-                          </span>
-                        </button>;
-                      })}
-                    </div> : <span className="cashier-voucher-state">Belum ada voucher aktif.</span>}
-                {selectedVoucher && <small className="cashier-voucher-field__note">{selectedVoucher.value}</small>}
-              </section>
               <div className="cashier-breakdown" aria-label="Rincian total">
                 <div><span>Subtotal</span><strong>{formatMoney(subtotal)}</strong></div>
                 {selectedVoucher && <div className="cashier-breakdown__discount"><span>Diskon · {selectedVoucher.name}</span><strong>−{formatMoney(discountAmount)}</strong></div>}
