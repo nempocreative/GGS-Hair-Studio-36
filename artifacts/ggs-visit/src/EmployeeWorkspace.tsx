@@ -28,7 +28,7 @@ import {
   useLogoutGgsEmployee,
   useUnlockGgsEmployeeCashier,
 } from '@workspace/api-client-react';
-import type { GetGgsEmployeeCashierTransactionsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsCashierAnnouncement, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import type { GetGgsEmployeeCashierTransactionsParams, GgsEmployeeBooking, GgsEmployeeCashierRegister, GgsEmployeeCashierTransaction, GgsEmployeeCashierTransactionInput, GgsEmployeeCashierVoucher, GgsCashierAnnouncement, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
 import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
@@ -209,18 +209,17 @@ function EmployeeCashierPage() {
       : products.find((product) => product.id === line.itemId);
     return sum + (item?.price ?? 0) * line.quantity;
   }, 0);
-  const discountBase = selectedVoucher
-    ? selectedVoucher.appliesTo === 'all_items'
+  const calculateVoucherDiscount = (voucher: GgsEmployeeCashierVoucher) => {
+    const discountBase = voucher.appliesTo === 'all_items'
       ? subtotal
       : cart.reduce((sum, line) => line.itemType === 'service'
         ? sum + (services.find((service) => service.id === line.itemId)?.price ?? 0) * line.quantity
-        : sum, 0)
-    : 0;
-  const discountAmount = selectedVoucher
-    ? Math.min(discountBase, selectedVoucher.discountType === 'percent'
-      ? Math.round(discountBase * selectedVoucher.discountValue / 100)
-      : selectedVoucher.discountValue)
-    : 0;
+        : sum, 0);
+    return Math.min(discountBase, voucher.discountType === 'percent'
+      ? Math.round(discountBase * voucher.discountValue / 100)
+      : voucher.discountValue);
+  };
+  const discountAmount = selectedVoucher ? calculateVoucherDiscount(selectedVoucher) : 0;
   const taxRate = Math.min(100, Math.max(0, cashierSession.data?.taxRate ?? 0));
   const previewTax = Math.round((subtotal - discountAmount) * taxRate / 100);
   const previewTotal = subtotal - discountAmount + previewTax;
@@ -530,15 +529,43 @@ function EmployeeCashierPage() {
                   </article>;
                 }) : <div className="cashier-cart__empty"><ReceiptText size={21} aria-hidden="true" /><strong>Belum ada item</strong><span>Pilih layanan atau produk di samping.</span></div>}
               </div>
-              <label className="cashier-field cashier-voucher-field">Voucher kasir <span>Opsional</span>
+              <section className="cashier-field cashier-voucher-field" aria-labelledby="cashier-voucher-heading">
+                <span id="cashier-voucher-heading">Voucher atau diskon <span>Opsional · pilih satu</span></span>
                 {vouchersQuery.isLoading ? <span className="cashier-voucher-state" role="status">Memuat voucher…</span> :
                   vouchersQuery.isError ? <span className="cashier-voucher-state cashier-voucher-state--error" role="alert">Voucher belum dapat dimuat. <button type="button" onClick={() => void vouchersQuery.refetch()}>Coba lagi</button></span> :
-                    <select value={voucherCode} onChange={(event) => { setVoucherCode(event.target.value); setCheckoutError(''); }} data-testid="select-cashier-voucher">
-                      <option value="">Tanpa voucher</option>
-                      {vouchers.map((voucher) => <option key={voucher.id} value={voucher.code}>{voucher.name} · {voucher.discountType === 'percent' ? `${voucher.discountValue}%` : formatMoney(voucher.discountValue)} · {voucher.appliesTo === 'services' ? 'Layanan' : 'Semua item'}</option>)}
-                    </select>}
-                {selectedVoucher && <small className="cashier-voucher-field__note">{selectedVoucher.value}{selectedVoucher.expiresAt ? ` · Berlaku sampai ${displayDate(selectedVoucher.expiresAt)}` : ''}</small>}
-              </label>
+                    vouchers.length ? <div className="cashier-voucher-list" role="group" aria-label="Pilih voucher atau diskon">
+                      <button
+                        type="button"
+                        className={`cashier-voucher-choice cashier-voucher-choice--none${voucherCode ? '' : ' is-selected'}`}
+                        aria-pressed={!voucherCode}
+                        onClick={() => { setVoucherCode(''); setCheckoutError(''); }}
+                        data-testid="button-cashier-voucher-none"
+                      >
+                        <span className="cashier-voucher-choice__copy"><strong>Tanpa voucher</strong><small>Harga normal</small></span>
+                      </button>
+                      {vouchers.map((voucher) => {
+                        const voucherDiscount = calculateVoucherDiscount(voucher);
+                        return <button
+                          type="button"
+                          key={voucher.id}
+                          className={`cashier-voucher-choice${voucherCode === voucher.code ? ' is-selected' : ''}`}
+                          aria-pressed={voucherCode === voucher.code}
+                          onClick={() => { setVoucherCode(voucher.code); setCheckoutError(''); }}
+                          data-testid={`button-cashier-voucher-${voucher.id}`}
+                        >
+                          <span className="cashier-voucher-choice__copy">
+                            <strong>{voucher.name}</strong>
+                            <small>{voucher.code} · {voucher.appliesTo === 'services' ? 'Layanan' : 'Semua item'}{voucher.expiresAt ? ` · Sampai ${displayDate(voucher.expiresAt)}` : ''}</small>
+                          </span>
+                          <span className="cashier-voucher-choice__discount">
+                            <strong>{voucher.discountType === 'percent' ? `${voucher.discountValue}%` : formatMoney(voucher.discountValue)}</strong>
+                            {subtotal > 0 && voucherDiscount > 0 && <small>−{formatMoney(voucherDiscount)}</small>}
+                          </span>
+                        </button>;
+                      })}
+                    </div> : <span className="cashier-voucher-state">Belum ada voucher aktif.</span>}
+                {selectedVoucher && <small className="cashier-voucher-field__note">{selectedVoucher.value}</small>}
+              </section>
               <div className="cashier-breakdown" aria-label="Rincian total">
                 <div><span>Subtotal</span><strong>{formatMoney(subtotal)}</strong></div>
                 {selectedVoucher && <div className="cashier-breakdown__discount"><span>Diskon · {selectedVoucher.name}</span><strong>−{formatMoney(discountAmount)}</strong></div>}

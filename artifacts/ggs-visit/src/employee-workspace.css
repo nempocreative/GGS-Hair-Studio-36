@@ -1092,6 +1092,7 @@
 }
 
 .cashier-voucher-field {
+  grid-template-columns: minmax(0, 1fr);
   display: grid;
   gap: 7px;
   margin: 17px 0 0;
@@ -1101,26 +1102,111 @@
 }
 
 .cashier-voucher-field > span:first-of-type {
-  display: inline;
-  margin-left: 5px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  color: var(--cashier-ink);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cashier-voucher-field > span:first-of-type > span {
   color: var(--cashier-muted);
   font-size: 8px;
   font-weight: 400;
 }
 
-.cashier-voucher-field select {
-  width: 100%;
-  min-height: 42px;
+.cashier-voucher-list {
+  display: grid;
+  max-height: 232px;
+  gap: 6px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.cashier-voucher-choice {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   border: 1px solid var(--cashier-line);
-  border-radius: 0;
-  background: #fffdfb;
-  padding: 0 11px;
+  background: #fffdfa;
+  padding: 10px 11px;
   color: var(--cashier-ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, color .16s ease;
+}
+
+.cashier-voucher-choice:hover {
+  border-color: #c99eae;
+  background: #fdf7f8;
+}
+
+.cashier-voucher-choice:focus-visible {
+  outline: 2px solid var(--cashier-berry);
+  outline-offset: 2px;
+}
+
+.cashier-voucher-choice.is-selected {
+  border-color: var(--cashier-berry);
+  background: var(--cashier-soft);
+  color: var(--cashier-berry-deep);
+}
+
+.cashier-voucher-choice__copy,
+.cashier-voucher-choice__discount {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.cashier-voucher-choice__copy strong {
+  overflow: hidden;
   font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cashier-voucher-choice__copy small {
+  overflow: hidden;
+  color: var(--cashier-muted);
+  font-size: 8px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cashier-voucher-choice__discount {
+  flex: 0 0 auto;
+  justify-items: end;
+  color: var(--cashier-berry-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.cashier-voucher-choice__discount strong {
+  font-size: 10px;
+}
+
+.cashier-voucher-choice__discount small {
+  color: #47705c;
+  font-size: 9px;
+}
+
+.cashier-voucher-choice--none {
+  justify-content: flex-start;
+}
+
+.cashier-voucher-choice--none .cashier-voucher-choice__copy strong {
+  color: inherit;
 }
 
 .cashier-voucher-field__note,
 .cashier-voucher-state {
+  grid-column: 1 / -1;
   color: var(--cashier-muted);
   font-size: 9px;
   font-weight: 400;
