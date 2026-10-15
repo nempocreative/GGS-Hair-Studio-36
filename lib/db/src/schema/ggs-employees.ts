@@ -41,6 +41,8 @@ export const ggsEmployeeSessionsTable = pgTable(
       .notNull()
       .references(() => ggsEmployeeAccountsTable.id, { onDelete: "cascade" }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    cashierRegister: text("cashier_register"),
+    cashierExpiresAt: timestamp("cashier_expires_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

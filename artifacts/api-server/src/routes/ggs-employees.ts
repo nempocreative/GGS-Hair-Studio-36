@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { and, asc, desc, eq, gt, isNull, lt } from "drizzle-orm";
 import {
   Router,
@@ -16,15 +16,20 @@ import {
   GetGgsAdminEmployeesResponse,
   GetGgsEmployeeAttendanceTodayResponse,
   GetGgsEmployeeBookingsResponse,
+  GetGgsEmployeeCashierSessionResponse,
   GetGgsEmployeeSessionResponse,
   CheckInGgsEmployeeAttendanceResponse,
   CheckOutGgsEmployeeAttendanceBody,
   CheckOutGgsEmployeeAttendanceResponse,
   LoginGgsEmployeeBody,
   LoginGgsEmployeeResponse,
+  LogoutGgsEmployeeCashierResponse,
+  UnlockGgsEmployeeCashierBody,
+  UnlockGgsEmployeeCashierResponse,
   UpdateGgsAdminEmployeeBody,
   UpdateGgsAdminEmployeeParams,
   UpdateGgsAdminEmployeeResponse,
+  type GgsEmployeeCashierRegister,
 } from "@workspace/api-zod";
 import {
   db,
@@ -46,9 +51,14 @@ const router: IRouter = Router();
 const employeeCookieName = "ggs_employee_session";
 const employeeCookiePath = "/api/ggs/employee";
 const employeeSessionMaxAgeMs = 1000 * 60 * 60 * 12;
+const cashierSessionMaxAgeMs = 1000 * 60 * 60 * 8;
 const attemptWindowMs = 15 * 60 * 1000;
 const attemptLimit = 10;
 const loginAttempts = new Map<string, { count: number; expiresAt: number }>();
+const cashierPasswordEnvKeys: Record<GgsEmployeeCashierRegister, string> = {
+  ggs_beauty: "GGS_BEAUTY_CASHIER_PASSWORD",
+  barber_ggs: "GGS_BARBER_CASHIER_PASSWORD",
+};
 const attendanceSalonLocation = {
   latitude: -7.20282,
   longitude: 107.8898963,
@@ -188,6 +198,21 @@ function canAttemptLogin(keys: string[]) {
   return allowed;
 }
 
+function isCashierRegister(value: string | null): value is GgsEmployeeCashierRegister {
+  return value === "ggs_beauty" || value === "barber_ggs";
+}
+
+function cashierAttemptKeys(req: Request, register: GgsEmployeeCashierRegister) {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  return [`cashier:${register}:ip:${ip}`];
+}
+
+function matchesConfiguredPassword(candidate: string, expected: string) {
+  const candidateDigest = createHash("sha256").update(candidate).digest();
+  const expectedDigest = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(candidateDigest, expectedDigest);
+}
+
 async function getEmployeeForSession(
   req: Request,
   res: Response,
@@ -303,6 +328,151 @@ router.post("/ggs/employee/logout", async (req, res): Promise<void> => {
   res.clearCookie(employeeCookieName, cookieOptions());
   res.sendStatus(204);
 });
+
+router.get(
+  "/ggs/employee/cashier/session",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const token = req.cookies?.[employeeCookieName];
+    const [session] =
+      typeof token === "string"
+        ? await db
+            .select({
+              cashierRegister: ggsEmployeeSessionsTable.cashierRegister,
+              cashierExpiresAt: ggsEmployeeSessionsTable.cashierExpiresAt,
+            })
+            .from(ggsEmployeeSessionsTable)
+            .where(eq(ggsEmployeeSessionsTable.tokenHash, hashSessionToken(token)))
+            .limit(1)
+        : [];
+    const now = Date.now();
+    const active = Boolean(
+      session &&
+        isCashierRegister(session.cashierRegister) &&
+        session.cashierExpiresAt &&
+        session.cashierExpiresAt.getTime() > now,
+    );
+
+    if (session && !active && session.cashierRegister !== null) {
+      await db
+        .update(ggsEmployeeSessionsTable)
+        .set({ cashierRegister: null, cashierExpiresAt: null })
+        .where(eq(ggsEmployeeSessionsTable.tokenHash, hashSessionToken(token!)));
+    }
+
+    res.json(
+      GetGgsEmployeeCashierSessionResponse.parse({
+        active,
+        register: active ? session?.cashierRegister : null,
+        expiresAt: active ? session?.cashierExpiresAt : null,
+      }),
+    );
+  },
+);
+
+router.post(
+  "/ggs/employee/cashier/access",
+  async (req, res): Promise<void> => {
+    const parsed = UnlockGgsEmployeeCashierBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const secret = process.env[cashierPasswordEnvKeys[parsed.data.register]];
+    if (!secret || secret.length < 8 || secret.length > 128) {
+      res.status(503).json({ error: "Kata sandi kasir belum dikonfigurasi." });
+      return;
+    }
+
+    const attemptKeysForRegister = cashierAttemptKeys(req, parsed.data.register);
+    if (!canAttemptLogin(attemptKeysForRegister)) {
+      res.status(429).json({ error: "Terlalu banyak percobaan. Coba lagi nanti." });
+      return;
+    }
+    if (!matchesConfiguredPassword(parsed.data.password, secret)) {
+      res.status(403).json({ error: "Kata sandi kasir tidak sesuai." });
+      return;
+    }
+    for (const key of attemptKeysForRegister) loginAttempts.delete(key);
+
+    const token = req.cookies?.[employeeCookieName];
+    if (typeof token !== "string") {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+    const tokenHash = hashSessionToken(token);
+    const [employeeSession] = await db
+      .select({ expiresAt: ggsEmployeeSessionsTable.expiresAt })
+      .from(ggsEmployeeSessionsTable)
+      .where(
+        and(
+          eq(ggsEmployeeSessionsTable.tokenHash, tokenHash),
+          gt(ggsEmployeeSessionsTable.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+    if (!employeeSession) {
+      res.status(401).json({ error: "Sesi karyawan tidak aktif. Silakan masuk kembali." });
+      return;
+    }
+
+    const expiresAt = new Date(
+      Math.min(Date.now() + cashierSessionMaxAgeMs, employeeSession.expiresAt.getTime()),
+    );
+    const [updatedSession] = await db
+      .update(ggsEmployeeSessionsTable)
+      .set({
+        cashierRegister: parsed.data.register,
+        cashierExpiresAt: expiresAt,
+      })
+      .where(eq(ggsEmployeeSessionsTable.tokenHash, tokenHash))
+      .returning({ tokenHash: ggsEmployeeSessionsTable.tokenHash });
+    if (!updatedSession) {
+      res.status(401).json({ error: "Sesi karyawan tidak aktif. Silakan masuk kembali." });
+      return;
+    }
+
+    res.json(
+      UnlockGgsEmployeeCashierResponse.parse({
+        register: parsed.data.register,
+        expiresAt,
+      }),
+    );
+  },
+);
+
+router.post(
+  "/ggs/employee/cashier/logout",
+  async (req, res): Promise<void> => {
+    const employee = await getEmployeeForSession(req, res);
+    if (!employee) {
+      res.status(401).json({ error: "Silakan masuk dengan akun karyawan." });
+      return;
+    }
+
+    const token = req.cookies?.[employeeCookieName];
+    if (typeof token === "string") {
+      await db
+        .update(ggsEmployeeSessionsTable)
+        .set({ cashierRegister: null, cashierExpiresAt: null })
+        .where(eq(ggsEmployeeSessionsTable.tokenHash, hashSessionToken(token)));
+    }
+    LogoutGgsEmployeeCashierResponse.parse(undefined);
+    res.sendStatus(204);
+  },
+);
 
 router.get("/ggs/employee/bookings", async (req, res): Promise<void> => {
   const employee = await getEmployeeForSession(req, res);

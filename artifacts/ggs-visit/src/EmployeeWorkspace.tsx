@@ -1,18 +1,22 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, Clock3, LayoutDashboard, LogOut, Menu, Package, RefreshCw, Search, ShieldCheck, UserRound, UsersRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Banknote, BarChart3, CalendarDays, Clock3, LayoutDashboard, LockKeyhole, LogOut, Menu, Package, RefreshCw, Search, ShieldCheck, Store, UserRound, UsersRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import {
   getGetGgsEmployeeBookingsQueryKey,
   getGetGgsEmployeeAttendanceHistoryQueryKey,
   getGetGgsEmployeeAttendanceTodayQueryKey,
+  getGetGgsEmployeeCashierSessionQueryKey,
   getGetGgsEmployeeSessionQueryKey,
   useGetGgsEmployeeBookings,
+  useGetGgsEmployeeCashierSession,
   useGetGgsEmployeeSession,
   useLoginGgsEmployee,
+  useLogoutGgsEmployeeCashier,
   useLogoutGgsEmployee,
+  useUnlockGgsEmployeeCashier,
 } from '@workspace/api-client-react';
-import type { GgsEmployeeBooking, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
+import type { GgsEmployeeBooking, GgsEmployeeCashierRegister, LoginGgsEmployeeMutationVariables } from '@workspace/api-client-react';
 import { EmployeeAttendancePage } from './EmployeeAttendancePage';
 import './employee-workspace.css';
 
@@ -78,7 +82,180 @@ const employeeMenuItems = [
   { href: '/employee/reports', label: 'Laporan', icon: BarChart3, description: 'Rekap kegiatan dan performa studio.' },
 ] as const;
 
+const cashierRegisters: {
+  value: GgsEmployeeCashierRegister;
+  label: string;
+  description: string;
+}[] = [
+  { value: 'ggs_beauty', label: 'GGS Beauty', description: 'Kasir layanan kecantikan' },
+  { value: 'barber_ggs', label: 'Barber GGS', description: 'Kasir layanan barber' },
+];
+
 type EmployeeMenuItem = (typeof employeeMenuItems)[number];
+
+function cashierErrorMessage(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'data' in error) {
+    const data = (error as { data?: unknown }).data;
+    if (typeof data === 'object' && data !== null && 'error' in data) {
+      const message = (data as { error?: unknown }).error;
+      if (typeof message === 'string' && message.trim()) return message;
+    }
+  }
+  return 'Kasir belum dapat dibuka. Periksa koneksi lalu coba lagi.';
+}
+
+function EmployeeCashierPage() {
+  const queryClient = useQueryClient();
+  const cashierSession = useGetGgsEmployeeCashierSession({
+    query: {
+      queryKey: getGetGgsEmployeeCashierSessionQueryKey(),
+      retry: false,
+      staleTime: 0,
+    },
+  });
+  const unlockCashier = useUnlockGgsEmployeeCashier();
+  const lockCashier = useLogoutGgsEmployeeCashier();
+  const [selectedRegister, setSelectedRegister] = useState<GgsEmployeeCashierRegister>('ggs_beauty');
+  const [password, setPassword] = useState('');
+  const [formError, setFormError] = useState('');
+  const [lockError, setLockError] = useState('');
+  const activeRegister = cashierRegisters.find(
+    (register) => register.value === cashierSession.data?.register,
+  );
+  const hasActiveAccess = Boolean(cashierSession.data?.active && activeRegister);
+
+  const submitUnlock = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormError('');
+    unlockCashier.mutate(
+      { data: { register: selectedRegister, password } },
+      {
+        onSuccess: async () => {
+          setPassword('');
+          await queryClient.invalidateQueries({
+            queryKey: getGetGgsEmployeeCashierSessionQueryKey(),
+          });
+        },
+        onError: (error) => setFormError(cashierErrorMessage(error)),
+      },
+    );
+  };
+
+  const submitLock = () => {
+    setLockError('');
+    if (activeRegister) setSelectedRegister(activeRegister.value);
+    lockCashier.mutate(undefined, {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: getGetGgsEmployeeCashierSessionQueryKey(),
+        });
+      },
+      onError: (error) => setLockError(cashierErrorMessage(error)),
+    });
+  };
+
+  return (
+    <div className="employee-cashier" data-testid="employee-cashier">
+      <header className="employee-cashier__heading">
+        <div>
+          <p className="employee-kicker">AKSES KASIR</p>
+          <h1>Kasir <em>GGS.</em></h1>
+          <p>Pilih unit kasir, lalu masukkan kata sandi khusus unit tersebut.</p>
+        </div>
+        <span className="employee-cashier__secure-label"><LockKeyhole size={15} aria-hidden="true" /> Akses terlindungi</span>
+      </header>
+
+      {cashierSession.isLoading ? (
+        <section className="employee-cashier__state" role="status">Memeriksa akses kasir…</section>
+      ) : cashierSession.isError ? (
+        <section className="employee-cashier__state employee-cashier__state--error" role="alert">
+          <div><strong>Status kasir belum dapat dimuat.</strong><p>Periksa koneksi, lalu perbarui status akses.</p></div>
+          <button
+            type="button"
+            onClick={() => void cashierSession.refetch()}
+            disabled={cashierSession.isFetching}
+            data-testid="button-refresh-employee-cashier"
+          >
+            {cashierSession.isFetching ? 'Memuat…' : 'Coba lagi'}
+          </button>
+        </section>
+      ) : hasActiveAccess && activeRegister ? (
+        <section className="employee-cashier__unlocked" aria-labelledby="employee-cashier-active-title">
+          <div className="employee-cashier__unlocked-icon"><Store size={21} aria-hidden="true" /></div>
+          <p className="employee-kicker">AKSES AKTIF</p>
+          <h2 id="employee-cashier-active-title">{activeRegister.label}</h2>
+          <p>{activeRegister.description}. Akses akan terkunci otomatis saat sesi berakhir.</p>
+          {cashierSession.data?.expiresAt && (
+            <p className="employee-cashier__expiry">
+              Berlaku sampai {new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(cashierSession.data.expiresAt))}
+            </p>
+          )}
+          {lockError && <p className="employee-form-error" role="alert">{lockError}</p>}
+          <button
+            type="button"
+            className="employee-cashier__lock-button"
+            onClick={submitLock}
+            disabled={lockCashier.isPending}
+            data-testid="button-lock-employee-cashier"
+          >
+            <LockKeyhole size={15} aria-hidden="true" />
+            {lockCashier.isPending ? 'Mengunci kasir…' : 'Kunci kasir'}
+          </button>
+        </section>
+      ) : (
+        <section className="employee-cashier__access" aria-label="Buka akses kasir">
+          <div className="employee-cashier__registers" role="group" aria-label="Pilih unit kasir">
+            {cashierRegisters.map((register) => (
+              <button
+                key={register.value}
+                type="button"
+                className={`employee-cashier__register${selectedRegister === register.value ? ' employee-cashier__register--selected' : ''}`}
+                aria-pressed={selectedRegister === register.value}
+                onClick={() => {
+                  setSelectedRegister(register.value);
+                  setFormError('');
+                }}
+                data-testid={`button-select-cashier-${register.value}`}
+              >
+                <span className="employee-cashier__register-icon"><Store size={18} aria-hidden="true" /></span>
+                <span><strong>{register.label}</strong><small>{register.description}</small></span>
+                <span className="employee-cashier__register-check" aria-hidden="true">{selectedRegister === register.value ? '✓' : ''}</span>
+              </button>
+            ))}
+          </div>
+
+          <form className="employee-cashier__form" onSubmit={submitUnlock}>
+            <label htmlFor="employee-cashier-password">Kata sandi {cashierRegisters.find((item) => item.value === selectedRegister)?.label}</label>
+            <input
+              id="employee-cashier-password"
+              name="cashier-password"
+              type="password"
+              autoComplete="off"
+              minLength={8}
+              maxLength={128}
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Masukkan kata sandi kasir"
+              data-testid="input-employee-cashier-password"
+            />
+            {formError && <p className="employee-form-error" role="alert" data-testid="status-employee-cashier-error">{formError}</p>}
+            <button
+              type="submit"
+              className="employee-primary-button"
+              disabled={unlockCashier.isPending}
+              data-testid="button-unlock-employee-cashier"
+            >
+              <span>{unlockCashier.isPending ? 'Memverifikasi…' : 'Buka kasir'}</span>
+              <ArrowRight size={16} aria-hidden="true" />
+            </button>
+            <p className="employee-cashier__privacy"><ShieldCheck size={15} aria-hidden="true" /> Kata sandi diperiksa di server dan tidak disimpan di perangkat.</p>
+          </form>
+        </section>
+      )}
+    </div>
+  );
+}
 
 function EmployeeOverview({
   employeeName,
@@ -189,6 +366,7 @@ export function EmployeeSignInPage() {
       onSuccess: async () => {
         queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceTodayQueryKey(), exact: true });
         queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceHistoryQueryKey(), exact: true });
+        queryClient.removeQueries({ queryKey: getGetGgsEmployeeCashierSessionQueryKey(), exact: true });
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeSessionQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeBookingsQueryKey() }),
@@ -378,6 +556,7 @@ export function EmployeeSchedulePage() {
       onSuccess: async () => {
         queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceTodayQueryKey(), exact: true });
         queryClient.removeQueries({ queryKey: getGetGgsEmployeeAttendanceHistoryQueryKey(), exact: true });
+        queryClient.removeQueries({ queryKey: getGetGgsEmployeeCashierSessionQueryKey(), exact: true });
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeSessionQueryKey() }),
           queryClient.invalidateQueries({ queryKey: getGetGgsEmployeeBookingsQueryKey() }),
@@ -591,6 +770,8 @@ export function EmployeeSchedulePage() {
           </div>
         ) : currentMenu.href === '/employee/attendance' ? (
           <EmployeeAttendancePage employeeName={session.data?.name ?? 'Karyawan'} />
+        ) : currentMenu.href === '/employee/cashier' ? (
+          <EmployeeCashierPage />
         ) : (
           <EmployeeModulePlaceholder item={currentMenu} />
         )}
