@@ -963,11 +963,13 @@ function HomePage({ services, servicesQuery, site, openBooking, chooseHairStyle,
   }, []);
 
   useEffect(() => {
-    const mobileQuery = window.matchMedia('(max-width: 680px)');
-    const tabletQuery = window.matchMedia('(max-width: 900px), (max-width: 1180px) and (orientation: portrait)');
+    const mobileQuery = window.matchMedia('(max-width: 680px), (max-width: 900px) and (max-height: 599px)');
+    const tabletQuery = window.matchMedia(
+      '(min-width: 681px) and (max-width: 1180px) and (min-height: 600px), (min-width: 681px) and (hover: none) and (pointer: coarse) and (min-height: 600px)',
+    );
     const updateVisibleSlides = () => {
-      setMensSlidesPerView(mobileQuery.matches ? 2 : tabletQuery.matches ? 2 : 4);
-      setWomenSlidesPerView(mobileQuery.matches ? 2 : tabletQuery.matches ? 2 : 4);
+      setMensSlidesPerView(mobileQuery.matches ? 2 : tabletQuery.matches ? 3 : 4);
+      setWomenSlidesPerView(mobileQuery.matches ? 2 : tabletQuery.matches ? 3 : 4);
     };
     updateVisibleSlides();
     mobileQuery.addEventListener('change', updateVisibleSlides);

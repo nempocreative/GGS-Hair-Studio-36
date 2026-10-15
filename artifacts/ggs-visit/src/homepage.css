@@ -2882,3 +2882,21 @@
     font-size: 9px;
   }
 }
+
+@media
+  (min-width: 681px) and (max-width: 1180px) and (min-height: 600px),
+  (min-width: 681px) and (hover: none) and (pointer: coarse) and (min-height: 600px) {
+  .home-mens-service-slide,
+  .home-womens-service-slide { flex-basis: 33.333333%; }
+  .home-mens-service-skeleton { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-style-model-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+    scroll-snap-type: none;
+  }
+  .home-style-model-card { min-width: 0; flex: initial; scroll-snap-align: none; }
+}
