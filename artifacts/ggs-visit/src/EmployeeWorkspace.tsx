@@ -159,8 +159,6 @@ const cashierRegisters: {
   { value: 'barber_ggs', label: 'Barber GGS', description: 'Kasir layanan barber' },
 ];
 
-type EmployeeMenuItem = (typeof employeeMenuItems)[number];
-
 function cashierErrorMessage(
   error: unknown,
   fallback = 'Kasir belum dapat dibuka. Periksa koneksi lalu coba lagi.',
@@ -862,20 +860,6 @@ function EmployeeOverview({
         )}
       </section>
     </div>
-  );
-}
-
-function EmployeeModulePlaceholder({ item }: { item: EmployeeMenuItem }) {
-  const Icon = item.icon;
-
-  return (
-    <section className="employee-module-placeholder" data-testid={`employee-module-${item.href.split('/').pop()}`}>
-      <div className="employee-module-placeholder__icon"><Icon size={21} aria-hidden="true" /></div>
-      <p className="employee-kicker">MENU KARYAWAN</p>
-      <h1>{item.label}</h1>
-      <p>{item.description}</p>
-      <span className="employee-module-placeholder__status">MENU BELUM AKTIF</span>
-    </section>
   );
 }
 
@@ -2013,7 +1997,10 @@ export function EmployeeSchedulePage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches,
   );
-  const currentMenu = employeeMenuItems.find((item) => item.href === location) ?? employeeMenuItems[0];
+  const normalizedLocation = location.length > 1 ? location.replace(/\/+$/, '') : location;
+  const matchedMenu = employeeMenuItems.find((item) => item.href === normalizedLocation);
+  const currentMenu = matchedMenu ?? employeeMenuItems[0];
+  const employeeRouteNotFound = !matchedMenu;
   const authenticated = Boolean(session.isSuccess && session.data?.active);
 
   const sortedBookings = useMemo(() => {
@@ -2127,7 +2114,7 @@ export function EmployeeSchedulePage() {
             <nav className="employee-sidebar__nav">
               {employeeMenuItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = currentMenu.href === item.href;
+                const isActive = !employeeRouteNotFound && currentMenu.href === item.href;
                 return (
                   <Link
                     key={item.href}
@@ -2182,7 +2169,7 @@ export function EmployeeSchedulePage() {
                 <Menu size={18} aria-hidden="true" />
               </button>
               <div className="employee-cms__breadcrumb">
-                <strong>{currentMenu.label}</strong>
+                <strong>{employeeRouteNotFound ? 'Halaman tidak ditemukan' : currentMenu.label}</strong>
               </div>
             </>
           ) : (
@@ -2218,6 +2205,18 @@ export function EmployeeSchedulePage() {
               data-testid="link-schedule-sign-in"
             >
               Masuk karyawan <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </section>
+        ) : employeeRouteNotFound ? (
+          <section className="employee-protected-message" role="status" data-testid="page-employee-not-found">
+            <span className="employee-protected-message__icon"><ShieldCheck size={20} aria-hidden="true" /></span>
+            <div>
+              <p className="employee-kicker">HALAMAN TIDAK DITEMUKAN</p>
+              <h1>Alamat ini tidak tersedia.</h1>
+              <p>Pilih menu karyawan yang tersedia untuk melanjutkan.</p>
+            </div>
+            <Link href="/employee/overview" className="employee-primary-button" data-testid="link-employee-not-found-home">
+              Kembali ke ringkasan <ArrowRight size={15} aria-hidden="true" />
             </Link>
           </section>
         ) : currentMenu.href === '/employee/overview' ? (
@@ -2330,9 +2329,7 @@ export function EmployeeSchedulePage() {
           <EmployeeStockPage />
         ) : currentMenu.href === '/employee/reports' ? (
           <EmployeeReportsPage />
-        ) : (
-          <EmployeeModulePlaceholder item={currentMenu} />
-        )}
+        ) : null}
 
         {authenticated && pendingBookingCancellation ? (
           <div className="employee-booking-action__backdrop" role="presentation">
